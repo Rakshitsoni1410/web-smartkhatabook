@@ -77,6 +77,11 @@ export default function Sidebar({ role = "Retailer" }) {
           name: "Reports",
           path: "/reports",
         },
+        {
+          icon: <FiStar />,
+          name: "Reviews",
+          path: "/reviews",
+        },
       ];
 
   const handleLogout = () => {

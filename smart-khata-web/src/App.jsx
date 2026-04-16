@@ -7,51 +7,25 @@ import Stock from "./pages/Stock";
 import WholesalerDashboard from "./pages/WholesalerDashboard";
 import Orders from "./pages/Orders";
 import OrderDetails from "./pages/OrderDetails";
-
+import Reviews from "./pages/Reviews";
 export default function App() {
   return (
     <Routes>
+      <Route path="/" element={<Login />} />
 
-      <Route
-        path="/"
-        element={<Login />}
-      />
+      <Route path="/dashboard" element={<Dashboard />} />
 
-      <Route
-        path="/dashboard"
-        element={<Dashboard />}
-      />
+      <Route path="/signup" element={<Signup />} />
 
-      <Route
-        path="/signup"
-        element={<Signup />}
-      />
+      <Route path="/stock" element={<Stock />} />
 
-      <Route
-        path="/stock"
-        element={<Stock />}
-      />
-
-      <Route
-        path="/wholesalers/:category"
-        element={
-          <WholesalerDashboard />
-        }
-      />
+      <Route path="/wholesalers/:category" element={<WholesalerDashboard />} />
 
       {/* Orders */}
-      <Route
-        path="/orders"
-        element={<Orders />}
-      />
+      <Route path="/orders" element={<Orders />} />
 
-      <Route
-        path="/order/:id"
-        element={
-          <OrderDetails />
-        }
-      />
-
+      <Route path="/order/:id" element={<OrderDetails />} />
+      <Route path="/reviews" element={<Reviews />} />
     </Routes>
   );
 }
