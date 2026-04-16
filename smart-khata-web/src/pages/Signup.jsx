@@ -29,13 +29,15 @@ export default function Signup() {
 
   const [errors, setErrors] = useState({});
 
-  // 🔁 handle input
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
-    setErrors({ ...errors, [e.target.name]: "" });
+
+    setErrors({
+      ...errors,
+      [e.target.name]: "",
+    });
   };
 
-  // ✅ validation
   const validate = () => {
     let newErrors = {};
 
@@ -44,208 +46,318 @@ export default function Signup() {
     if (!form.email) newErrors.email = "Email required";
     if (!form.role) newErrors.role = "Select role";
     if (!form.address) newErrors.address = "Address required";
-    if (!form.password) newErrors.password = "Password required";
+    if (!form.password)
+      newErrors.password = "Password required";
 
     if (form.role !== "Customer") {
-      if (!form.shopName) newErrors.shopName = "Shop name required";
-      if (!form.businessType) newErrors.businessType = "Business type required";
+      if (!form.shopName)
+        newErrors.shopName =
+          "Shop name required";
+
+      if (!form.businessType)
+        newErrors.businessType =
+          "Business type required";
     }
 
     if (form.password !== form.confirm) {
-      newErrors.confirm = "Passwords do not match";
+      newErrors.confirm =
+        "Passwords do not match";
     }
 
     return newErrors;
   };
 
-  // 🔥 SIGNUP API
   const handleSignup = async () => {
     const validationErrors = validate();
 
-    if (Object.keys(validationErrors).length > 0) {
+    if (
+      Object.keys(validationErrors).length > 0
+    ) {
       setErrors(validationErrors);
       return;
     }
 
     try {
-      const res = await axios.post("http://localhost:4000/api/user/register", {
-        name: form.name,
-        phone: form.phone,
-        email: form.email,
-        role: form.role,
-        shopName: form.shopName,
-        businessType: form.businessType,
-        address: form.address,
-        password: form.password,
-      });
+      await axios.post(
+        "http://localhost:4000/api/user/register",
+        {
+          name: form.name,
+          phone: form.phone,
+          email: form.email,
+          role: form.role,
+          shopName: form.shopName,
+          businessType:
+            form.businessType,
+          address: form.address,
+          password: form.password,
+        }
+      );
 
-      alert("Account created successfully!");
+      alert(
+        "Account created successfully!"
+      );
 
       navigate("/");
+
     } catch (err) {
       setErrors({
-        phone: err.response?.data?.message || "Signup failed",
+        phone:
+          err.response?.data?.message ||
+          "Signup failed",
       });
     }
   };
 
   return (
     <div className="signup-container">
-      <div className="top-section">
-        <img src="/icons.svg" className="logo" alt="logo" />
-        <h2>Create Account</h2>
-        <p>Register and manage your business easily</p>
+
+      {/* LEFT SIDE */}
+      <div className="left-panel">
+        <div className="left-content">
+          <img
+            src="/icons.svg"
+            alt="logo"
+          />
+
+          <h1>Smart Khatabook</h1>
+
+          <p>
+            Smart business accounting
+            platform for billing,
+            customers, inventory and
+            reports.
+          </p>
+
+          <ul>
+            <li>✔ Billing System</li>
+            <li>✔ Customer Ledger</li>
+            <li>✔ Stock Tracking</li>
+            <li>✔ Reports</li>
+          </ul>
+        </div>
       </div>
 
-      <div className="signup-card">
-        <Input
-          icon={<FiUser />}
-          name="name"
-          placeholder="Full Name"
-          value={form.name}
-          onChange={handleChange}
-          error={errors.name}
-        />
+      {/* RIGHT SIDE */}
+      <div className="right-panel">
+        <div className="signup-card">
 
-        <Input
-          icon={<FiPhone />}
-          name="phone"
-          placeholder="Phone Number"
-          value={form.phone}
-          onChange={handleChange}
-          error={errors.phone}
-        />
+          <h2>Create Account</h2>
 
-        <Input
-          icon={<FiMail />}
-          name="email"
-          placeholder="Email"
-          value={form.email}
-          onChange={handleChange}
-          error={errors.email}
-        />
+          <p className="sub-title">
+            Register your business
+            account
+          </p>
 
-        {/* ROLE */}
-        <SelectBox
-          icon={<FiBriefcase />}
-          name="role"
-          value={form.role}
-          onChange={handleChange}
-          options={["Customer", "Retailer", "Wholesaler"]}
-          error={errors.role}
-        />
+          {/* HORIZONTAL GRID */}
+          <div className="grid-2">
 
-        {/* SHOP */}
-        {form.role !== "Customer" && (
-          <Input
-            icon={<FiHome />}
-            name="shopName"
-            placeholder="Shop Name"
-            value={form.shopName}
-            onChange={handleChange}
-            error={errors.shopName}
-          />
-        )}
+            <Input
+              icon={<FiUser />}
+              name="name"
+              placeholder="Full Name"
+              value={form.name}
+              onChange={handleChange}
+              error={errors.name}
+            />
 
-        {/* BUSINESS TYPE */}
-        {form.role !== "Customer" && (
-          <SelectBox
-            icon={<FiHome />}
-            name="businessType"
-            value={form.businessType}
-            onChange={handleChange}
-            options={[
-              "Stationery",
-              "Grocery",
-              "Medical",
-              "Clothing",
-              "Electronics",
-              "Footwear",
-              "Jewelry",
-              "Hardware",
-              "Furniture",
-              "Cosmetic",
-              "Book Store",
-              "Mobile Shop",
-              "Bakery",
-              "Restaurant",
-              "Gift Shop",
-              "General Store",
-              "Sports Shop",
-              "Toy Shop",
-              "Agriculture",
-              "Other",
-            ]}
-            error={errors.businessType}
-          />
-        )}
+            <Input
+              icon={<FiPhone />}
+              name="phone"
+              placeholder="Phone Number"
+              value={form.phone}
+              onChange={handleChange}
+              error={errors.phone}
+            />
 
-        <Input
-          icon={<FiMapPin />}
-          name="address"
-          placeholder="Address"
-          value={form.address}
-          onChange={handleChange}
-          error={errors.address}
-        />
+            <Input
+              icon={<FiMail />}
+              name="email"
+              placeholder="Email"
+              value={form.email}
+              onChange={handleChange}
+              error={errors.email}
+            />
 
-        <Input
-          icon={<FiLock />}
-          name="password"
-          type="password"
-          placeholder="Password"
-          value={form.password}
-          onChange={handleChange}
-          error={errors.password}
-        />
+            <SelectBox
+              icon={<FiBriefcase />}
+              name="role"
+              value={form.role}
+              onChange={handleChange}
+              options={[
+                "Customer",
+                "Retailer",
+                "Wholesaler",
+              ]}
+              error={errors.role}
+            />
 
-        <Input
-          icon={<FiLock />}
-          name="confirm"
-          type="password"
-          placeholder="Confirm Password"
-          value={form.confirm}
-          onChange={handleChange}
-          error={errors.confirm}
-        />
+            <Input
+              icon={<FiHome />}
+              name="shopName"
+              placeholder="Shop Name"
+              value={form.shopName}
+              onChange={handleChange}
+              error={errors.shopName}
+            />
 
-        <button onClick={handleSignup}>Create Account</button>
+            <SelectBox
+              icon={<FiHome />}
+              name="businessType"
+              value={form.businessType}
+              onChange={handleChange}
+              options={[
+                "Stationery",
+                "Grocery",
+                "Medical",
+                "Clothing",
+                "Electronics",
+                "Footwear",
+                "Jewelry",
+                "Hardware",
+                "Furniture",
+                "Cosmetic",
+                "Book Store",
+                "Mobile Shop",
+                "Bakery",
+                "Restaurant",
+                "Gift Shop",
+                "General Store",
+                "Sports Shop",
+                "Toy Shop",
+                "Agriculture",
+                "Other",
+              ]}
+              error={
+                errors.businessType
+              }
+            />
 
-        <p className="login-link" onClick={() => navigate("/")}>
-          Already have an account? Login
-        </p>
+            <Input
+              icon={<FiMapPin />}
+              name="address"
+              placeholder="Address"
+              value={form.address}
+              onChange={handleChange}
+              error={errors.address}
+            />
+
+            <Input
+              icon={<FiLock />}
+              type="password"
+              name="password"
+              placeholder="Password"
+              value={form.password}
+              onChange={handleChange}
+              error={errors.password}
+            />
+
+            <Input
+              icon={<FiLock />}
+              type="password"
+              name="confirm"
+              placeholder="Confirm Password"
+              value={form.confirm}
+              onChange={handleChange}
+              error={errors.confirm}
+            />
+
+          </div>
+
+          <button
+            onClick={handleSignup}
+          >
+            Create Account
+          </button>
+
+          <p
+            className="login-link"
+            onClick={() =>
+              navigate("/")
+            }
+          >
+            Already have an account?
+            Login
+          </p>
+
+        </div>
       </div>
+
     </div>
   );
 }
 
-/* Input */
-function Input({ icon, error, ...props }) {
+function Input({
+  icon,
+  error,
+  ...props
+}) {
   return (
-    <>
-      <div className={`input-box ${error ? "error" : ""}`}>
-        <span className="icon">{icon}</span>
+    <div className="field-wrap">
+      <div
+        className={`input-box ${
+          error
+            ? "error"
+            : ""
+        }`}
+      >
+        <span className="icon">
+          {icon}
+        </span>
+
         <input {...props} />
       </div>
-      {error && <p className="error-text">{error}</p>}
-    </>
+
+      {error && (
+        <p className="error-text">
+          {error}
+        </p>
+      )}
+    </div>
   );
 }
 
-/* Select */
-function SelectBox({ icon, options, error, ...props }) {
+function SelectBox({
+  icon,
+  options,
+  error,
+  ...props
+}) {
   return (
-    <>
-      <div className={`input-box select-box ${error ? "error" : ""}`}>
-        <span className="icon">{icon}</span>
+    <div className="field-wrap">
+      <div
+        className={`input-box select-box ${
+          error
+            ? "error"
+            : ""
+        }`}
+      >
+        <span className="icon">
+          {icon}
+        </span>
+
         <select {...props}>
-          <option value="">Select</option>
-          {options.map((o) => (
-            <option key={o}>{o}</option>
-          ))}
+          <option value="">
+            Select
+          </option>
+
+          {options.map(
+            (item) => (
+              <option
+                key={item}
+                value={item}
+              >
+                {item}
+              </option>
+            )
+          )}
         </select>
       </div>
-      {error && <p className="error-text">{error}</p>}
-    </>
+
+      {error && (
+        <p className="error-text">
+          {error}
+        </p>
+      )}
+    </div>
   );
 }
