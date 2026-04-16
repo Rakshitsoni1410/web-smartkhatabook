@@ -114,10 +114,7 @@ export default function Signup() {
       {/* LEFT SIDE */}
       <div className="left-panel">
         <div className="left-content">
-          <img
-            src="/icons.svg"
-            alt="logo"
-          />
+          <img src="/logos.svg" alt="logo" className="logo" />
 
           <h1>Smart Khatabook</h1>
 

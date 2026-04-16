@@ -63,7 +63,7 @@ export default function Login() {
     <div className="login-container">
 
       <div className="top-section">
-        <img src="/icons.svg" alt="logo" className="logo" />
+        <img src="/logos.svg" alt="logo" className="logo" />
         <h1>SMART KHATABOOK</h1>
         <p>Track. Manage. Profit.</p>
       </div>

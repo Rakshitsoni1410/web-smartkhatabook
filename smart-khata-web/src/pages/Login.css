@@ -144,3 +144,11 @@ body {
   font-size: 12px;
   margin: -8px 0 10px 5px;
 }
+/*logo*/
+.logo{
+  width:80px;
+}
+
+.logo-small{
+  width:45px;
+}
