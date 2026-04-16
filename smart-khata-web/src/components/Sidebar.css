@@ -1,183 +1,124 @@
-body {
-  margin: 0;
-  font-family: "Segoe UI", sans-serif;
-}
-
-/* Main Layout */
-.signup-container {
+.sidebar {
+  width: 270px;
   min-height: 100vh;
+  background: linear-gradient(180deg,#0f4db8,#0b3f97);
+  padding: 22px 16px;
   display: flex;
-  background: #f5f7fb;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: 0.3s ease;
 }
 
-/* Left Side */
-.left-panel {
-  flex: 1;
-  background: linear-gradient(135deg, #1976d2, #0d47a1);
+.sidebar.collapsed {
+  width: 90px;
+}
+
+/* Header */
+.side-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.brand-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.side-logo {
+  width: 42px;
+}
+
+.brand {
   color: white;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 40px;
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0;
 }
 
-.left-content {
-  max-width: 400px;
-}
-
-.left-content img {
-  width: 80px;
-  margin-bottom: 20px;
-}
-
-.left-content h1 {
-  font-size: 36px;
-  margin-bottom: 10px;
-}
-
-.left-content p {
-  font-size: 16px;
-  line-height: 1.6;
-  opacity: 0.95;
-}
-
-/* Right Side */
-.right-panel {
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 40px;
-}
-
-/* Card */
-.signup-card {
-  background: white;
-  width: 100%;
-  max-width: 420px;
-  padding: 30px;
-  border-radius: 20px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-}
-
-.signup-card h2 {
-  margin-bottom: 5px;
-}
-
-.sub-title {
-  color: #666;
-  font-size: 14px;
-  margin-bottom: 20px;
-}
-
-/* Fields */
-.input-box {
-  display: flex;
-  align-items: center;
-  height: 48px;
-  background: #f4f7fb;
-  border-radius: 12px;
-  padding: 0 14px;
-  margin-bottom: 12px;
-  border: 1px solid transparent;
-}
-
-.input-box:focus-within {
-  border: 1px solid #1976d2;
-  background: white;
-}
-
-.icon {
-  color: #1976d2;
-  margin-right: 10px;
-}
-
-.input-box input,
-.input-box select {
-  width: 100%;
-  border: none;
-  outline: none;
-  background: transparent;
-  font-size: 14px;
-}
-
-.input-box select {
-  appearance: none;
-  cursor: pointer;
-}
-
-.select-box {
-  position: relative;
-}
-
-.select-box::after {
-  content: "▾";
-  position: absolute;
-  right: 15px;
-  color: #666;
-}
-
-/* Errors */
-.input-box.error {
-  border: 1px solid red !important;
-}
-
-.error-text {
-  color: red;
+.role-badge {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
   font-size: 12px;
-  margin: -8px 0 10px 4px;
+  background: rgba(255,255,255,0.15);
 }
 
-/* Button */
-.signup-card button {
-  width: 100%;
-  height: 48px;
+/* Toggle */
+.toggle-btn {
+  width: 36px;
+  height: 36px;
   border: none;
-  background: #1976d2;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.12);
   color: white;
-  border-radius: 12px;
-  font-size: 15px;
-  cursor: pointer;
-  margin-top: 10px;
-}
-
-.signup-card button:hover {
-  background: #1259a7;
-}
-
-/* Login link */
-.login-link {
-  margin-top: 14px;
-  text-align: center;
-  font-size: 14px;
-  color: #1976d2;
   cursor: pointer;
 }
 
-/* Mobile */
-@media (max-width: 900px) {
-  .signup-container {
-    flex-direction: column;
-  }
-
-  .left-panel {
-    padding: 30px 20px;
-    text-align: center;
-  }
-
-  .left-content h1 {
-    font-size: 28px;
-  }
-
-  .right-panel {
-    padding: 20px;
-  }
-}
-/*logo*/
-.logo{
-  width:80px;
+/* Menu */
+.menu-wrap {
+  margin-top: 30px;
 }
 
-.logo-small{
-  width:45px;
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 13px 14px;
+  color: rgba(255,255,255,0.9);
+  border-radius: 14px;
+  cursor: pointer;
+  margin-bottom: 10px;
+  transition: 0.25s;
+}
+
+.menu-item:hover {
+  background: rgba(255,255,255,0.08);
+  transform: translateX(3px);
+}
+
+.menu-item.active {
+  background: white;
+  color: #0f4db8;
+  font-weight: 700;
+}
+
+.menu-icon {
+  font-size: 18px;
+  min-width: 20px;
+}
+
+.menu-item p {
+  margin: 0;
+}
+
+/* Logout */
+.logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 13px 14px;
+  border-radius: 14px;
+  cursor: pointer;
+  background: rgba(255,255,255,0.08);
+  color: white;
+}
+
+.logout-btn:hover {
+  background: rgba(255,255,255,0.14);
+}
+
+/* Collapse mode */
+.sidebar.collapsed .brand,
+.sidebar.collapsed .role-badge,
+.sidebar.collapsed .menu-item p,
+.sidebar.collapsed .logout-btn p {
+  display: none;
+}
+
+.sidebar.collapsed .menu-item,
+.sidebar.collapsed .logout-btn {
+  justify-content: center;
 }

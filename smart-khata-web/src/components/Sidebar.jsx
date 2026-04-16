@@ -1,32 +1,173 @@
-import { Link, useLocation } from "react-router-dom";
+import { useState } from "react";
+import {
+  FiGrid,
+  FiBox,
+  FiUsers,
+  FiFileText,
+  FiStar,
+  FiLogOut,
+  FiMenu,
+  FiChevronLeft,
+} from "react-icons/fi";
 
-export default function Sidebar() {
-  const location = useLocation();
+export default function Sidebar({
+  role = "Retailer",
+}) {
+  const [collapsed, setCollapsed] =
+    useState(false);
 
-  const menu = [
-    { name: "Dashboard", path: "/dashboard" },
-    { name: "Customers", path: "/customers" },
-    { name: "Employees", path: "/employees" },
-    { name: "Bills", path: "/bills" },
-  ];
+  const isWholesaler =
+    role === "Wholesaler";
+
+  const menu = isWholesaler
+    ? [
+        {
+          icon: <FiGrid />,
+          name: "Overview",
+        },
+        {
+          icon: <FiBox />,
+          name: "Stock",
+        },
+        {
+          icon: <FiUsers />,
+          name: "Employees",
+        },
+        {
+          icon: <FiFileText />,
+          name: "Orders",
+        },
+        {
+          icon: <FiStar />,
+          name: "Reviews",
+        },
+      ]
+    : [
+        {
+          icon: <FiGrid />,
+          name: "Overview",
+        },
+        {
+          icon: <FiBox />,
+          name: "Stock",
+        },
+        {
+          icon: <FiUsers />,
+          name: "Customers",
+        },
+        {
+          icon: <FiFileText />,
+          name: "Ledger",
+        },
+        {
+          icon: <FiStar />,
+          name: "Reports",
+        },
+      ];
+
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    window.location.href = "/";
+  };
 
   return (
-    <div className="sidebar">
-      <h2 className="logo">Smart Khata</h2>
+    <aside
+      className={`sidebar ${
+        collapsed
+          ? "collapsed"
+          : ""
+      }`}
+    >
 
-      {menu.map((item) => (
-        <Link
-          key={item.name}
-          to={item.path}
-          className={
-            location.pathname === item.path
-              ? "menu active"
-              : "menu"
-          }
-        >
-          {item.name}
-        </Link>
-      ))}
-    </div>
+      {/* HEADER */}
+      <div>
+
+        <div className="side-header">
+
+          <div className="brand-row">
+
+            <img
+              src="/icons.svg"
+              alt="logo"
+              className="side-logo"
+            />
+
+            {!collapsed && (
+              <div>
+                <h2 className="brand">
+                  Smart Khata
+                </h2>
+
+                <span className="role-badge">
+                  {role}
+                </span>
+              </div>
+            )}
+
+          </div>
+
+          <button
+            className="toggle-btn"
+            onClick={() =>
+              setCollapsed(
+                !collapsed
+              )
+            }
+          >
+            {collapsed ? (
+              <FiMenu />
+            ) : (
+              <FiChevronLeft />
+            )}
+          </button>
+
+        </div>
+
+        {/* MENU */}
+        <div className="menu-wrap">
+          {menu.map(
+            (
+              item,
+              index
+            ) => (
+              <div
+                key={index}
+                className={`menu-item ${
+                  index === 0
+                    ? "active"
+                    : ""
+                }`}
+              >
+                <span className="menu-icon">
+                  {item.icon}
+                </span>
+
+                {!collapsed && (
+                  <p>
+                    {item.name}
+                  </p>
+                )}
+              </div>
+            )
+          )}
+        </div>
+
+      </div>
+
+      {/* FOOTER */}
+      <div
+        className="logout-btn"
+        onClick={handleLogout}
+      >
+        <span className="menu-icon">
+          <FiLogOut />
+        </span>
+
+        {!collapsed && (
+          <p>Logout</p>
+        )}
+      </div>
+
+    </aside>
   );
 }
