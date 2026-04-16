@@ -1,29 +1,175 @@
-.sidebar {
-  width: 220px;
-  height: 100vh;
-  background: #0d47a1;
+body {
+  margin: 0;
+  font-family: "Segoe UI", sans-serif;
+}
+
+/* Main Layout */
+.signup-container {
+  min-height: 100vh;
+  display: flex;
+  background: #f5f7fb;
+}
+
+/* Left Side */
+.left-panel {
+  flex: 1;
+  background: linear-gradient(135deg, #1976d2, #0d47a1);
   color: white;
-  padding: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
 }
 
-.logo {
-  margin-bottom: 30px;
+.left-content {
+  max-width: 400px;
 }
 
-.menu {
-  display: block;
-  padding: 10px;
+.left-content img {
+  width: 80px;
+  margin-bottom: 20px;
+}
+
+.left-content h1 {
+  font-size: 36px;
   margin-bottom: 10px;
-  color: white;
-  text-decoration: none;
-  border-radius: 8px;
 }
 
-.menu:hover {
-  background: rgba(255,255,255,0.2);
+.left-content p {
+  font-size: 16px;
+  line-height: 1.6;
+  opacity: 0.95;
 }
 
-.active {
+/* Right Side */
+.right-panel {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
+}
+
+/* Card */
+.signup-card {
   background: white;
-  color: #0d47a1;
+  width: 100%;
+  max-width: 420px;
+  padding: 30px;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+}
+
+.signup-card h2 {
+  margin-bottom: 5px;
+}
+
+.sub-title {
+  color: #666;
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+
+/* Fields */
+.input-box {
+  display: flex;
+  align-items: center;
+  height: 48px;
+  background: #f4f7fb;
+  border-radius: 12px;
+  padding: 0 14px;
+  margin-bottom: 12px;
+  border: 1px solid transparent;
+}
+
+.input-box:focus-within {
+  border: 1px solid #1976d2;
+  background: white;
+}
+
+.icon {
+  color: #1976d2;
+  margin-right: 10px;
+}
+
+.input-box input,
+.input-box select {
+  width: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 14px;
+}
+
+.input-box select {
+  appearance: none;
+  cursor: pointer;
+}
+
+.select-box {
+  position: relative;
+}
+
+.select-box::after {
+  content: "▾";
+  position: absolute;
+  right: 15px;
+  color: #666;
+}
+
+/* Errors */
+.input-box.error {
+  border: 1px solid red !important;
+}
+
+.error-text {
+  color: red;
+  font-size: 12px;
+  margin: -8px 0 10px 4px;
+}
+
+/* Button */
+.signup-card button {
+  width: 100%;
+  height: 48px;
+  border: none;
+  background: #1976d2;
+  color: white;
+  border-radius: 12px;
+  font-size: 15px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.signup-card button:hover {
+  background: #1259a7;
+}
+
+/* Login link */
+.login-link {
+  margin-top: 14px;
+  text-align: center;
+  font-size: 14px;
+  color: #1976d2;
+  cursor: pointer;
+}
+
+/* Mobile */
+@media (max-width: 900px) {
+  .signup-container {
+    flex-direction: column;
+  }
+
+  .left-panel {
+    padding: 30px 20px;
+    text-align: center;
+  }
+
+  .left-content h1 {
+    font-size: 28px;
+  }
+
+  .right-panel {
+    padding: 20px;
+  }
 }

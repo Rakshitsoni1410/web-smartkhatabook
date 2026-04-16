@@ -7,9 +7,9 @@ import {
   FiLock,
   FiMapPin,
   FiBriefcase,
-  FiHome
+  FiHome,
 } from "react-icons/fi";
-
+import axios from "axios";
 import "./Signup.css";
 
 export default function Signup() {
@@ -17,64 +17,197 @@ export default function Signup() {
 
   const [form, setForm] = useState({
     name: "",
-    mobile: "",
+    phone: "",
     email: "",
-    role: "Retailer",
-    shop: "",
-    type: "",
+    role: "",
+    shopName: "",
+    businessType: "",
     address: "",
     password: "",
-    confirm: ""
+    confirm: "",
   });
 
+  const [errors, setErrors] = useState({});
+
+  // 🔁 handle input
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+    setErrors({ ...errors, [e.target.name]: "" });
   };
 
-  const handleSignup = () => {
-    if (!form.name || !form.mobile || !form.password) {
-      alert("Fill required fields");
+  // ✅ validation
+  const validate = () => {
+    let newErrors = {};
+
+    if (!form.name) newErrors.name = "Name required";
+    if (!form.phone) newErrors.phone = "Phone required";
+    if (!form.email) newErrors.email = "Email required";
+    if (!form.role) newErrors.role = "Select role";
+    if (!form.address) newErrors.address = "Address required";
+    if (!form.password) newErrors.password = "Password required";
+
+    if (form.role !== "Customer") {
+      if (!form.shopName) newErrors.shopName = "Shop name required";
+      if (!form.businessType) newErrors.businessType = "Business type required";
+    }
+
+    if (form.password !== form.confirm) {
+      newErrors.confirm = "Passwords do not match";
+    }
+
+    return newErrors;
+  };
+
+  // 🔥 SIGNUP API
+  const handleSignup = async () => {
+    const validationErrors = validate();
+
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
       return;
     }
 
-    alert("Account Created!");
-    navigate("/");
+    try {
+      const res = await axios.post("http://localhost:4000/api/user/register", {
+        name: form.name,
+        phone: form.phone,
+        email: form.email,
+        role: form.role,
+        shopName: form.shopName,
+        businessType: form.businessType,
+        address: form.address,
+        password: form.password,
+      });
+
+      alert("Account created successfully!");
+
+      navigate("/");
+    } catch (err) {
+      setErrors({
+        phone: err.response?.data?.message || "Signup failed",
+      });
+    }
   };
 
   return (
     <div className="signup-container">
-
-      {/* Top */}
       <div className="top-section">
-        <img src="/icons.svg" className="logo" />
+        <img src="/icons.svg" className="logo" alt="logo" />
         <h2>Create Account</h2>
         <p>Register and manage your business easily</p>
       </div>
 
-      {/* Card */}
       <div className="signup-card">
+        <Input
+          icon={<FiUser />}
+          name="name"
+          placeholder="Full Name"
+          value={form.name}
+          onChange={handleChange}
+          error={errors.name}
+        />
 
-        <Input icon={<FiUser />} name="name" placeholder="Full Name" onChange={handleChange} />
-        <Input icon={<FiPhone />} name="mobile" placeholder="Mobile Number" onChange={handleChange} />
-        <Input icon={<FiMail />} name="email" placeholder="Email Address" onChange={handleChange} />
+        <Input
+          icon={<FiPhone />}
+          name="phone"
+          placeholder="Phone Number"
+          value={form.phone}
+          onChange={handleChange}
+          error={errors.phone}
+        />
 
-        <select name="role" onChange={handleChange}>
-          <option>Retailer</option>
-          <option>Wholesaler</option>
-        </select>
+        <Input
+          icon={<FiMail />}
+          name="email"
+          placeholder="Email"
+          value={form.email}
+          onChange={handleChange}
+          error={errors.email}
+        />
 
-        <Input icon={<FiHome />} name="shop" placeholder="Shop / Business Name" onChange={handleChange} />
+        {/* ROLE */}
+        <SelectBox
+          icon={<FiBriefcase />}
+          name="role"
+          value={form.role}
+          onChange={handleChange}
+          options={["Customer", "Retailer", "Wholesaler"]}
+          error={errors.role}
+        />
 
-        <select name="type" onChange={handleChange}>
-          <option>Business Type</option>
-          <option>Grocery</option>
-          <option>Clothing</option>
-        </select>
+        {/* SHOP */}
+        {form.role !== "Customer" && (
+          <Input
+            icon={<FiHome />}
+            name="shopName"
+            placeholder="Shop Name"
+            value={form.shopName}
+            onChange={handleChange}
+            error={errors.shopName}
+          />
+        )}
 
-        <Input icon={<FiMapPin />} name="address" placeholder="Address" onChange={handleChange} />
+        {/* BUSINESS TYPE */}
+        {form.role !== "Customer" && (
+          <SelectBox
+            icon={<FiHome />}
+            name="businessType"
+            value={form.businessType}
+            onChange={handleChange}
+            options={[
+              "Stationery",
+              "Grocery",
+              "Medical",
+              "Clothing",
+              "Electronics",
+              "Footwear",
+              "Jewelry",
+              "Hardware",
+              "Furniture",
+              "Cosmetic",
+              "Book Store",
+              "Mobile Shop",
+              "Bakery",
+              "Restaurant",
+              "Gift Shop",
+              "General Store",
+              "Sports Shop",
+              "Toy Shop",
+              "Agriculture",
+              "Other",
+            ]}
+            error={errors.businessType}
+          />
+        )}
 
-        <Input icon={<FiLock />} name="password" type="password" placeholder="Password" onChange={handleChange} />
-        <Input icon={<FiLock />} name="confirm" type="password" placeholder="Confirm Password" onChange={handleChange} />
+        <Input
+          icon={<FiMapPin />}
+          name="address"
+          placeholder="Address"
+          value={form.address}
+          onChange={handleChange}
+          error={errors.address}
+        />
+
+        <Input
+          icon={<FiLock />}
+          name="password"
+          type="password"
+          placeholder="Password"
+          value={form.password}
+          onChange={handleChange}
+          error={errors.password}
+        />
+
+        <Input
+          icon={<FiLock />}
+          name="confirm"
+          type="password"
+          placeholder="Confirm Password"
+          value={form.confirm}
+          onChange={handleChange}
+          error={errors.confirm}
+        />
 
         <button onClick={handleSignup}>Create Account</button>
 
@@ -86,12 +219,33 @@ export default function Signup() {
   );
 }
 
-/* Reusable Input */
-function Input({ icon, ...props }) {
+/* Input */
+function Input({ icon, error, ...props }) {
   return (
-    <div className="input-box">
-      <span className="icon">{icon}</span>
-      <input {...props} />
-    </div>
+    <>
+      <div className={`input-box ${error ? "error" : ""}`}>
+        <span className="icon">{icon}</span>
+        <input {...props} />
+      </div>
+      {error && <p className="error-text">{error}</p>}
+    </>
+  );
+}
+
+/* Select */
+function SelectBox({ icon, options, error, ...props }) {
+  return (
+    <>
+      <div className={`input-box select-box ${error ? "error" : ""}`}>
+        <span className="icon">{icon}</span>
+        <select {...props}>
+          <option value="">Select</option>
+          {options.map((o) => (
+            <option key={o}>{o}</option>
+          ))}
+        </select>
+      </div>
+      {error && <p className="error-text">{error}</p>}
+    </>
   );
 }

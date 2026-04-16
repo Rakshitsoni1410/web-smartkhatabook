@@ -133,3 +133,14 @@ body {
     transform: translateY(0);
   }
 }
+/* Error border */
+.input-box.error {
+  border: 1px solid red !important;
+}
+
+/* Error text */
+.error-text {
+  color: red;
+  font-size: 12px;
+  margin: -8px 0 10px 5px;
+}
