@@ -78,6 +78,7 @@ export default function Login() {
           <FiPhone className="icon" />
           <input
             type="text"
+            maxLength="10"
             name="phone"
             placeholder="Phone Number"
             value={form.phone}

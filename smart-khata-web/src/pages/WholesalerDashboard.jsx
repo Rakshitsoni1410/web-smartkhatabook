@@ -1,19 +1,8 @@
-import {
-  useNavigate,
-  useParams,
-} from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
-import {
-  FiArrowLeft,
-  FiPhone,
-  FiMapPin,
-  FiShoppingCart,
-} from "react-icons/fi";
+import { FiArrowLeft, FiPhone, FiMapPin, FiShoppingCart } from "react-icons/fi";
 
-import {
-  useEffect,
-  useState,
-} from "react";
+import { useEffect, useState } from "react";
 
 import axios from "axios";
 import "./Dashboard.css";
@@ -22,64 +11,76 @@ export default function WholesalerDashboard() {
   const navigate = useNavigate();
   const { category } = useParams();
 
-  const [list, setList] =
-    useState([]);
+  const user = JSON.parse(localStorage.getItem("user")) || {};
 
-  const [toast, setToast] =
-    useState("");
+  const [list, setList] = useState([]);
+
+  const [toast, setToast] = useState("");
 
   useEffect(() => {
     fetchWholesalers();
   }, []);
 
-  const fetchWholesalers =
-    async () => {
-      try {
-        const res =
-          await axios.get(
-            `http://localhost:4000/api/user/wholesalers/${category}`
-          );
+  const fetchWholesalers = async () => {
+    try {
+      const res = await axios.get(
+        `http://localhost:4000/api/user/wholesalers/${category}`,
+      );
 
-        setList(
-          res.data.users
-        );
-      } catch (error) {
-        console.log(error);
-      }
-    };
+      setList(res.data.users || []);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  const handleOrder = async (shop) => {
+    try {
+      const userData = JSON.parse(localStorage.getItem("user")) || {};
 
-  const handleOrder = (
-    shop
-  ) => {
-    setToast(
-      `Order request sent to ${shop}`
-    );
+      await axios.post("http://localhost:4000/api/orders/create", {
+        retailerId: userData._id.toString(),
 
-    setTimeout(() => {
-      setToast("");
-    }, 2500);
+        wholesalerId: shop._id.toString(),
+
+        productName: category,
+
+        category: category,
+
+        businessType: category,
+
+        quantity: 10,
+        unit: "pcs",
+        pricePerUnit: 100,
+        totalAmount: 1000,
+      });
+
+      setToast("Order placed successfully");
+
+      setTimeout(() => {
+        setToast("");
+      }, 2500);
+    } catch (error) {
+      console.log(error);
+
+      setToast("Order failed");
+    }
   };
 
   return (
     <div className="dashboard-main">
-
       {/* Toast */}
       {toast && (
         <div
           style={{
-            position:
-              "fixed",
+            position: "fixed",
             top: "20px",
             right: "20px",
-            background:
-              "#16a34a",
-            color:
-              "white",
-            padding:
-              "12px 18px",
-            borderRadius:
-              "12px",
+            background: "#16a34a",
+            color: "white",
+            padding: "12px 18px",
+            borderRadius: "12px",
             zIndex: 999,
+            fontWeight: "600",
+            boxShadow: "0 10px 20px rgba(0,0,0,0.12)",
           }}
         >
           {toast}
@@ -88,144 +89,75 @@ export default function WholesalerDashboard() {
 
       {/* Topbar */}
       <div className="topbar">
-
         <div
           style={{
-            display:
-              "flex",
+            display: "flex",
             gap: "12px",
-            alignItems:
-              "center",
+            alignItems: "center",
           }}
         >
-          <button
-            className="back-btn"
-            onClick={() =>
-              navigate(
-                "/stock"
-              )
-            }
-          >
+          <button className="back-btn" onClick={() => navigate("/stock")}>
             <FiArrowLeft />
           </button>
 
-          <h2>
-            {category} Suppliers
-          </h2>
+          <h2>{category} Suppliers</h2>
         </div>
 
-        <p>
-          Verified wholesalers
-        </p>
-
+        <p>Verified wholesalers</p>
       </div>
 
       {/* Banner */}
       <div className="welcome-card">
+        <h2>Need Extra Stock?</h2>
 
-        <h2>
-          Need Extra Stock?
-        </h2>
+        <p>Order in advance for higher demand.</p>
 
-        <p>
-          You can order in
-          advance for sales,
-          festivals or demand.
-        </p>
-
-        <span>
-          Smart restocking
-          for your business
-        </span>
-
+        <span>Fast supplier access</span>
       </div>
 
       {/* Cards */}
       <div className="stats-grid">
+        {list.map((item) => (
+          <div className="stat-card" key={item._id}>
+            <h3>{item.shopName}</h3>
 
-        {list.map(
-          (item) => (
-            <div
-              className="stat-card"
-              key={
-                item._id
-              }
+            <p>Owner: {item.name}</p>
+
+            <p
+              style={{
+                marginTop: "8px",
+              }}
             >
+              <FiPhone /> {item.phone}
+            </p>
 
-              <h3>
-                {
-                  item.shopName
-                }
-              </h3>
+            <p
+              style={{
+                marginTop: "8px",
+              }}
+            >
+              <FiMapPin /> {item.address}
+            </p>
 
-              <p>
-                Owner:{" "}
-                {
-                  item.name
-                }
-              </p>
-
-              <p
-                style={{
-                  marginTop:
-                    "8px",
-                }}
-              >
-                <FiPhone />{" "}
-                {
-                  item.phone
-                }
-              </p>
-
-              <p
-                style={{
-                  marginTop:
-                    "8px",
-                }}
-              >
-                <FiMapPin />{" "}
-                {
-                  item.address
-                }
-              </p>
-
-              <button
-                onClick={() =>
-                  handleOrder(
-                    item.shopName
-                  )
-                }
-                style={{
-                  marginTop:
-                    "16px",
-                  width:
-                    "100%",
-                  border:
-                    "none",
-                  padding:
-                    "12px",
-                  borderRadius:
-                    "12px",
-                  background:
-                    "linear-gradient(135deg,#7c3aed,#6366f1)",
-                  color:
-                    "white",
-                  fontWeight:
-                    "700",
-                  cursor:
-                    "pointer",
-                }}
-              >
-                <FiShoppingCart />{" "}
-                Order Now
-              </button>
-
-            </div>
-          )
-        )}
-
+            <button
+              onClick={() => handleOrder(item)}
+              style={{
+                marginTop: "16px",
+                width: "100%",
+                border: "none",
+                padding: "12px",
+                borderRadius: "12px",
+                background: "linear-gradient(135deg,#7c3aed,#6366f1)",
+                color: "white",
+                fontWeight: "700",
+                cursor: "pointer",
+              }}
+            >
+              <FiShoppingCart /> Order Now
+            </button>
+          </div>
+        ))}
       </div>
-
     </div>
   );
 }

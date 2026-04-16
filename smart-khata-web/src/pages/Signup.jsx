@@ -160,6 +160,7 @@ export default function Signup() {
             <Input
               icon={<FiPhone />}
               name="phone"
+              maxLength="10"
               placeholder="Phone Number"
               value={form.phone}
               onChange={handleChange}
