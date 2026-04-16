@@ -11,17 +11,12 @@ import {
   FiChevronLeft,
 } from "react-icons/fi";
 
-export default function Sidebar({
-  role = "Retailer",
-}) {
-  const [collapsed, setCollapsed] =
-    useState(false);
+export default function Sidebar({ role = "Retailer" }) {
+  const [collapsed, setCollapsed] = useState(false);
 
-  const navigate =
-    useNavigate();
+  const navigate = useNavigate();
 
-  const isWholesaler =
-    role === "Wholesaler";
+  const isWholesaler = role === "Wholesaler";
 
   const menu = isWholesaler
     ? [
@@ -69,6 +64,11 @@ export default function Sidebar({
         },
         {
           icon: <FiFileText />,
+          name: "Orders",
+          path: "/orders",
+        },
+        {
+          icon: <FiFileText />,
           name: "Ledger",
           path: "/ledger",
         },
@@ -85,110 +85,54 @@ export default function Sidebar({
   };
 
   return (
-    <aside
-      className={`sidebar ${
-        collapsed
-          ? "collapsed"
-          : ""
-      }`}
-    >
-
+    <aside className={`sidebar ${collapsed ? "collapsed" : ""}`}>
       {/* HEADER */}
       <div>
-
         <div className="side-header">
-
           <div className="brand-row">
-
-            <img
-              src="/icons.svg"
-              alt="logo"
-              className="side-logo"
-            />
+            <img src="/icons.svg" alt="logo" className="side-logo" />
 
             {!collapsed && (
               <div>
-                <h2 className="brand">
-                  Smart Khata
-                </h2>
+                <h2 className="brand">Smart Khata</h2>
 
-                <span className="role-badge">
-                  {role}
-                </span>
+                <span className="role-badge">{role}</span>
               </div>
             )}
-
           </div>
 
           <button
             className="toggle-btn"
-            onClick={() =>
-              setCollapsed(
-                !collapsed
-              )
-            }
+            onClick={() => setCollapsed(!collapsed)}
           >
-            {collapsed ? (
-              <FiMenu />
-            ) : (
-              <FiChevronLeft />
-            )}
+            {collapsed ? <FiMenu /> : <FiChevronLeft />}
           </button>
-
         </div>
 
         {/* MENU */}
         <div className="menu-wrap">
+          {menu.map((item, index) => (
+            <div
+              key={index}
+              className={`menu-item ${index === 0 ? "active" : ""}`}
+              onClick={() => navigate(item.path)}
+            >
+              <span className="menu-icon">{item.icon}</span>
 
-          {menu.map(
-            (
-              item,
-              index
-            ) => (
-              <div
-                key={index}
-                className={`menu-item ${
-                  index === 0
-                    ? "active"
-                    : ""
-                }`}
-                onClick={() =>
-                  navigate(
-                    item.path
-                  )
-                }
-              >
-                <span className="menu-icon">
-                  {item.icon}
-                </span>
-
-                {!collapsed && (
-                  <p>
-                    {item.name}
-                  </p>
-                )}
-              </div>
-            )
-          )}
-
+              {!collapsed && <p>{item.name}</p>}
+            </div>
+          ))}
         </div>
-
       </div>
 
       {/* FOOTER */}
-      <div
-        className="logout-btn"
-        onClick={handleLogout}
-      >
+      <div className="logout-btn" onClick={handleLogout}>
         <span className="menu-icon">
           <FiLogOut />
         </span>
 
-        {!collapsed && (
-          <p>Logout</p>
-        )}
+        {!collapsed && <p>Logout</p>}
       </div>
-
     </aside>
   );
 }

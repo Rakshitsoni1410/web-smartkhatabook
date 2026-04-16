@@ -8,43 +8,75 @@ import {
 import "./Dashboard.css";
 
 export default function Orders() {
-  const navigate = useNavigate();
+  const navigate =
+    useNavigate();
 
   const user =
-    JSON.parse(localStorage.getItem("user")) || {};
+    JSON.parse(
+      localStorage.getItem(
+        "user"
+      )
+    ) || {};
 
   const [orders, setOrders] =
     useState([]);
 
   useEffect(() => {
     fetchOrders();
+
+    const timer =
+      setInterval(
+        fetchOrders,
+        5000
+      );
+
+    return () =>
+      clearInterval(
+        timer
+      );
   }, []);
 
-  const fetchOrders = async () => {
-    try {
-      const url =
-        user.role ===
-        "Wholesaler"
-          ? `http://localhost:4000/api/orders/wholesaler/${user._id}`
-          : `http://localhost:4000/api/orders/retailer/${user._id}`;
+  const fetchOrders =
+    async () => {
+      try {
+        const role =
+          user.role
+            ?.trim()
+            .toLowerCase();
 
-      const res =
-        await axios.get(url);
+        const url =
+          role ===
+          "wholesaler"
+            ? `http://localhost:4000/api/orders/wholesaler/${user._id}`
+            : `http://localhost:4000/api/orders/retailer/${user._id}`;
 
-      setOrders(res.data);
-    } catch (error) {
-      console.log(error);
-    }
-  };
+        const res =
+          await axios.get(
+            url
+          );
 
-  const badgeColor = (status) => {
+        setOrders(
+          res.data || []
+        );
+      } catch (error) {
+        console.log(
+          error
+        );
+      }
+    };
+
+  const badgeColor = (
+    status
+  ) => {
     if (
-      status === "pending"
+      status ===
+      "pending"
     )
       return "#f59e0b";
 
     if (
-      status === "approved"
+      status ===
+      "approved"
     )
       return "#3b82f6";
 
@@ -61,7 +93,8 @@ export default function Orders() {
       return "#16a34a";
 
     if (
-      status === "rejected"
+      status ===
+      "rejected"
     )
       return "#ef4444";
 
@@ -71,6 +104,7 @@ export default function Orders() {
   return (
     <div className="dashboard-main">
 
+      {/* Topbar */}
       <div className="topbar">
 
         <div
@@ -110,12 +144,38 @@ export default function Orders() {
 
       </div>
 
+      {/* Empty */}
+      {orders.length ===
+        0 && (
+        <div
+          className="focus-card"
+          style={{
+            textAlign:
+              "center",
+          }}
+        >
+          <h3>
+            No Orders
+            Found
+          </h3>
+
+          <p>
+            Place an
+            order from
+            stock page.
+          </p>
+        </div>
+      )}
+
+      {/* Orders */}
       <div className="stats-grid">
 
         {orders.map(
           (item) => (
             <div
-              key={item._id}
+              key={
+                item._id
+              }
               className="stat-card"
               onClick={() =>
                 navigate(
@@ -151,11 +211,11 @@ export default function Orders() {
               <span
                 style={{
                   marginTop:
-                    "10px",
+                    "12px",
                   display:
                     "inline-block",
                   padding:
-                    "6px 10px",
+                    "6px 12px",
                   borderRadius:
                     "12px",
                   background:
@@ -166,6 +226,8 @@ export default function Orders() {
                     "white",
                   fontSize:
                     "13px",
+                  fontWeight:
+                    "600",
                 }}
               >
                 {
