@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   FiGrid,
   FiBox,
@@ -16,6 +17,9 @@ export default function Sidebar({
   const [collapsed, setCollapsed] =
     useState(false);
 
+  const navigate =
+    useNavigate();
+
   const isWholesaler =
     role === "Wholesaler";
 
@@ -24,50 +28,60 @@ export default function Sidebar({
         {
           icon: <FiGrid />,
           name: "Overview",
+          path: "/dashboard",
         },
         {
           icon: <FiBox />,
           name: "Stock",
+          path: "/stock",
         },
         {
           icon: <FiUsers />,
           name: "Employees",
+          path: "/employees",
         },
         {
           icon: <FiFileText />,
           name: "Orders",
+          path: "/orders",
         },
         {
           icon: <FiStar />,
           name: "Reviews",
+          path: "/reviews",
         },
       ]
     : [
         {
           icon: <FiGrid />,
           name: "Overview",
+          path: "/dashboard",
         },
         {
           icon: <FiBox />,
           name: "Stock",
+          path: "/stock",
         },
         {
           icon: <FiUsers />,
           name: "Customers",
+          path: "/customers",
         },
         {
           icon: <FiFileText />,
           name: "Ledger",
+          path: "/ledger",
         },
         {
           icon: <FiStar />,
           name: "Reports",
+          path: "/reports",
         },
       ];
 
   const handleLogout = () => {
     localStorage.removeItem("user");
-    window.location.href = "/";
+    navigate("/");
   };
 
   return (
@@ -125,6 +139,7 @@ export default function Sidebar({
 
         {/* MENU */}
         <div className="menu-wrap">
+
           {menu.map(
             (
               item,
@@ -137,6 +152,11 @@ export default function Sidebar({
                     ? "active"
                     : ""
                 }`}
+                onClick={() =>
+                  navigate(
+                    item.path
+                  )
+                }
               >
                 <span className="menu-icon">
                   {item.icon}
@@ -150,6 +170,7 @@ export default function Sidebar({
               </div>
             )
           )}
+
         </div>
 
       </div>
