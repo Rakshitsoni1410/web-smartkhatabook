@@ -1,20 +1,25 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+
 import {
   FiGrid,
   FiBox,
   FiUsers,
   FiFileText,
-  FiStar,
   FiLogOut,
   FiMenu,
   FiChevronLeft,
+  FiBarChart2,
+  FiMessageSquare,
 } from "react-icons/fi";
+
+import logo from "../assets/hero.png";
 
 export default function Sidebar({ role = "Retailer" }) {
   const [collapsed, setCollapsed] = useState(false);
 
   const navigate = useNavigate();
+  const location = useLocation();
 
   const isWholesaler = role === "Wholesaler";
 
@@ -41,7 +46,7 @@ export default function Sidebar({ role = "Retailer" }) {
           path: "/orders",
         },
         {
-          icon: <FiStar />,
+          icon: <FiMessageSquare />,
           name: "Reviews",
           path: "/reviews",
         },
@@ -63,6 +68,11 @@ export default function Sidebar({ role = "Retailer" }) {
           path: "/customers",
         },
         {
+          icon: <FiUsers />,
+          name: "Employees",
+          path: "/employees",
+        },
+        {
           icon: <FiFileText />,
           name: "Orders",
           path: "/orders",
@@ -73,29 +83,31 @@ export default function Sidebar({ role = "Retailer" }) {
           path: "/ledger",
         },
         {
-          icon: <FiStar />,
+          icon: <FiBarChart2 />,
           name: "Reports",
           path: "/reports",
         },
         {
-          icon: <FiStar />,
+          icon: <FiMessageSquare />,
           name: "Reviews",
           path: "/reviews",
         },
       ];
 
   const handleLogout = () => {
-    localStorage.removeItem("user");
+    localStorage.clear();
+    sessionStorage.clear();
+
     navigate("/");
   };
 
   return (
     <aside className={`sidebar ${collapsed ? "collapsed" : ""}`}>
-      {/* HEADER */}
       <div>
+        {/* HEADER */}
         <div className="side-header">
           <div className="brand-row">
-            <img src="/icons.svg" alt="logo" className="side-logo" />
+            <img src={logo} alt="logo" className="side-logo" />
 
             {!collapsed && (
               <div>
@@ -119,7 +131,10 @@ export default function Sidebar({ role = "Retailer" }) {
           {menu.map((item, index) => (
             <div
               key={index}
-              className={`menu-item ${index === 0 ? "active" : ""}`}
+              title={item.name}
+              className={`menu-item ${
+                location.pathname === item.path ? "active" : ""
+              }`}
               onClick={() => navigate(item.path)}
             >
               <span className="menu-icon">{item.icon}</span>
@@ -131,12 +146,20 @@ export default function Sidebar({ role = "Retailer" }) {
       </div>
 
       {/* FOOTER */}
-      <div className="logout-btn" onClick={handleLogout}>
-        <span className="menu-icon">
-          <FiLogOut />
-        </span>
+      <div>
+        {!collapsed && (
+          <div className="user-profile">
+            <div className="user-avatar">R</div>
+          </div>
+        )}
 
-        {!collapsed && <p>Logout</p>}
+        <div className="logout-btn" onClick={handleLogout}>
+          <span className="menu-icon">
+            <FiLogOut />
+          </span>
+
+          {!collapsed && <p>Logout</p>}
+        </div>
       </div>
     </aside>
   );

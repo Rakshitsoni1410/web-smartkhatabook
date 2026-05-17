@@ -8,6 +8,8 @@ import WholesalerDashboard from "./pages/WholesalerDashboard";
 import Orders from "./pages/Orders";
 import OrderDetails from "./pages/OrderDetails";
 import Reviews from "./pages/Reviews";
+import Employee from "./pages/Employee";
+import EmployeeDetail from "./pages/EmployeeDetail";
 export default function App() {
   return (
     <Routes>
@@ -20,7 +22,8 @@ export default function App() {
       <Route path="/stock" element={<Stock />} />
 
       <Route path="/wholesalers/:category" element={<WholesalerDashboard />} />
-
+      <Route path="/employees" element={<Employee />} />
+<Route path="/employee-detail" element={<EmployeeDetail />} />
       {/* Orders */}
       <Route path="/orders" element={<Orders />} />
 

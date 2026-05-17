@@ -1,0 +1,49 @@
+.detail-page {
+  padding: 24px;
+  background: #f4f7fb;
+  min-height: 100vh;
+}
+
+.detail-header {
+  background: linear-gradient(to right, #2563eb, #0ea5e9);
+  color: white;
+  padding: 30px;
+  border-radius: 20px;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.detail-card {
+  background: white;
+  padding: 20px;
+  border-radius: 18px;
+}
+
+.attendance-section {
+  margin-top: 25px;
+}
+
+.attendance-card {
+  padding: 16px;
+  border-radius: 14px;
+  margin-top: 12px;
+  color: white;
+  font-weight: bold;
+}
+
+.present {
+  background: green;
+}
+
+.absent {
+  background: red;
+}
+
+.leave {
+  background: orange;
+}
