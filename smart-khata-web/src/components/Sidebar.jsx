@@ -1,48 +1,94 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
-  FiGrid, FiBox, FiUsers, FiFileText, FiLogOut,
-  FiMenu, FiChevronLeft, FiBarChart2, FiMessageSquare,
-  FiChevronDown, FiSun, FiMoon,
+  FiGrid,
+  FiBox,
+  FiUsers,
+  FiFileText,
+  FiLogOut,
+  FiMenu,
+  FiChevronLeft,
+  FiBarChart2,
+  FiMessageSquare,
+  FiChevronDown,
+  FiSun,
+  FiMoon,
 } from "react-icons/fi";
 import logo from "../assets/hero.png";
 
 /* ── menu config ── */
 const WHOLESALER_MENU = [
-  { icon: <FiGrid />,         name: "Overview",   path: "/dashboard", color: "#6366f1" },
-  { icon: <FiBox />,          name: "Stock",       path: "/stock",     color: "#f59e0b" },
-  { icon: <FiUsers />,        name: "Employees",   path: "/employees", color: "#22c55e" },
-  { icon: <FiFileText />,     name: "Orders",      path: "/orders",    color: "#0ea5e9" },
-  { icon: <FiMessageSquare />,name: "Reviews",     path: "/reviews",   color: "#ec4899" },
+  { icon: <FiGrid />, name: "Overview", path: "/dashboard", color: "#6366f1" },
+  { icon: <FiBox />, name: "Stock", path: "/stock", color: "#f59e0b" },
+  {
+    icon: <FiUsers />,
+    name: "Employees",
+    path: "/employees",
+    color: "#22c55e",
+  },
+  { icon: <FiFileText />, name: "Orders", path: "/orders", color: "#0ea5e9" },
+  {
+    icon: <FiMessageSquare />,
+    name: "Reviews",
+    path: "/reviews",
+    color: "#ec4899",
+  },
 ];
 
 const RETAILER_MENU = [
-  { icon: <FiGrid />,         name: "Overview",   path: "/dashboard", color: "#6366f1" },
-  { icon: <FiBox />,          name: "Stock",       path: "/stock",     color: "#f59e0b" },
-  { icon: <FiUsers />,        name: "Customers",   path: "/customers", color: "#8b5cf6" },
-  { icon: <FiUsers />,        name: "Employees",   path: "/employees", color: "#22c55e" },
-  { icon: <FiFileText />,     name: "Orders",      path: "/orders",    color: "#0ea5e9" },
-  { icon: <FiFileText />,     name: "Ledger",      path: "/ledger",    color: "#f97316" },
-  { icon: <FiBarChart2 />,    name: "Reports",     path: "/reports",   color: "#14b8a6" },
-  { icon: <FiMessageSquare />,name: "Reviews",     path: "/reviews",   color: "#ec4899" },
+  { icon: <FiGrid />, name: "Overview", path: "/dashboard", color: "#6366f1" },
+  { icon: <FiBox />, name: "Stock", path: "/stock", color: "#f59e0b" },
+  {
+    icon: <FiUsers />,
+    name: "Customers",
+    path: "/customers",
+    color: "#8b5cf6",
+  },
+  {
+    icon: <FiUsers />,
+    name: "Employees",
+    path: "/employees",
+    color: "#22c55e",
+  },
+  { icon: <FiFileText />, name: "Orders", path: "/orders", color: "#0ea5e9" },
+  { icon: <FiFileText />, name: "Ledger", path: "/ledger", color: "#f97316" },
+  {
+    icon: <FiBarChart2 />,
+    name: "Reports",
+    path: "/reports",
+    color: "#14b8a6",
+  },
+  {
+    icon: <FiMessageSquare />,
+    name: "Reviews",
+    path: "/reviews",
+    color: "#ec4899",
+  },
 ];
 
 /* ── tooltip for collapsed mode ── */
 function Tooltip({ label, children }) {
   return (
-    <div style={{ position: "relative", display: "flex" }} className="tooltip-wrap">
+    <div
+      style={{ position: "relative", display: "flex" }}
+      className="tooltip-wrap"
+    >
       {children}
       <span className="tooltip-label">{label}</span>
     </div>
   );
 }
 
-export default function Sidebar({ role = "Retailer", userName = "Rakshit", userEmail = "rakshitsoni@gmail.com" }) {
-  const [collapsed, setCollapsed]     = useState(false);
-  const [darkMode, setDarkMode]       = useState(true);
+export default function Sidebar({
+  role = "Retailer",
+  userName = "Rakshit",
+  userEmail = "rakshitsoni@gmail.com",
+}) {
+  const [collapsed, setCollapsed] = useState(false);
+  const [darkMode, setDarkMode] = useState(true);
   const [showProfile, setShowProfile] = useState(false);
-  const navigate  = useNavigate();
-  const location  = useLocation();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const menu = role === "Wholesaler" ? WHOLESALER_MENU : RETAILER_MENU;
 
@@ -54,7 +100,7 @@ export default function Sidebar({ role = "Retailer", userName = "Rakshit", userE
 
   const initials = userName
     .split(" ")
-    .map(w => w[0])
+    .map((w) => w[0])
     .join("")
     .toUpperCase()
     .slice(0, 2);
@@ -144,7 +190,11 @@ export default function Sidebar({ role = "Retailer", userName = "Rakshit", userE
 
       <aside
         className={`sk-sidebar ${collapsed ? "closed" : "open"}`}
-        style={{ background: t.bg, color: t.text, borderRight: `1px solid ${t.border}` }}
+        style={{
+          background: t.bg,
+          color: t.text,
+          borderRight: `1px solid ${t.border}`,
+        }}
       >
         {/* ── HEADER ── */}
         <div>
@@ -154,13 +204,17 @@ export default function Sidebar({ role = "Retailer", userName = "Rakshit", userE
               {!collapsed && (
                 <div className="sk-brand-text">
                   <h2 style={{ color: t.text }}>Smart Khata</h2>
-                  <span style={{ background: t.badgeBg, color: t.badgeText }}>{role}</span>
+                  <span style={{ background: t.badgeBg, color: t.badgeText }}>
+                    {role}
+                  </span>
                 </div>
               )}
             </div>
-            <button className="sk-toggle"
+            <button
+              className="sk-toggle"
               style={{ background: t.toggleBg, color: t.textMuted }}
-              onClick={() => setCollapsed(!collapsed)}>
+              onClick={() => setCollapsed(!collapsed)}
+            >
               {collapsed ? <FiMenu /> : <FiChevronLeft />}
             </button>
           </div>
@@ -170,32 +224,54 @@ export default function Sidebar({ role = "Retailer", userName = "Rakshit", userE
           {/* ── MENU ── */}
           <div className="sk-scroll">
             {!collapsed && (
-              <div className="sk-section-label" style={{ color: t.textMuted }}>Main Menu</div>
+              <div className="sk-section-label" style={{ color: t.textMuted }}>
+                Main Menu
+              </div>
             )}
             <div className="sk-menu">
               {menu.map((item, i) => {
                 const active = location.pathname === item.path;
                 const itemEl = (
-                  <div key={i}
+                  <div
+                    key={i}
                     className={`sk-item ${active ? "active" : ""}`}
                     style={{
                       background: active ? t.activeBg : "transparent",
                       color: active ? item.color : t.textMuted,
                     }}
                     onClick={() => navigate(item.path)}
-                    onMouseEnter={e => { if (!active) e.currentTarget.style.background = t.hoverBg; }}
-                    onMouseLeave={e => { if (!active) e.currentTarget.style.background = "transparent"; }}
+                    onMouseEnter={(e) => {
+                      if (!active) e.currentTarget.style.background = t.hoverBg;
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!active)
+                        e.currentTarget.style.background = "transparent";
+                    }}
                   >
-                    {active && <div className="sk-active-bar" style={{ background: item.color }} />}
-                    <span className="sk-item-icon" style={{ color: active ? item.color : t.textMuted }}>
+                    {active && (
+                      <div
+                        className="sk-active-bar"
+                        style={{ background: item.color }}
+                      />
+                    )}
+                    <span
+                      className="sk-item-icon"
+                      style={{ color: active ? item.color : t.textMuted }}
+                    >
                       {item.icon}
                     </span>
-                    {!collapsed && <span className="sk-item-label">{item.name}</span>}
+                    {!collapsed && (
+                      <span className="sk-item-label">{item.name}</span>
+                    )}
                   </div>
                 );
-                return collapsed
-                  ? <Tooltip key={i} label={item.name}>{itemEl}</Tooltip>
-                  : itemEl;
+                return collapsed ? (
+                  <Tooltip key={i} label={item.name}>
+                    {itemEl}
+                  </Tooltip>
+                ) : (
+                  itemEl
+                );
               })}
             </div>
           </div>
@@ -203,44 +279,91 @@ export default function Sidebar({ role = "Retailer", userName = "Rakshit", userE
 
         {/* ── BOTTOM ── */}
         <div className="sk-bottom">
-          <div className="sk-divider" style={{ background: t.border, margin: "0 14px 8px" }} />
+          <div
+            className="sk-divider"
+            style={{ background: t.border, margin: "0 14px 8px" }}
+          />
 
           {/* dark mode toggle */}
           {collapsed ? (
             <Tooltip label={darkMode ? "Light Mode" : "Dark Mode"}>
-              <div className="sk-item" style={{ margin: "0 10px", color: t.textMuted }}
+              <div
+                className="sk-item"
+                style={{ margin: "0 10px", color: t.textMuted }}
                 onClick={() => setDarkMode(!darkMode)}
-                onMouseEnter={e => e.currentTarget.style.background = t.hoverBg}
-                onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-                <span className="sk-item-icon">{darkMode ? <FiSun /> : <FiMoon />}</span>
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.background = t.hoverBg)
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.background = "transparent")
+                }
+              >
+                <span className="sk-item-icon">
+                  {darkMode ? <FiSun /> : <FiMoon />}
+                </span>
               </div>
             </Tooltip>
           ) : (
-            <div className="sk-item" style={{ margin: "0 10px", color: t.textMuted }}
+            <div
+              className="sk-item"
+              style={{ margin: "0 10px", color: t.textMuted }}
               onClick={() => setDarkMode(!darkMode)}
-              onMouseEnter={e => e.currentTarget.style.background = t.hoverBg}
-              onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-              <span className="sk-item-icon">{darkMode ? <FiSun /> : <FiMoon />}</span>
-              {!collapsed && <span className="sk-item-label">{darkMode ? "Light Mode" : "Dark Mode"}</span>}
+              onMouseEnter={(e) =>
+                (e.currentTarget.style.background = t.hoverBg)
+              }
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.background = "transparent")
+              }
+            >
+              <span className="sk-item-icon">
+                {darkMode ? <FiSun /> : <FiMoon />}
+              </span>
+              {!collapsed && (
+                <span className="sk-item-label">
+                  {darkMode ? "Light Mode" : "Dark Mode"}
+                </span>
+              )}
             </div>
           )}
 
           {/* profile */}
           <div style={{ position: "relative" }}>
             {showProfile && !collapsed && (
-              <div className="sk-profile-dropdown"
-                style={{ background: t.dropdownBg, borderColor: t.border }}>
-                <div className="sk-dropdown-item" style={{ color: t.text }}
-                  onMouseEnter={e => e.currentTarget.style.background = t.hoverBg}
-                  onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-                  onClick={() => { setShowProfile(false); navigate("/profile"); }}>
+              <div
+                className="sk-profile-dropdown"
+                style={{ background: t.dropdownBg, borderColor: t.border }}
+              >
+                <div
+                  className="sk-dropdown-item"
+                  style={{ color: t.text }}
+                  onMouseEnter={(e) =>
+                    (e.currentTarget.style.background = t.hoverBg)
+                  }
+                  onMouseLeave={(e) =>
+                    (e.currentTarget.style.background = "transparent")
+                  }
+                  onClick={() => {
+                    setShowProfile(false);
+                    navigate("/profile");
+                  }}
+                >
                   <FiUsers size={14} /> View Profile
                 </div>
-                <div className="sk-divider" style={{ background: t.border, margin: "0" }} />
-                <div className="sk-dropdown-item" style={{ color: "#ef4444" }}
-                  onMouseEnter={e => e.currentTarget.style.background = "#ef444415"}
-                  onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-                  onClick={handleLogout}>
+                <div
+                  className="sk-divider"
+                  style={{ background: t.border, margin: "0" }}
+                />
+                <div
+                  className="sk-dropdown-item"
+                  style={{ color: "#ef4444" }}
+                  onMouseEnter={(e) =>
+                    (e.currentTarget.style.background = "#ef444415")
+                  }
+                  onMouseLeave={(e) =>
+                    (e.currentTarget.style.background = "transparent")
+                  }
+                  onClick={handleLogout}
+                >
                   <FiLogOut size={14} /> Logout
                 </div>
               </div>
@@ -248,27 +371,62 @@ export default function Sidebar({ role = "Retailer", userName = "Rakshit", userE
 
             {collapsed ? (
               <Tooltip label={userName}>
-                <div className="sk-profile-btn" onClick={() => setShowProfile(!showProfile)}
-                  onMouseEnter={e => e.currentTarget.style.background = t.hoverBg}
-                  onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-                  <div className="sk-avatar" style={{ background: t.avatarBg, color: t.avatarText }}>
+                <div
+                  className="sk-profile-btn"
+                  onClick={() => setShowProfile(!showProfile)}
+                  onMouseEnter={(e) =>
+                    (e.currentTarget.style.background = t.hoverBg)
+                  }
+                  onMouseLeave={(e) =>
+                    (e.currentTarget.style.background = "transparent")
+                  }
+                >
+                  <div
+                    className="sk-avatar"
+                    style={{ background: t.avatarBg, color: t.avatarText }}
+                  >
                     {initials}
                   </div>
                 </div>
               </Tooltip>
             ) : (
-              <div className="sk-profile-btn" onClick={() => setShowProfile(!showProfile)}
-                onMouseEnter={e => e.currentTarget.style.background = t.hoverBg}
-                onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-                <div className="sk-avatar" style={{ background: t.avatarBg, color: t.avatarText }}>
+              <div
+                className="sk-profile-btn"
+                onClick={() => setShowProfile(!showProfile)}
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.background = t.hoverBg)
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.background = "transparent")
+                }
+              >
+                <div
+                  className="sk-avatar"
+                  style={{ background: t.avatarBg, color: t.avatarText }}
+                >
                   {initials}
                 </div>
                 <div className="sk-profile-info">
-                  <div className="sk-profile-name" style={{ color: t.text }}>{userName}</div>
-                  <div className="sk-profile-email" style={{ color: t.textMuted }}>{userEmail}</div>
+                  <div className="sk-profile-name" style={{ color: t.text }}>
+                    {userName}
+                  </div>
+                  <div
+                    className="sk-profile-email"
+                    style={{ color: t.textMuted }}
+                  >
+                    {userEmail}
+                  </div>
                 </div>
-                <FiChevronDown size={13} style={{ color: t.textMuted, marginLeft: "auto",
-                  transform: showProfile ? "rotate(180deg)" : "rotate(0deg)", transition: "transform .2s", flexShrink: 0 }} />
+                <FiChevronDown
+                  size={13}
+                  style={{
+                    color: t.textMuted,
+                    marginLeft: "auto",
+                    transform: showProfile ? "rotate(180deg)" : "rotate(0deg)",
+                    transition: "transform .2s",
+                    flexShrink: 0,
+                  }}
+                />
               </div>
             )}
           </div>
@@ -276,11 +434,20 @@ export default function Sidebar({ role = "Retailer", userName = "Rakshit", userE
           {/* logout shortcut when collapsed */}
           {collapsed && (
             <Tooltip label="Logout">
-              <div className="sk-logout" style={{ color: "#ef4444" }}
-                onMouseEnter={e => e.currentTarget.style.background = "#ef444415"}
-                onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-                onClick={handleLogout}>
-                <span className="sk-item-icon"><FiLogOut /></span>
+              <div
+                className="sk-logout"
+                style={{ color: "#ef4444" }}
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.background = "#ef444415")
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.background = "transparent")
+                }
+                onClick={handleLogout}
+              >
+                <span className="sk-item-icon">
+                  <FiLogOut />
+                </span>
               </div>
             </Tooltip>
           )}
