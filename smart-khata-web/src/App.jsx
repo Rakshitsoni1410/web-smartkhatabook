@@ -10,6 +10,8 @@ import OrderDetails from "./pages/OrderDetails";
 import Reviews from "./pages/Reviews";
 import Employee from "./pages/Employee";
 import EmployeeDetail from "./pages/EmployeeDetail";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 export default function App() {
   return (
     <Routes>
@@ -23,10 +25,14 @@ export default function App() {
 
       <Route path="/wholesalers/:category" element={<WholesalerDashboard />} />
       <Route path="/employees" element={<Employee />} />
-<Route path="/employee-detail" element={<EmployeeDetail />} />
+      <Route path="/employee-detail" element={<EmployeeDetail />} />
       {/* Orders */}
       <Route path="/orders" element={<Orders />} />
-
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route
+  path="/reset-password/:token"
+  element={<ResetPassword />}
+/>
       <Route path="/order/:id" element={<OrderDetails />} />
       <Route path="/reviews" element={<Reviews />} />
     </Routes>

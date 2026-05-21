@@ -132,6 +132,26 @@ export default function Login() {
 
         <button onClick={handleLogin}>Login</button>
 
+        <p
+          style={{
+            textAlign: "center",
+            marginTop: "12px",
+            fontSize: "13px",
+            color: "#94a3b8",
+          }}
+        >
+          <span
+            style={{
+              color: "#6366f1",
+              fontWeight: "600",
+              cursor: "pointer",
+            }}
+            onClick={() => navigate("/forgot-password")}
+          >
+            Forgot Password?
+          </span>
+        </p>
+
         <p className="signup">
           Don’t have an account?
           <span onClick={() => navigate("/signup")}> Sign up</span>
