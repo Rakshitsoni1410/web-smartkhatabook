@@ -54,7 +54,7 @@ export default function Login() {
 
       localStorage.setItem("user", JSON.stringify(res.data.user));
 
-      setToast("Login Successful ✅");
+      setToast("Login Successful ");
 
       setTimeout(() => {
         navigate("/dashboard");
