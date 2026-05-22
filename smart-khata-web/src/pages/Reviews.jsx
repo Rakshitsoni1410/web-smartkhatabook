@@ -31,7 +31,7 @@ export default function Reviews() {
     fetchReviews();
 
     if (user.role === "Retailer") {
-      fetchWholesalers();
+      fetchSuggestions();
     }
   }, []);
 
@@ -47,18 +47,24 @@ export default function Reviews() {
     }
   };
 
-  const fetchWholesalers = async () => {
-    try {
-      const res = await axios.get(
-        `http://localhost:4000/api/user/wholesalers/${user.businessType}`,
-      );
+const fetchSuggestions = async () => {
 
-      setWholesalers(res.data.users || []);
-    } catch (error) {
-      console.log(error);
-    }
-  };
+  try {
 
+    const res = await axios.get(
+      `http://localhost:4000/api/reviews/suggestions/${user._id}`
+    );
+
+    setWholesalers(
+      res.data.users || []
+    );
+
+  } catch (error) {
+
+    console.log(error);
+
+  }
+};
   const submitReview = async () => {
     try {
       await axios.post("http://localhost:4000/api/reviews/add", {
