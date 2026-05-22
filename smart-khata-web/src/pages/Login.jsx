@@ -1,162 +1,199 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FiPhone, FiLock } from "react-icons/fi";
+import { FiPhone, FiLock, FiEye, FiEyeOff, FiArrowRight } from "react-icons/fi";
 import axios from "axios";
 import "./Login.css";
 
 export default function Login() {
   const navigate = useNavigate();
 
-  const [form, setForm] = useState({
-    phone: "",
-    password: "",
-  });
-
+  const [form, setForm] = useState({ phone: "", password: "" });
   const [errors, setErrors] = useState({});
-
+  const [showPassword, setShowPassword] = useState(false);
   const [toast, setToast] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
-    setForm({
-      ...form,
-      [e.target.name]: e.target.value,
-    });
-
-    setErrors({
-      ...errors,
-      [e.target.name]: "",
-    });
+    setForm({ ...form, [e.target.name]: e.target.value });
+    setErrors({ ...errors, [e.target.name]: "" });
   };
 
   const validate = () => {
-    let newErrors = {};
-
-    if (!form.phone) newErrors.phone = "Phone is required";
-
-    if (!form.password) newErrors.password = "Password is required";
-
-    return newErrors;
+    const e = {};
+    if (!form.phone.trim()) e.phone = "Phone number is required";
+    else if (form.phone.length < 10) e.phone = "Enter a valid 10-digit number";
+    if (!form.password) e.password = "Password is required";
+    return e;
   };
 
   const handleLogin = async () => {
-    const validationErrors = validate();
+    const errs = validate();
+    if (Object.keys(errs).length > 0) { setErrors(errs); return; }
 
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      return;
-    }
-
+    setLoading(true);
     try {
       const res = await axios.post("http://localhost:4000/api/user/login", {
         phone: form.phone,
         password: form.password,
       });
-
       localStorage.setItem("user", JSON.stringify(res.data.user));
-
-      setToast("Login Successful ");
-
-      setTimeout(() => {
-        navigate("/dashboard");
-      }, 1200);
+      setToast("Login successful!");
+      setTimeout(() => navigate("/dashboard"), 1200);
     } catch (err) {
-      setErrors({
-        password: err.response?.data?.message || "Login failed",
-      });
+      setErrors({ password: err.response?.data?.message || "Invalid phone or password" });
+    } finally {
+      setLoading(false);
     }
   };
 
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") handleLogin();
+  };
+
   return (
-    <div className="login-container">
+    <div className="login-page">
+
       {/* Toast */}
       {toast && (
-        <div
-          style={{
-            position: "fixed",
-            top: "20px",
-            right: "20px",
-            background: "#16a34a",
-            color: "white",
-            padding: "12px 18px",
-            borderRadius: "12px",
-            zIndex: 999,
-            fontWeight: "600",
-            boxShadow: "0 10px 20px rgba(0,0,0,0.12)",
-          }}
-        >
+        <div className="toast">
+          <span className="toast-dot" />
           {toast}
         </div>
       )}
 
-      <div className="top-section">
-        <img src="/logos.svg" alt="logo" className="logo" />
+      {/* LEFT PANEL */}
+      <div className="login-left">
+        <div className="left-inner">
+          <div className="brand">
+            <div className="brand-icon">
+              <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+              </svg>
+            </div>
+            <span className="brand-name">Smart Khatabook</span>
+          </div>
 
-        <h1>SMART KHATABOOK</h1>
+          <div className="left-hero">
+            <h1>Track. Manage. Profit.</h1>
+            <p>Your complete business accounting platform — billing, customers, stock and reports in one place.</p>
+          </div>
 
-        <p>Track. Manage. Profit.</p>
-      </div>
+          <div className="stat-grid">
+            <div className="stat-card">
+              <span className="stat-num">10K+</span>
+              <span className="stat-label">Businesses</span>
+            </div>
+            <div className="stat-card">
+              <span className="stat-num">₹50Cr+</span>
+              <span className="stat-label">Transactions</span>
+            </div>
+            <div className="stat-card">
+              <span className="stat-num">4.8★</span>
+              <span className="stat-label">Rating</span>
+            </div>
+          </div>
 
-      <div className="login-card">
-        <h2>Welcome Back</h2>
-
-        <p className="sub-text">Login to continue to your account</p>
-
-        <div className={`input-box ${errors.phone ? "error" : ""}`}>
-          <FiPhone className="icon" />
-
-          <input
-            type="text"
-            maxLength="10"
-            name="phone"
-            placeholder="Phone Number"
-            value={form.phone}
-            onChange={handleChange}
-          />
+          <div className="left-quote">
+            <p>"Smart Khatabook transformed how I manage my store. Everything is so much simpler now."</p>
+            <div className="quote-author">
+              <div className="author-avatar">RK</div>
+              <div>
+                <strong>Ramesh Kumar</strong>
+                <span>Grocery Store, Surat</span>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {errors.phone && <p className="error-text">{errors.phone}</p>}
-
-        <div className={`input-box ${errors.password ? "error" : ""}`}>
-          <FiLock className="icon" />
-
-          <input
-            type="password"
-            name="password"
-            placeholder="Password"
-            value={form.password}
-            onChange={handleChange}
-          />
+        <div className="left-decor" aria-hidden="true">
+          <div className="decor-circle c1" />
+          <div className="decor-circle c2" />
+          <div className="decor-circle c3" />
         </div>
-
-        {errors.password && <p className="error-text">{errors.password}</p>}
-
-        <button onClick={handleLogin}>Login</button>
-
-        <p
-          style={{
-            textAlign: "center",
-            marginTop: "12px",
-            fontSize: "13px",
-            color: "#94a3b8",
-          }}
-        >
-          <span
-            style={{
-              color: "#6366f1",
-              fontWeight: "600",
-              cursor: "pointer",
-            }}
-            onClick={() => navigate("/forgot-password")}
-          >
-            Forgot Password?
-          </span>
-        </p>
-
-        <p className="signup">
-          Don’t have an account?
-          <span onClick={() => navigate("/signup")}> Sign up</span>
-        </p>
       </div>
+
+      {/* RIGHT PANEL */}
+      <div className="login-right">
+        <div className="login-card">
+
+          <div className="card-header">
+            <div className="welcome-badge">Welcome back 👋</div>
+            <h2>Sign in to your account</h2>
+            <p>Enter your credentials to continue</p>
+          </div>
+
+          <div className="form-body">
+            <div className="field-wrap">
+              <label className="field-label">Phone number</label>
+              <div className={`field-box ${errors.phone ? "has-error" : ""}`}>
+                <FiPhone className="field-icon" />
+                <input
+                  type="tel"
+                  name="phone"
+                  placeholder="Enter 10-digit number"
+                  value={form.phone}
+                  onChange={handleChange}
+                  onKeyDown={handleKeyDown}
+                  maxLength="10"
+                  autoComplete="tel"
+                />
+              </div>
+              {errors.phone && <p className="field-error">{errors.phone}</p>}
+            </div>
+
+            <div className="field-wrap">
+              <div className="label-row">
+                <label className="field-label">Password</label>
+                <span className="forgot-link" onClick={() => navigate("/forgot-password")}>
+                  Forgot password?
+                </span>
+              </div>
+              <div className={`field-box ${errors.password ? "has-error" : ""}`}>
+                <FiLock className="field-icon" />
+                <input
+                  type={showPassword ? "text" : "password"}
+                  name="password"
+                  placeholder="Enter your password"
+                  value={form.password}
+                  onChange={handleChange}
+                  onKeyDown={handleKeyDown}
+                  autoComplete="current-password"
+                />
+                <button
+                  type="button"
+                  className="eye-btn"
+                  onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? <FiEyeOff size={15} /> : <FiEye size={15} />}
+                </button>
+              </div>
+              {errors.password && <p className="field-error">{errors.password}</p>}
+            </div>
+
+            <button
+              className={`btn-primary ${loading ? "loading" : ""}`}
+              onClick={handleLogin}
+              disabled={loading}
+            >
+              {loading ? (
+                <span className="spinner" />
+              ) : (
+                <>Sign in <FiArrowRight size={15} /></>
+              )}
+            </button>
+          </div>
+
+          <p className="signup-hint">
+            Don't have an account?{" "}
+            <span className="signup-link" onClick={() => navigate("/signup")}>
+              Create account
+            </span>
+          </p>
+        </div>
+      </div>
+
     </div>
   );
 }
