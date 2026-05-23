@@ -7,6 +7,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
 import {
+  FiArrowLeft,
   FiUsers,
   FiSearch,
   FiPlus,
@@ -31,11 +32,9 @@ export default function Employees() {
 
   const [employees, setEmployees] = useState([]);
 
-  const [showPaymentModal, setShowPaymentModal] =
-    useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
-  const [selectedEmployee, setSelectedEmployee] =
-    useState(null);
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
 
   const [paymentData, setPaymentData] = useState({
     amount: "",
@@ -71,7 +70,7 @@ export default function Employees() {
   // FILTER
   // =========================
   const filteredEmployees = employees.filter((emp) =>
-    emp.name.toLowerCase().includes(search.toLowerCase())
+    emp.name.toLowerCase().includes(search.toLowerCase()),
   );
 
   // =========================
@@ -79,15 +78,12 @@ export default function Employees() {
   // =========================
   const totalSalary = employees.reduce(
     (acc, emp) => acc + Number(emp.salary || 0),
-    0
+    0,
   );
 
   const totalPaid = employees.reduce((acc, emp) => {
     const paid =
-      emp.payments?.reduce(
-        (sum, p) => sum + Number(p.amount),
-        0
-      ) || 0;
+      emp.payments?.reduce((sum, p) => sum + Number(p.amount), 0) || 0;
 
     return acc + paid;
   }, 0);
@@ -97,10 +93,7 @@ export default function Employees() {
   const presentEmployees = employees.filter((emp) => {
     if (!emp.attendance?.length) return false;
 
-    return (
-      emp.attendance[emp.attendance.length - 1]
-        ?.status === "Present"
-    );
+    return emp.attendance[emp.attendance.length - 1]?.status === "Present";
   }).length;
 
   // =========================
@@ -119,23 +112,14 @@ export default function Employees() {
   // =========================
   // ATTENDANCE
   // =========================
-  const handleAttendance = async (
-    id,
-    currentStatus
-  ) => {
+  const handleAttendance = async (id, currentStatus) => {
     try {
-      const newStatus =
-        currentStatus === "Present"
-          ? "Absent"
-          : "Present";
+      const newStatus = currentStatus === "Present" ? "Absent" : "Present";
 
-      await axios.post(
-        `${API}/attendance/${id}`,
-        {
-          status: newStatus,
-          date: new Date().toISOString(),
-        }
-      );
+      await axios.post(`${API}/attendance/${id}`, {
+        status: newStatus,
+        date: new Date().toISOString(),
+      });
 
       fetchEmployees();
     } catch (err) {
@@ -153,10 +137,7 @@ export default function Employees() {
         return;
       }
 
-      await axios.post(
-        `${API}/payment/${selectedEmployee._id}`,
-        paymentData
-      );
+      await axios.post(`${API}/payment/${selectedEmployee._id}`, paymentData);
 
       fetchEmployees();
 
@@ -187,20 +168,13 @@ export default function Employees() {
   // =========================
   const handleSubmit = async () => {
     try {
-      if (
-        !formData.name ||
-        !formData.phone ||
-        !formData.salary
-      ) {
+      if (!formData.name || !formData.phone || !formData.salary) {
         alert("Please fill all fields");
         return;
       }
 
       if (editId) {
-        await axios.put(
-          `${API}/update/${editId}`,
-          formData
-        );
+        await axios.put(`${API}/update/${editId}`, formData);
       } else {
         await axios.post(`${API}/add`, {
           ...formData,
@@ -641,17 +615,42 @@ body{
       `}</style>
 
       <div className="employee-page">
-
         {/* HEADER */}
 
         <div className="top-header">
-          <div className="title-wrap">
-            <h1>Employee Management</h1>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "16px",
+            }}
+          >
+            <button
+              className="or-back-btn"
+              onClick={() => navigate("/dashboard")}
+              style={{
+                width: "52px",
+                height: "52px",
+                borderRadius: "16px",
+                border: "none",
+                background: "linear-gradient(135deg,#2563eb,#7c3aed)",
+                color: "white",
+                fontSize: "22px",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                boxShadow: "0 10px 25px rgba(37,99,235,0.25)",
+              }}
+            >
+              <FiArrowLeft />
+            </button>
 
-            <p>
-              Manage employees, salary &
-              attendance
-            </p>
+            <div className="title-wrap">
+              <h1>Employee Management</h1>
+
+              <p>Manage employees, salary & attendance</p>
+            </div>
           </div>
 
           <button
@@ -677,7 +676,6 @@ body{
         {/* SUMMARY */}
 
         <div className="summary-grid">
-
           <div className="summary-card">
             <h3>Total Employees</h3>
             <h2>{employees.length}</h2>
@@ -697,7 +695,6 @@ body{
             <h3>Present Today</h3>
             <h2>{presentEmployees}</h2>
           </div>
-
         </div>
 
         {/* SEARCH */}
@@ -709,79 +706,51 @@ body{
             type="text"
             placeholder="Search employee..."
             value={search}
-            onChange={(e) =>
-              setSearch(e.target.value)
-            }
+            onChange={(e) => setSearch(e.target.value)}
           />
         </div>
 
         {/* EMPLOYEE LIST */}
 
         <div className="employee-grid">
-
           {filteredEmployees.map((emp) => {
-
             const paid =
-              emp.payments?.reduce(
-                (sum, p) =>
-                  sum + Number(p.amount),
-                0
-              ) || 0;
+              emp.payments?.reduce((sum, p) => sum + Number(p.amount), 0) || 0;
 
-            const progress =
-              (paid / emp.salary) * 100;
+            const progress = (paid / emp.salary) * 100;
 
             const latestAttendance =
-              emp.attendance?.[
-                emp.attendance.length - 1
-              ]?.status;
+              emp.attendance?.[emp.attendance.length - 1]?.status;
 
             return (
-              <div
-                className="employee-card"
-                key={emp._id}
-              >
-
+              <div className="employee-card" key={emp._id}>
                 <div className="employee-top">
-
                   <div className="avatar">
                     <FiUsers />
                   </div>
 
                   <span
                     className={`badge ${
-                      emp.status === "Active"
-                        ? "active"
-                        : "leave"
+                      emp.status === "Active" ? "active" : "leave"
                     }`}
                   >
                     {emp.status}
                   </span>
-
                 </div>
 
-                <div className="employee-name">
-                  {emp.name}
-                </div>
+                <div className="employee-name">{emp.name}</div>
 
-                <div className="employee-phone">
-                  {emp.phone}
-                </div>
+                <div className="employee-phone">{emp.phone}</div>
 
-                <div className="category">
-                  {emp.category}
-                </div>
+                <div className="category">{emp.category}</div>
 
                 {/* SALARY */}
 
                 <div className="salary-section">
-
                   <div className="salary-top">
                     <span>Paid ₹{paid}</span>
 
-                    <span>
-                      ₹{emp.salary}
-                    </span>
+                    <span>₹{emp.salary}</span>
                   </div>
 
                   <div className="progress">
@@ -792,22 +761,17 @@ body{
                       }}
                     />
                   </div>
-
                 </div>
 
                 {/* ACTIONS */}
 
                 <div className="card-actions">
-
                   <button
                     className="action-btn view-btn"
                     onClick={() =>
-                      navigate(
-                        "/employee-detail",
-                        {
-                          state: emp,
-                        }
-                      )
+                      navigate("/employee-detail", {
+                        state: emp,
+                      })
                     }
                   >
                     <FiEye />
@@ -815,18 +779,14 @@ body{
 
                   <button
                     className="action-btn edit-btn"
-                    onClick={() =>
-                      handleEdit(emp)
-                    }
+                    onClick={() => handleEdit(emp)}
                   >
                     <FiEdit2 />
                   </button>
 
                   <button
                     className="action-btn delete-btn"
-                    onClick={() =>
-                      handleDelete(emp._id)
-                    }
+                    onClick={() => handleDelete(emp._id)}
                   >
                     <FiTrash2 />
                   </button>
@@ -836,9 +796,7 @@ body{
                     onClick={() => {
                       setSelectedEmployee(emp);
 
-                      setShowPaymentModal(
-                        true
-                      );
+                      setShowPaymentModal(true);
                     }}
                   >
                     <FiDollarSign />
@@ -846,46 +804,30 @@ body{
 
                   <button
                     className={`action-btn ${
-                      latestAttendance ===
-                      "Present"
+                      latestAttendance === "Present"
                         ? "attendance-btn"
                         : "attendance-off"
                     }`}
-                    onClick={() =>
-                      handleAttendance(
-                        emp._id,
-                        latestAttendance
-                      )
-                    }
+                    onClick={() => handleAttendance(emp._id, latestAttendance)}
                   >
-                    {latestAttendance ===
-                    "Present" ? (
+                    {latestAttendance === "Present" ? (
                       <FiCheckCircle />
                     ) : (
                       <FiXCircle />
                     )}
                   </button>
-
                 </div>
-
               </div>
             );
           })}
-
         </div>
 
         {/* ADD / EDIT MODAL */}
 
         {showModal && (
           <div className="modal-overlay">
-
             <div className="modal">
-
-              <h2>
-                {editId
-                  ? "Edit Employee"
-                  : "Add Employee"}
-              </h2>
+              <h2>{editId ? "Edit Employee" : "Add Employee"}</h2>
 
               <input
                 type="text"
@@ -909,37 +851,21 @@ body{
                 onChange={handleChange}
                 className="employee-select"
               >
-                <option value="">
-                  Select Category
-                </option>
+                <option value="">Select Category</option>
 
-                <option value="Salesman">
-                  Salesman
-                </option>
+                <option value="Salesman">Salesman</option>
 
-                <option value="Cashier">
-                  Cashier
-                </option>
+                <option value="Cashier">Cashier</option>
 
-                <option value="Manager">
-                  Manager
-                </option>
+                <option value="Manager">Manager</option>
 
-                <option value="Delivery Boy">
-                  Delivery Boy
-                </option>
+                <option value="Delivery Boy">Delivery Boy</option>
 
-                <option value="Accountant">
-                  Accountant
-                </option>
+                <option value="Accountant">Accountant</option>
 
-                <option value="Helper">
-                  Helper
-                </option>
+                <option value="Helper">Helper</option>
 
-                <option value="Other">
-                  Other
-                </option>
+                <option value="Other">Other</option>
               </select>
 
               <input
@@ -951,14 +877,8 @@ body{
               />
 
               <div className="modal-buttons">
-
-                <button
-                  className="save-btn"
-                  onClick={handleSubmit}
-                >
-                  {editId
-                    ? "Update"
-                    : "Save"}
+                <button className="save-btn" onClick={handleSubmit}>
+                  {editId ? "Update" : "Save"}
                 </button>
 
                 <button
@@ -971,11 +891,8 @@ body{
                 >
                   Cancel
                 </button>
-
               </div>
-
             </div>
-
           </div>
         )}
 
@@ -983,9 +900,7 @@ body{
 
         {showPaymentModal && (
           <div className="modal-overlay">
-
             <div className="modal">
-
               <h2>Pay Salary</h2>
 
               <input
@@ -1010,17 +925,11 @@ body{
                   })
                 }
               >
-                <option value="Cash">
-                  Cash
-                </option>
+                <option value="Cash">Cash</option>
 
-                <option value="UPI">
-                  UPI
-                </option>
+                <option value="UPI">UPI</option>
 
-                <option value="Bank Transfer">
-                  Bank Transfer
-                </option>
+                <option value="Bank Transfer">Bank Transfer</option>
               </select>
 
               <input
@@ -1036,34 +945,20 @@ body{
               />
 
               <div className="modal-buttons">
-
-                <button
-                  className="save-btn"
-                  onClick={
-                    handleSalaryPayment
-                  }
-                >
+                <button className="save-btn" onClick={handleSalaryPayment}>
                   Pay Now
                 </button>
 
                 <button
                   className="cancel-btn"
-                  onClick={() =>
-                    setShowPaymentModal(
-                      false
-                    )
-                  }
+                  onClick={() => setShowPaymentModal(false)}
                 >
                   Cancel
                 </button>
-
               </div>
-
             </div>
-
           </div>
         )}
-
       </div>
     </>
   );

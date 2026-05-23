@@ -1,7 +1,13 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { FiArrowLeft, FiRefreshCw, FiPackage, FiShoppingBag } from "react-icons/fi";
+
+import {
+  FiArrowLeft,
+  FiRefreshCw,
+  FiPackage,
+  FiShoppingBag,
+} from "react-icons/fi";
 
 export default function Orders() {
   const navigate = useNavigate();
@@ -33,15 +39,45 @@ export default function Orders() {
   };
 
   const statusConfig = {
-    pending:   { color: "#fff", bg: "#f59e0b", label: "Pending",    shadow: "rgba(245,158,11,0.3)"  },
-    approved:  { color: "#fff", bg: "#6366f1", label: "Approved",   shadow: "rgba(99,102,241,0.3)"  },
-    onTheWay:  { color: "#fff", bg: "#0ea5e9", label: "On The Way", shadow: "rgba(14,165,233,0.3)"  },
-    delivered: { color: "#fff", bg: "#22c55e", label: "Delivered",  shadow: "rgba(34,197,94,0.3)"   },
-    rejected:  { color: "#fff", bg: "#ef4444", label: "Rejected",   shadow: "rgba(239,68,68,0.3)"   },
+    pending: {
+      color: "#fff",
+      bg: "#f59e0b",
+      label: "Pending",
+      shadow: "rgba(245,158,11,0.3)",
+    },
+    approved: {
+      color: "#fff",
+      bg: "#6366f1",
+      label: "Approved",
+      shadow: "rgba(99,102,241,0.3)",
+    },
+    onTheWay: {
+      color: "#fff",
+      bg: "#0ea5e9",
+      label: "On The Way",
+      shadow: "rgba(14,165,233,0.3)",
+    },
+    delivered: {
+      color: "#fff",
+      bg: "#22c55e",
+      label: "Delivered",
+      shadow: "rgba(34,197,94,0.3)",
+    },
+    rejected: {
+      color: "#fff",
+      bg: "#ef4444",
+      label: "Rejected",
+      shadow: "rgba(239,68,68,0.3)",
+    },
   };
 
   const getStatus = (status) =>
-    statusConfig[status] || { color: "#fff", bg: "#94a3b8", label: status, shadow: "rgba(0,0,0,0.1)" };
+    statusConfig[status] || {
+      color: "#fff",
+      bg: "#94a3b8",
+      label: status,
+      shadow: "rgba(0,0,0,0.1)",
+    };
 
   return (
     <>
@@ -317,11 +353,13 @@ export default function Orders() {
       `}</style>
 
       <div className="or-page">
-
         {/* Topbar */}
         <div className="or-topbar">
           <div className="or-topbar-left">
-            <button className="or-back-btn" onClick={() => navigate("/dashboard")}>
+            <button
+              className="or-back-btn"
+              onClick={() => navigate("/dashboard")}
+            >
               <FiArrowLeft />
             </button>
             <div>
@@ -331,7 +369,9 @@ export default function Orders() {
                   <span className="or-count-badge">{orders.length}</span>
                 )}
               </div>
-              <div className="or-subtitle">Track and manage all your orders</div>
+              <div className="or-subtitle">
+                Track and manage all your orders
+              </div>
             </div>
           </div>
 
@@ -349,7 +389,10 @@ export default function Orders() {
               if (count === 0) return null;
               return (
                 <div className="or-summary-pill" key={key}>
-                  <span className="or-summary-dot" style={{ background: val.bg }} />
+                  <span
+                    className="or-summary-dot"
+                    style={{ background: val.bg }}
+                  />
                   {val.label}
                   <span className="or-summary-num">{count}</span>
                 </div>
@@ -362,12 +405,16 @@ export default function Orders() {
         <div className="or-grid">
           {loading ? (
             <div className="or-empty">
-              <div className="or-empty-icon"><FiPackage /></div>
+              <div className="or-empty-icon">
+                <FiPackage />
+              </div>
               <p>Loading orders...</p>
             </div>
           ) : orders.length === 0 ? (
             <div className="or-empty">
-              <div className="or-empty-icon"><FiShoppingBag /></div>
+              <div className="or-empty-icon">
+                <FiShoppingBag />
+              </div>
               <h3>No Orders Found</h3>
               <p>Place an order from the stock page.</p>
             </div>
@@ -405,18 +452,24 @@ export default function Orders() {
                     </div>
 
                     <div className="or-product-name">{item.productName}</div>
-                    <div className="or-order-id">#{item._id?.slice(-6).toUpperCase()}</div>
+                    <div className="or-order-id">
+                      #{item._id?.slice(-6).toUpperCase()}
+                    </div>
 
                     <div className="or-divider" />
 
                     <div className="or-stats">
                       <div>
                         <span className="or-stat-label">Quantity</span>
-                        <span className="or-stat-value">{item.quantity} units</span>
+                        <span className="or-stat-value">
+                          {item.quantity} units
+                        </span>
                       </div>
                       <div style={{ textAlign: "right" }}>
                         <span className="or-stat-label">Total</span>
-                        <span className="or-stat-total">₹{item.totalAmount}</span>
+                        <span className="or-stat-total">
+                          ₹{item.totalAmount}
+                        </span>
                       </div>
                     </div>
                   </div>
