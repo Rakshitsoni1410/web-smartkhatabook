@@ -8,6 +8,8 @@ import {
   FiEdit2,
   FiTrash2,
   FiX,
+  FiCheckCircle,
+  FiAlertCircle,
 } from "react-icons/fi";
 import "./Stock.css";
 
@@ -17,19 +19,13 @@ export default function Stock() {
   const user = JSON.parse(localStorage.getItem("user")) || {};
 
   const [products, setProducts] = useState([]);
-
   const [wholesalers, setWholesalers] = useState({});
-
   const [suggestions, setSuggestions] = useState([]);
-
   const [search, setSearch] = useState("");
-
   const [open, setOpen] = useState(false);
-
   const [editOpen, setEditOpen] = useState(false);
-
   const [selected, setSelected] = useState(null);
-
+  const [toast, setToast] = useState({ msg: "", type: "success" });
   const [form, setForm] = useState({
     name: "",
     category: "",
@@ -48,19 +44,19 @@ export default function Stock() {
     fetchSuggestions();
   }, []);
 
+  const showToast = (msg, type = "success") => {
+    setToast({ msg, type });
+    setTimeout(() => setToast({ msg: "", type: "success" }), 3000);
+  };
+
   const fetchProducts = async () => {
     try {
       const res = await axios.get(
         `http://localhost:4000/api/product/list/${user._id}`,
       );
-
       const data = res.data.products || [];
-
       setProducts(data);
-
-      data.forEach((item) => {
-        fetchWholesalers(item.category);
-      });
+      data.forEach((item) => fetchWholesalers(item.category));
     } catch (error) {
       console.log(error);
     }
@@ -71,7 +67,6 @@ export default function Stock() {
       const res = await axios.get(
         `http://localhost:4000/api/user/wholesalers/${category}`,
       );
-
       setWholesalers((prev) => ({
         ...prev,
         [category]: res.data.users || [],
@@ -86,7 +81,6 @@ export default function Stock() {
       const res = await axios.get(
         `http://localhost:4000/api/product/suggestions/${user._id}`,
       );
-
       setSuggestions(res.data.suggestions || []);
     } catch (error) {
       console.log(error);
@@ -110,11 +104,7 @@ export default function Stock() {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-
-    setForm({
-      ...form,
-      [name]: type === "checkbox" ? checked : value,
-    });
+    setForm({ ...form, [name]: type === "checkbox" ? checked : value });
   };
 
   const handleAdd = async () => {
@@ -124,7 +114,6 @@ export default function Stock() {
         businessType: user.businessType,
         ...form,
       });
-
       setOpen(false);
       resetForm();
       fetchProducts();
@@ -135,7 +124,6 @@ export default function Stock() {
 
   const openEdit = (item) => {
     setSelected(item);
-
     setForm({
       name: item.name,
       category: item.category,
@@ -148,7 +136,6 @@ export default function Stock() {
       weight: item.weight,
       weightUnit: item.weightUnit || "kg",
     });
-
     setEditOpen(true);
   };
 
@@ -158,7 +145,6 @@ export default function Stock() {
         `http://localhost:4000/api/product/update/${selected._id}`,
         form,
       );
-
       setEditOpen(false);
       fetchProducts();
     } catch (error) {
@@ -169,10 +155,31 @@ export default function Stock() {
   const handleDelete = async (id) => {
     try {
       await axios.delete(`http://localhost:4000/api/product/delete/${id}`);
-
       fetchProducts();
     } catch (error) {
       console.log(error);
+    }
+  };
+
+  const handleOrderNow = async (item) => {
+    try {
+      const res = await axios.post("http://localhost:4000/api/orders/create", {
+        retailerId: user._id,
+        productName: item.name,
+        quantity: 1,
+        unit: "piece",
+      });
+      showToast(
+        "AI selected best wholesaler and order placed successfully",
+        "success",
+      );
+      console.log(res.data);
+    } catch (error) {
+      console.log(error);
+      showToast(
+        error?.response?.data?.message || "Failed to place order",
+        "error",
+      );
     }
   };
 
@@ -182,16 +189,51 @@ export default function Stock() {
 
   return (
     <div className="stock-page">
+      {/* TOAST */}
+      {toast.msg && (
+        <div
+          style={{
+            position: "fixed",
+            top: 20,
+            right: 20,
+            zIndex: 9999,
+            background: toast.type === "success" ? "#22c55e" : "#ef4444",
+            color: "#fff",
+            padding: "12px 18px",
+            borderRadius: 14,
+            fontWeight: 700,
+            fontSize: 14,
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            boxShadow: "0 8px 24px rgba(0,0,0,0.15)",
+            animation: "slideIn 0.2s ease",
+          }}
+        >
+          {toast.type === "success" ? (
+            <FiCheckCircle size={16} />
+          ) : (
+            <FiAlertCircle size={16} />
+          )}
+          {toast.msg}
+        </div>
+      )}
+
+      <style>{`
+        @keyframes slideIn {
+          from { opacity: 0; transform: translateX(20px); }
+          to   { opacity: 1; transform: translateX(0); }
+        }
+      `}</style>
+
       {/* TOPBAR */}
       <div className="stock-topbar">
         <div className="left-head">
           <button className="back-btn" onClick={() => navigate("/dashboard")}>
             <FiArrowLeft />
           </button>
-
           <h2>Stock</h2>
         </div>
-
         <button className="add-btn" onClick={() => setOpen(true)}>
           <FiPlus />
           Add Product
@@ -201,7 +243,6 @@ export default function Stock() {
       {/* SEARCH */}
       <div className="search-box">
         <FiSearch />
-
         <input
           type="text"
           placeholder="Search product..."
@@ -217,7 +258,6 @@ export default function Stock() {
             {/* HEADER */}
             <div className="card-head">
               <h3>{item.name}</h3>
-
               <div className="card-actions">
                 <button
                   className="icon-btn edit-mini"
@@ -225,7 +265,6 @@ export default function Stock() {
                 >
                   <FiEdit2 />
                 </button>
-
                 <button
                   className="icon-btn delete-mini"
                   onClick={() => handleDelete(item._id)}
@@ -238,7 +277,6 @@ export default function Stock() {
             {/* TAGS */}
             <div className="tags">
               <span>{item.category}</span>
-
               <span className="green">{item.inStock ? "In Stock" : "Out"}</span>
             </div>
 
@@ -248,12 +286,10 @@ export default function Stock() {
                 <small>Selling</small>
                 <p>₹{item.selling}</p>
               </div>
-
               <div>
                 <small>Profit</small>
                 <p>₹{item.profit}</p>
               </div>
-
               <div>
                 <small>Stock</small>
                 <p>{item.stockQty}</p>
@@ -271,32 +307,7 @@ export default function Stock() {
                 <div className="whole-list">
                   <button
                     className="order-btn"
-                    onClick={async () => {
-                      try {
-                        const res = await axios.post(
-                          "http://localhost:4000/api/orders/create",
-                          {
-                            retailerId: user._id,
-                            productName: item.name,
-                            quantity: 1,
-                            unit: "piece",
-                          },
-                        );
-
-                        alert(
-                          "✅ AI selected best wholesaler and order placed successfully",
-                        );
-
-                        console.log(res.data);
-                      } catch (error) {
-                        console.log(error);
-
-                        alert(
-                          error?.response?.data?.message ||
-                            "❌ Failed to place order",
-                        );
-                      }
-                    }}
+                    onClick={() => handleOrderNow(item)}
                   >
                     Order Now
                   </button>
@@ -313,13 +324,11 @@ export default function Stock() {
           <div className="modal-box">
             <div className="modal-head">
               <h3>Add Product</h3>
-
               <FiX onClick={() => setOpen(false)} />
             </div>
 
             <div className="suggest-box">
               <p>Suggested for {user.businessType}</p>
-
               <div className="chips">
                 {suggestions.map((item, index) => (
                   <span
@@ -352,35 +361,30 @@ export default function Stock() {
                 value={form.name}
                 onChange={handleChange}
               />
-
               <input
                 name="category"
                 placeholder="Category"
                 value={form.category}
                 onChange={handleChange}
               />
-
               <input
                 name="purchase"
                 placeholder="Purchase ₹"
                 value={form.purchase}
                 onChange={handleChange}
               />
-
               <input
                 name="selling"
                 placeholder="Selling ₹"
                 value={form.selling}
                 onChange={handleChange}
               />
-
               <input
                 name="stockQty"
                 placeholder="Stock Qty"
                 value={form.stockQty}
                 onChange={handleChange}
               />
-
               <input
                 name="description"
                 placeholder="Description"
@@ -402,37 +406,31 @@ export default function Stock() {
           <div className="modal-box">
             <div className="modal-head">
               <h3>Edit Product</h3>
-
               <FiX onClick={() => setEditOpen(false)} />
             </div>
 
             <div className="form-grid">
               <input name="name" value={form.name} onChange={handleChange} />
-
               <input
                 name="category"
                 value={form.category}
                 onChange={handleChange}
               />
-
               <input
                 name="purchase"
                 value={form.purchase}
                 onChange={handleChange}
               />
-
               <input
                 name="selling"
                 value={form.selling}
                 onChange={handleChange}
               />
-
               <input
                 name="stockQty"
                 value={form.stockQty}
                 onChange={handleChange}
               />
-
               <input
                 name="description"
                 value={form.description}

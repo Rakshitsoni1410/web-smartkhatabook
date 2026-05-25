@@ -29,6 +29,11 @@ export default function OrderDetails() {
     return () => clearInterval(timer);
   }, []);
 
+  const showToast = (msg, type = "success") => {
+    setToast({ msg, type });
+    setTimeout(() => setToast({ msg: "", type: "success" }), 3000);
+  };
+
   const fetchOrder = async () => {
     try {
       const url =
@@ -46,15 +51,11 @@ export default function OrderDetails() {
   const updateStatus = async (status) => {
     try {
       setUpdating(true);
-      await axios.patch(`http://localhost:4000/api/orders/${id}/status`, {
-        status,
-      });
-      setToast({ msg: `Order marked as ${status}`, type: "success" });
+      await axios.patch(`http://localhost:4000/api/orders/${id}/status`, { status });
+      showToast(`Order marked as ${status}`);
       fetchOrder();
-      setTimeout(() => setToast({ msg: "", type: "success" }), 3000);
     } catch (error) {
-      setToast({ msg: "Failed to update status", type: "error" });
-      setTimeout(() => setToast({ msg: "", type: "success" }), 3000);
+      showToast("Failed to update status", "error");
     } finally {
       setUpdating(false);
     }
@@ -64,12 +65,10 @@ export default function OrderDetails() {
     try {
       setUpdating(true);
       await axios.patch(`http://localhost:4000/api/orders/${id}/pay-advance`);
-      setToast({ msg: "Advance payment successful", type: "success" });
+      showToast("Advance payment successful");
       fetchOrder();
-      setTimeout(() => setToast({ msg: "", type: "success" }), 3000);
     } catch (error) {
-      setToast({ msg: "Failed to process advance payment", type: "error" });
-      setTimeout(() => setToast({ msg: "", type: "success" }), 3000);
+      showToast("Failed to process advance payment", "error");
     } finally {
       setUpdating(false);
     }
@@ -79,12 +78,10 @@ export default function OrderDetails() {
     try {
       setUpdating(true);
       await axios.patch(`http://localhost:4000/api/orders/${id}/complete-payment`);
-      setToast({ msg: "Payment completed successfully", type: "success" });
+      showToast("Payment completed successfully");
       fetchOrder();
-      setTimeout(() => setToast({ msg: "", type: "success" }), 3000);
     } catch (error) {
-      setToast({ msg: "Failed to complete payment", type: "error" });
-      setTimeout(() => setToast({ msg: "", type: "success" }), 3000);
+      showToast("Failed to complete payment", "error");
     } finally {
       setUpdating(false);
     }
@@ -94,13 +91,12 @@ export default function OrderDetails() {
     try {
       setUpdating(true);
       await axios.patch(`http://localhost:4000/api/orders/${id}/request-advance`);
-      setToast({ msg: "Advance payment requested", type: "success" });
+      showToast("Advance payment requested");
       fetchOrder();
     } catch (error) {
-      setToast({ msg: "Failed to request advance", type: "error" });
+      showToast("Failed to request advance", "error");
     } finally {
       setUpdating(false);
-      setTimeout(() => setToast({ msg: "", type: "success" }), 3000);
     }
   };
 
@@ -108,16 +104,16 @@ export default function OrderDetails() {
     try {
       setUpdating(true);
       await axios.patch(`http://localhost:4000/api/orders/${id}/request-final-payment`);
-      setToast({ msg: "Final payment requested", type: "success" });
+      showToast("Final payment requested");
       fetchOrder();
     } catch (error) {
-      setToast({ msg: "Failed to request final payment", type: "error" });
+      showToast("Failed to request final payment", "error");
     } finally {
       setUpdating(false);
-      setTimeout(() => setToast({ msg: "", type: "success" }), 3000);
     }
   };
 
+  // ─── ALL statuses from backend model ───────────────────────────────────────
   const statusConfig = {
     pending: {
       color: "#fff",
@@ -131,6 +127,18 @@ export default function OrderDetails() {
       label: "Approved",
       shadow: "rgba(99,102,241,0.3)",
     },
+    advancePending: {
+      color: "#fff",
+      bg: "#f59e0b",
+      label: "Advance Pending",
+      shadow: "rgba(245,158,11,0.3)",
+    },
+    processing: {
+      color: "#fff",
+      bg: "#8b5cf6",
+      label: "Processing",
+      shadow: "rgba(139,92,246,0.3)",
+    },
     onTheWay: {
       color: "#fff",
       bg: "#0ea5e9",
@@ -143,12 +151,27 @@ export default function OrderDetails() {
       label: "Delivered",
       shadow: "rgba(34,197,94,0.3)",
     },
+    completed: {
+      color: "#fff",
+      bg: "#10b981",
+      label: "Completed",
+      shadow: "rgba(16,185,129,0.3)",
+    },
     rejected: {
       color: "#fff",
       bg: "#ef4444",
       label: "Rejected",
       shadow: "rgba(239,68,68,0.3)",
     },
+  };
+
+  // ─── Payment status label & color ──────────────────────────────────────────
+  const paymentStatusConfig = {
+    unpaid:            { label: "Unpaid",             color: "#f59e0b", bg: "#f59e0b18" },
+    advanceRequested:  { label: "Advance Requested",  color: "#0ea5e9", bg: "#0ea5e918" },
+    advancePaid:       { label: "Advance Paid",       color: "#8b5cf6", bg: "#8b5cf618" },
+    partial:           { label: "Partial",            color: "#f59e0b", bg: "#f59e0b18" },
+    paid:              { label: "Paid",               color: "#22c55e", bg: "#22c55e18" },
   };
 
   const getStatus = (status) =>
@@ -159,71 +182,27 @@ export default function OrderDetails() {
       shadow: "rgba(0,0,0,0.1)",
     };
 
-  const actionButtons = [
-    {
-      label: "Approve",
-      status: "approved",
-      icon: <FiCheckCircle size={15} />,
-      bg: "#6366f1",
-      shadow: "rgba(99,102,241,0.35)",
-    },
-    {
-      label: "On The Way",
-      status: "onTheWay",
-      icon: <FiTruck size={15} />,
-      bg: "#0ea5e9",
-      shadow: "rgba(14,165,233,0.35)",
-    },
-    {
-      label: "Delivered",
-      status: "delivered",
-      icon: <FiCheckCircle size={15} />,
-      bg: "#22c55e",
-      shadow: "rgba(34,197,94,0.35)",
-    },
-    {
-      label: "Reject",
-      status: "rejected",
-      icon: <FiXCircle size={15} />,
-      bg: "#ef4444",
-      shadow: "rgba(239,68,68,0.35)",
-    },
-  ];
+  const getPaymentStatus = (ps) =>
+    paymentStatusConfig[ps] || { label: ps, color: "#94a3b8", bg: "#94a3b818" };
 
   if (!order) {
     return (
       <div
         className="od-page"
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
+        style={{ display: "flex", alignItems: "center", justifyContent: "center" }}
       >
         <style>{pageStyles}</style>
         <div style={{ textAlign: "center" }}>
           <div
             style={{
-              width: 64,
-              height: 64,
-              borderRadius: 18,
-              background: "#fff",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              margin: "0 auto 16px",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+              width: 64, height: 64, borderRadius: 18, background: "#fff",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              margin: "0 auto 16px", boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
             }}
           >
             <FiPackage size={26} color="#cbd5e1" />
           </div>
-          <p
-            style={{
-              color: "#94a3b8",
-              fontFamily: "'Outfit', sans-serif",
-              fontWeight: 500,
-            }}
-          >
+          <p style={{ color: "#94a3b8", fontFamily: "'Outfit', sans-serif", fontWeight: 500 }}>
             Loading order...
           </p>
         </div>
@@ -231,31 +210,46 @@ export default function OrderDetails() {
     );
   }
 
-  const s = getStatus(order.orderStatus);
+  const s  = getStatus(order.orderStatus);
+  const ps = getPaymentStatus(order.paymentStatus);
+
+  // ─── Status flow order (matches backend enum) ──────────────────────────────
+  // pending → approved → advancePending OR processing → onTheWay → delivered → completed
+  // pending → rejected
+
+  const canApprove  = order.orderStatus === "pending";
+  const canReject   = order.orderStatus === "pending";
+  const canOnTheWay = ["approved", "advancePending", "processing"].includes(order.orderStatus);
+  const canDeliver  = order.orderStatus === "onTheWay";
+
+  // Advance request: after approval (any post-approve status), policy > 0, not yet requested
+  const canRequestAdvance =
+    ["approved", "advancePending", "processing", "onTheWay"].includes(order.orderStatus) &&
+    order.advancePercentage > 0 &&
+    !order.advanceRequested;
+
+  // Final payment: only after delivery, only once
+  const canRequestFinal =
+    order.orderStatus === "delivered" && !order.finalPaymentRequested;
 
   return (
     <>
       <style>{pageStyles}</style>
 
       <div className="od-page">
-        {/* Toast */}
+
+        {/* ── TOAST ── */}
         {toast.msg && (
           <div
             className="od-toast"
-            style={{
-              background: toast.type === "success" ? "#22c55e" : "#ef4444",
-            }}
+            style={{ background: toast.type === "success" ? "#22c55e" : "#ef4444" }}
           >
-            {toast.type === "success" ? (
-              <FiCheckCircle size={14} />
-            ) : (
-              <FiXCircle size={14} />
-            )}
+            {toast.type === "success" ? <FiCheckCircle size={14} /> : <FiXCircle size={14} />}
             {toast.msg}
           </div>
         )}
 
-        {/* Topbar */}
+        {/* ── TOPBAR ── */}
         <div className="od-topbar">
           <div className="od-topbar-left">
             <button className="od-back-btn" onClick={() => navigate("/orders")}>
@@ -270,34 +264,24 @@ export default function OrderDetails() {
             </div>
           </div>
 
-          {/* Status badge */}
           <span
             className="od-status-badge"
-            style={{
-              background: s.bg,
-              color: s.color,
-              boxShadow: `0 4px 12px ${s.shadow}`,
-            }}
+            style={{ background: s.bg, color: s.color, boxShadow: `0 4px 12px ${s.shadow}` }}
           >
             <span className="od-status-dot" />
             {s.label}
           </span>
         </div>
 
-        {/* ========================= */}
-        {/*       PRODUCT CARD        */}
-        {/* ========================= */}
+        {/* ═══════════════════════════════ */}
+        {/*         PRODUCT CARD           */}
+        {/* ═══════════════════════════════ */}
         <div className="od-card">
-          {/* colored top strip */}
           <div className="od-card-strip" style={{ background: s.bg }} />
-
           <div className="od-card-body">
-            {/* Product header */}
+
             <div className="od-product-header">
-              <div
-                className="od-product-icon"
-                style={{ background: s.bg + "18" }}
-              >
+              <div className="od-product-icon" style={{ background: s.bg + "18" }}>
                 <FiPackage size={22} color={s.bg} />
               </div>
               <div>
@@ -306,129 +290,106 @@ export default function OrderDetails() {
               </div>
             </div>
 
-            {/* Info rows */}
             <div className="od-info-row">
-              <span className="od-info-label">
-                <FiPackage size={13} color="#94a3b8" /> Quantity
-              </span>
+              <span className="od-info-label"><FiPackage size={13} color="#94a3b8" /> Quantity</span>
               <span className="od-info-value">{order.quantity} units</span>
             </div>
 
             <div className="od-info-row">
-              <span className="od-info-label">
-                <FiDollarSign size={13} color="#94a3b8" /> Price / Unit
-              </span>
+              <span className="od-info-label"><FiDollarSign size={13} color="#94a3b8" /> Price / Unit</span>
               <span className="od-info-value">₹{order.pricePerUnit}</span>
             </div>
 
             <div className="od-info-row">
-              <span className="od-info-label">
-                <FiDollarSign size={13} color="#94a3b8" /> Total Amount
-              </span>
-              <span className="od-info-value od-total">
-                ₹{order.totalAmount}
-              </span>
+              <span className="od-info-label"><FiDollarSign size={13} color="#94a3b8" /> Total Amount</span>
+              <span className="od-info-value od-total">₹{order.totalAmount}</span>
             </div>
 
             <div className="od-info-row" style={{ border: "none" }}>
-              <span className="od-info-label">
-                <FiClock size={13} color="#94a3b8" /> Payment Status
-              </span>
+              <span className="od-info-label"><FiClock size={13} color="#94a3b8" /> Payment Status</span>
               <span
                 className="od-info-value"
                 style={{
-                  color: order.paymentStatus === "paid" ? "#22c55e" : "#f59e0b",
-                  background:
-                    order.paymentStatus === "paid" ? "#22c55e18" : "#f59e0b18",
+                  color: ps.color,
+                  background: ps.bg,
                   padding: "3px 12px",
                   borderRadius: 20,
                   fontSize: 12,
                   fontWeight: 700,
                 }}
               >
-                {order.paymentStatus}
+                {ps.label}
               </span>
             </div>
           </div>
         </div>
 
-        {/* ========================= */}
-        {/*     PAYMENT INFORMATION   */}
-        {/* ========================= */}
+        {/* ═══════════════════════════════ */}
+        {/*       PAYMENT DETAILS          */}
+        {/* ═══════════════════════════════ */}
         <div className="od-card">
-          <div
-            className="od-card-strip"
-            style={{ background: "#22c55e" }}
-          />
-
+          <div className="od-card-strip" style={{ background: "#22c55e" }} />
           <div className="od-card-body">
+
             <div className="od-product-header">
-              <div
-                className="od-product-icon"
-                style={{ background: "#22c55e18" }}
-              >
+              <div className="od-product-icon" style={{ background: "#22c55e18" }}>
                 <FiDollarSign size={22} color="#22c55e" />
               </div>
               <div>
                 <div className="od-product-name">Payment Details</div>
-                <div className="od-product-label">
-                  Dynamic wholesaler payment policy
-                </div>
+                <div className="od-product-label">Wholesaler payment policy</div>
               </div>
             </div>
 
             {/* Advance Policy */}
             <div className="od-info-row">
               <span className="od-info-label">
-                <FiDollarSign size={13} color="#94a3b8" />
-                Advance Policy
+                <FiDollarSign size={13} color="#94a3b8" /> Advance Policy
               </span>
               <span
                 className="od-info-value"
-                style={{
-                  color: order.advancePercentage > 0 ? "#f59e0b" : "#22c55e",
-                }}
+                style={{ color: order.advancePercentage > 0 ? "#f59e0b" : "#22c55e" }}
               >
-                {order.advancePercentage || 0}%
+                {order.advancePercentage > 0 ? `${order.advancePercentage}%` : "No Advance"}
               </span>
             </div>
 
-            {/* Advance Amount */}
-            <div className="od-info-row">
-              <span className="od-info-label">
-                <FiDollarSign size={13} color="#94a3b8" />
-                Advance Amount
-              </span>
-              <span
-                className="od-info-value"
-                style={{
-                  color: order.advancePaid ? "#22c55e" : "#f59e0b",
-                }}
-              >
-                ₹{order.advanceAmount || 0}
-              </span>
-            </div>
+            {/* Advance Amount — only show if policy > 0 */}
+            {order.advancePercentage > 0 && (
+              <div className="od-info-row">
+                <span className="od-info-label">
+                  <FiDollarSign size={13} color="#94a3b8" /> Advance Amount
+                </span>
+                <span
+                  className="od-info-value"
+                  style={{ color: order.advancePaid ? "#22c55e" : "#f59e0b" }}
+                >
+                  ₹{order.advanceAmount || 0}
+                  {order.advancePaid && (
+                    <span style={{ marginLeft: 6, fontSize: 11, color: "#22c55e" }}>✓ Paid</span>
+                  )}
+                </span>
+              </div>
+            )}
 
             {/* Remaining Amount */}
             <div className="od-info-row">
               <span className="od-info-label">
-                <FiDollarSign size={13} color="#94a3b8" />
-                Remaining Amount
+                <FiDollarSign size={13} color="#94a3b8" /> Remaining Amount
               </span>
-              <span className="od-info-value">
-                ₹{order.remainingAmount || 0}
-              </span>
+              <span className="od-info-value">₹{order.remainingAmount || 0}</span>
             </div>
 
             {/* Delivery Date */}
             <div className="od-info-row">
               <span className="od-info-label">
-                <FiTruck size={13} color="#94a3b8" />
-                Delivery Date
+                <FiTruck size={13} color="#94a3b8" /> Delivery Date
               </span>
               <span className="od-info-value">
                 {order.deliveryDate
-                  ? new Date(order.deliveryDate).toLocaleDateString()
+                  ? new Date(order.deliveryDate).toLocaleDateString("en-IN", {
+                      day: "numeric", month: "short", year: "numeric",
+                    })
                   : "Not Assigned"}
               </span>
             </div>
@@ -436,168 +397,349 @@ export default function OrderDetails() {
             {/* Payment Status */}
             <div className="od-info-row" style={{ border: "none" }}>
               <span className="od-info-label">
-                <FiClock size={13} color="#94a3b8" />
-                Payment Status
+                <FiClock size={13} color="#94a3b8" /> Payment Status
               </span>
               <span
                 className="od-info-value"
                 style={{
-                  color:
-                    order.paymentStatus === "paid" ? "#22c55e" : "#f59e0b",
-                  background:
-                    order.paymentStatus === "paid" ? "#22c55e18" : "#f59e0b18",
+                  background: ps.bg,
+                  color: ps.color,
                   padding: "4px 14px",
                   borderRadius: 20,
                   fontSize: 12,
                   fontWeight: 700,
                 }}
               >
-                {order.paymentStatus}
+                {ps.label}
               </span>
             </div>
           </div>
         </div>
 
-        {/* ========================= */}
-        {/*  WHOLESALER ACTION BUTTONS */}
-        {/* ========================= */}
+        {/* ═══════════════════════════════════════════════ */}
+        {/*            WHOLESALER ACTIONS                  */}
+        {/* ═══════════════════════════════════════════════ */}
         {role === "wholesaler" && (
           <div className="od-actions-card">
             <div className="od-actions-title">Update Order Status</div>
+
+            {/* ── STATUS BUTTONS — always shown, active = current status ── */}
             <div className="od-actions-grid">
-              {actionButtons.map((btn) => {
-                const isActive = order.orderStatus === btn.status;
-                return (
-                  <button
-                    key={btn.status}
-                    className="od-action-btn"
-                    disabled={updating || isActive}
-                    onClick={() => updateStatus(btn.status)}
-                    style={{
-                      background: isActive ? btn.bg : "#fff",
-                      color: isActive ? "#fff" : btn.bg,
-                      border: `1.5px solid ${isActive ? btn.bg : btn.bg + "40"}`,
-                      boxShadow: isActive ? `0 4px 14px ${btn.shadow}` : "none",
-                      opacity: isActive ? 0.85 : 1,
-                    }}
-                  >
-                    {btn.icon}
-                    {btn.label}
-                    {isActive && <span style={{ fontSize: 11 }}>✓</span>}
-                  </button>
-                );
-              })}
+              {[
+                {
+                  label: "Approve",
+                  clickStatus: "approved",
+                  icon: <FiCheckCircle size={15} />,
+                  bg: "#6366f1",
+                  shadow: "rgba(99,102,241,0.35)",
+                  // active when order is at the "approved" stage (any sub-status)
+                  isActive: ["approved","advancePending","processing"].includes(order.orderStatus),
+                  // past when we've moved beyond the approved stage
+                  isDone: ["onTheWay","delivered","completed"].includes(order.orderStatus),
+                  canClick: canApprove,
+                },
+                {
+                  label: "On The Way",
+                  clickStatus: "onTheWay",
+                  icon: <FiTruck size={15} />,
+                  bg: "#0ea5e9",
+                  shadow: "rgba(14,165,233,0.35)",
+                  isActive: order.orderStatus === "onTheWay",
+                  isDone: ["delivered","completed"].includes(order.orderStatus),
+                  canClick: canOnTheWay,
+                },
+                {
+                  label: "Delivered",
+                  clickStatus: "delivered",
+                  icon: <FiCheckCircle size={15} />,
+                  bg: "#22c55e",
+                  shadow: "rgba(34,197,94,0.35)",
+                  isActive: ["delivered","completed"].includes(order.orderStatus),
+                  isDone: false,
+                  canClick: canDeliver,
+                },
+                {
+                  label: "Reject",
+                  clickStatus: "rejected",
+                  icon: <FiXCircle size={15} />,
+                  bg: "#ef4444",
+                  shadow: "rgba(239,68,68,0.35)",
+                  isActive: order.orderStatus === "rejected",
+                  isDone: false,
+                  canClick: canReject,
+                },
+              ].map((btn) => (
+                <button
+                  key={btn.clickStatus}
+                  className="od-action-btn"
+                  disabled={updating || !btn.canClick || btn.isActive || btn.isDone}
+                  onClick={() => updateStatus(btn.clickStatus)}
+                  style={{
+                    background: btn.isActive ? btn.bg : "#fff",
+                    color:      btn.isActive ? "#fff" : btn.bg,
+                    border:     `1.5px solid ${btn.isActive ? btn.bg : btn.bg + "40"}`,
+                    boxShadow:  btn.isActive ? `0 4px 14px ${btn.shadow}` : "none",
+                    opacity:    btn.isDone ? 0.4 : 1,
+                  }}
+                >
+                  {btn.icon}
+                  {btn.label}
+                  {btn.isActive && <span style={{ fontSize: 11 }}>✓</span>}
+                </button>
+              ))}
             </div>
 
-            {/* PAYMENT REQUESTS */}
-            <div
-              style={{
-                marginTop: 18,
-                display: "grid",
-                gridTemplateColumns: "1fr 1fr",
-                gap: 10,
-              }}
-            >
+            {/* ── PAYMENT REQUEST BUTTONS — below status grid ── */}
+            <div style={{ marginTop: 12, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+
               {/* REQUEST ADVANCE */}
-              {order.advancePercentage > 0 && !order.advanceRequested && (
+              {canRequestAdvance && (
                 <button
                   className="od-action-btn"
                   onClick={requestAdvancePayment}
                   disabled={updating}
                   style={{
-                    background: "#f59e0b",
-                    color: "#fff",
-                    border: "none",
+                    background: "#f59e0b", color: "#fff", border: "none",
+                    boxShadow: "0 4px 14px rgba(245,158,11,0.35)",
+                    gridColumn: "1 / -1",
                   }}
                 >
                   <FiDollarSign size={15} />
-                  Request Advance
+                  Request {order.advancePercentage}% Advance (₹{order.advanceAmount})
                 </button>
               )}
 
+              {/* ADVANCE ALREADY REQUESTED — show as done chip */}
+              {order.advanceRequested && (
+                <div
+                  style={{
+                    gridColumn: "1 / -1",
+                    background: order.advancePaid ? "#22c55e18" : "#f59e0b18",
+                    border: `1px solid ${order.advancePaid ? "#22c55e40" : "#f59e0b40"}`,
+                    borderRadius: 12,
+                    padding: "10px 14px",
+                    fontSize: 13,
+                    fontWeight: 700,
+                    color: order.advancePaid ? "#22c55e" : "#f59e0b",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                  }}
+                >
+                  <FiDollarSign size={14} />
+                  {order.advancePaid
+                    ? `✓ Advance received — ₹${order.advanceAmount}`
+                    : `Advance requested — waiting for retailer (₹${order.advanceAmount})`}
+                </div>
+              )}
+
               {/* REQUEST FINAL PAYMENT */}
-              {order.orderStatus === "delivered" && !order.finalPaymentRequested && (
+              {canRequestFinal && (
                 <button
                   className="od-action-btn"
                   onClick={requestFinalPayment}
                   disabled={updating}
                   style={{
-                    background: "#22c55e",
-                    color: "#fff",
-                    border: "none",
+                    background: "#22c55e", color: "#fff", border: "none",
+                    boxShadow: "0 4px 14px rgba(34,197,94,0.35)",
+                    gridColumn: "1 / -1",
                   }}
                 >
                   <FiCheckCircle size={15} />
-                  Request Final Payment
+                  Request Final Payment (₹{order.remainingAmount})
                 </button>
               )}
+
+              {/* FINAL ALREADY REQUESTED */}
+              {order.finalPaymentRequested && !order.fullPaymentDone && (
+                <div
+                  style={{
+                    gridColumn: "1 / -1",
+                    background: "#22c55e18",
+                    border: "1px solid #22c55e40",
+                    borderRadius: 12,
+                    padding: "10px 14px",
+                    fontSize: 13,
+                    fontWeight: 700,
+                    color: "#22c55e",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                  }}
+                >
+                  <FiClock size={14} />
+                  Final payment requested — waiting for retailer (₹{order.remainingAmount})
+                </div>
+              )}
+
+              {/* FULLY PAID */}
+              {order.fullPaymentDone && (
+                <div
+                  style={{
+                    gridColumn: "1 / -1",
+                    background: "#22c55e18",
+                    border: "1px solid #22c55e40",
+                    borderRadius: 12,
+                    padding: "10px 14px",
+                    fontSize: 13,
+                    fontWeight: 700,
+                    color: "#22c55e",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                  }}
+                >
+                  <FiCheckCircle size={14} />
+                  ✓ Full payment received — ₹{order.totalAmount}
+                </div>
+              )}
+
             </div>
           </div>
         )}
 
-        {/* ========================= */}
-        {/*  RETAILER PAYMENT ACTIONS  */}
-        {/* ========================= */}
+        {/* ═══════════════════════════════════════════════ */}
+        {/*            RETAILER PAYMENT ACTIONS            */}
+        {/* ═══════════════════════════════════════════════ */}
         {role === "retailer" && (
           <div className="od-actions-card">
             <div className="od-actions-title">Payment Actions</div>
-
             <div className="od-actions-grid">
-              {/* NO ADVANCE */}
-              {(order.advancePercentage || 0) === 0 && (
+
+              {/* ── PAY ADVANCE ──
+                  Wholesaler requested advance and retailer hasn't paid yet */}
+              {order.advanceRequested && !order.advancePaid && (
                 <div
                   style={{
-                    padding: "14px",
-                    borderRadius: "12px",
-                    background: "#22c55e15",
-                    color: "#22c55e",
-                    fontWeight: "700",
-                    textAlign: "center",
                     gridColumn: "1 / -1",
+                    background: "#f59e0b15",
+                    border: "1px solid #f59e0b40",
+                    borderRadius: 14,
+                    padding: 16,
                   }}
                 >
-                  No Advance Payment Required
+                  <div style={{ fontSize: 14, fontWeight: 700, color: "#0f172a", marginBottom: 6 }}>
+                    ⚠️ Advance Payment Requested
+                  </div>
+                  <div style={{ fontSize: 13, color: "#64748b", marginBottom: 14, lineHeight: 1.6 }}>
+                    Your wholesaler requires a <b>{order.advancePercentage}%</b> advance
+                    before dispatching.
+                    <br />
+                    Amount due: <b style={{ color: "#f59e0b" }}>₹{order.advanceAmount}</b>
+                  </div>
+                  <button
+                    className="od-action-btn"
+                    onClick={payAdvance}
+                    disabled={updating}
+                    style={{ background: "#f59e0b", color: "#fff", border: "none", width: "100%" }}
+                  >
+                    <FiDollarSign size={15} />
+                    Pay Advance ₹{order.advanceAmount}
+                  </button>
                 </div>
               )}
 
-              {/* PAY ADVANCE */}
-              {order.advanceRequested && !order.advancePaid && (
-                <button
-                  className="od-action-btn"
-                  onClick={payAdvance}
-                  disabled={updating}
+              {/* ── ADVANCE PAID CONFIRMATION ── */}
+              {order.advancePaid && !order.finalPaymentRequested && (
+                <div
                   style={{
-                    background: "#f59e0b",
-                    color: "#fff",
-                    border: "none",
+                    gridColumn: "1 / -1",
+                    background: "#8b5cf618",
+                    border: "1px solid #8b5cf640",
+                    borderRadius: 14,
+                    padding: 16,
+                    textAlign: "center",
                   }}
                 >
-                  <FiDollarSign size={15} />
-                  Pay {order.advancePercentage}% Advance
-                </button>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "#8b5cf6", marginBottom: 4 }}>
+                    ✓ Advance Paid — ₹{order.advanceAmount}
+                  </div>
+                  <div style={{ fontSize: 12, color: "#64748b" }}>
+                    Waiting for delivery & final payment request
+                  </div>
+                </div>
               )}
 
-              {/* COMPLETE PAYMENT */}
-              {order.finalPaymentRequested &&
-                !order.fullPaymentDone &&
-                order.orderStatus === "delivered" && (
+              {/* ── PAY FINAL ──
+                  Wholesaler requested final payment after delivery */}
+              {order.finalPaymentRequested && !order.fullPaymentDone && (
+                <div
+                  style={{
+                    gridColumn: "1 / -1",
+                    background: "#22c55e15",
+                    border: "1px solid #22c55e40",
+                    borderRadius: 14,
+                    padding: 16,
+                  }}
+                >
+                  <div style={{ fontSize: 14, fontWeight: 700, color: "#0f172a", marginBottom: 6 }}>
+                    ✅ Final Payment Requested
+                  </div>
+                  <div style={{ fontSize: 13, color: "#64748b", marginBottom: 14, lineHeight: 1.6 }}>
+                    Your order has been delivered. Remaining amount:
+                    <b style={{ color: "#22c55e" }}> ₹{order.remainingAmount}</b>
+                  </div>
                   <button
                     className="od-action-btn"
                     onClick={completePayment}
                     disabled={updating}
-                    style={{
-                      background: "#22c55e",
-                      color: "#fff",
-                      border: "none",
-                    }}
+                    style={{ background: "#22c55e", color: "#fff", border: "none", width: "100%" }}
                   >
                     <FiCheckCircle size={15} />
-                    Complete Payment
+                    Complete Payment ₹{order.remainingAmount}
                   </button>
+                </div>
+              )}
+
+              {/* ── ORDER FULLY PAID ── */}
+              {order.fullPaymentDone && (
+                <div
+                  style={{
+                    gridColumn: "1 / -1",
+                    background: "#22c55e18",
+                    border: "1px solid #22c55e40",
+                    borderRadius: 14,
+                    padding: 16,
+                    textAlign: "center",
+                    color: "#22c55e",
+                    fontWeight: 700,
+                    fontSize: 14,
+                  }}
+                >
+                  <FiCheckCircle size={18} style={{ marginBottom: 6 }} />
+                  <div>Order fully paid — ₹{order.totalAmount}</div>
+                </div>
+              )}
+
+              {/* ── WAITING (no action needed from retailer yet) ── */}
+              {!order.advanceRequested &&
+                !order.finalPaymentRequested &&
+                !order.fullPaymentDone &&
+                order.paymentStatus !== "paid" && (
+                  <div
+                    style={{
+                      gridColumn: "1 / -1",
+                      padding: "16px",
+                      borderRadius: "14px",
+                      background: "#e2e8f0",
+                      color: "#475569",
+                      fontWeight: "600",
+                      textAlign: "center",
+                      fontSize: 13,
+                    }}
+                  >
+                    {order.orderStatus === "pending"
+                      ? "⏳ Waiting for wholesaler to approve your order"
+                      : order.orderStatus === "rejected"
+                      ? "❌ This order was rejected"
+                      : "⏳ Waiting for wholesaler payment request"}
+                  </div>
                 )}
+
             </div>
           </div>
         )}
+
       </div>
     </>
   );
@@ -715,7 +857,6 @@ const pageStyles = `
     to   { opacity: 1; transform: translateY(0); }
   }
 
-  /* Colored strip */
   .od-card-strip {
     height: 5px;
     width: 100%;
@@ -826,6 +967,7 @@ const pageStyles = `
   }
   .od-action-btn:disabled {
     cursor: not-allowed;
+    opacity: 0.65;
     transform: none;
   }
 `;
