@@ -33,7 +33,7 @@ export default function OrderDetails() {
     setToast({ msg, type });
     setTimeout(() => setToast({ msg: "", type: "success" }), 3000);
   };
-
+  const [advanceInput, setAdvanceInput] = useState("");
   const fetchOrder = async () => {
     try {
       const url =
@@ -93,14 +93,13 @@ export default function OrderDetails() {
 
   const requestAdvancePayment = async () => {
     try {
-      // ASK PERCENTAGE
-      const percentage = prompt("Enter advance percentage");
+      if (!advanceInput) {
+        showToast("Enter advance percentage", "error");
 
-      // CANCEL
-      if (!percentage) return;
+        return;
+      }
 
-      // INVALID
-      if (Number(percentage) < 0 || Number(percentage) > 100) {
+      if (Number(advanceInput) < 0 || Number(advanceInput) > 100) {
         showToast("Enter valid percentage", "error");
 
         return;
@@ -108,16 +107,17 @@ export default function OrderDetails() {
 
       setUpdating(true);
 
-      // SEND TO BACKEND
       await axios.patch(
         `http://localhost:4000/api/orders/${id}/request-advance`,
 
         {
-          advancePercentage: Number(percentage),
+          advancePercentage: Number(advanceInput),
         },
       );
 
-      showToast(`Advance request sent (${percentage}%)`);
+      showToast(`Advance request sent (${advanceInput}%)`);
+
+      setAdvanceInput("");
 
       fetchOrder();
     } catch (error) {
@@ -269,15 +269,9 @@ export default function OrderDetails() {
 
   const canDeliver = order.orderStatus === "onTheWay";
 
-const canRequestAdvance =
-
-  (
-    order.orderStatus === "approved" ||
-
-    order.orderStatus === "processing"
-  ) &&
-
-  !order.advanceRequested;
+  const canRequestAdvance =
+    (order.orderStatus === "approved" || order.orderStatus === "processing") &&
+    !order.advanceRequested;
 
   // Final payment: only after delivery, only once
   const canRequestFinal =
@@ -395,9 +389,7 @@ const canRequestAdvance =
           </div>
         </div>
 
-        {/* ═══════════════════════════════ */}
         {/*       PAYMENT DETAILS          */}
-        {/* ═══════════════════════════════ */}
         <div className="od-card">
           <div className="od-card-strip" style={{ background: "#22c55e" }} />
           <div className="od-card-body">
@@ -601,22 +593,95 @@ const canRequestAdvance =
             >
               {/* REQUEST ADVANCE */}
               {canRequestAdvance && (
-                <button
-                  className="od-action-btn"
-                  onClick={requestAdvancePayment}
-                  disabled={updating}
+                <div
                   style={{
-                    background: "#f59e0b",
-                    color: "#fff",
-                    border: "none",
-                    boxShadow: "0 4px 14px rgba(245,158,11,0.35)",
                     gridColumn: "1 / -1",
+                    background: "#fff7ed",
+                    border: "1px solid #fdba74",
+                    borderRadius: 14,
+                    padding: 16,
                   }}
                 >
-                  <FiDollarSign size={15} />
-                  Request {order.advancePercentage}% Advance (₹
-                  {order.advanceAmount})
-                </button>
+                  <div
+                    style={{
+                      fontSize: 14,
+                      fontWeight: 700,
+                      color: "#9a3412",
+                      marginBottom: 12,
+                    }}
+                  >
+                    Request Advance Payment
+                  </div>
+
+                  <input
+                    type="number"
+                    placeholder="Enter advance percentage"
+                    value={advanceInput}
+                    min="0"
+                    max="100"
+                    onChange={(e) => {
+                      let value = Number(e.target.value);
+
+                      // LESS THAN 0
+                      if (value < 0) {
+                        value = 0;
+                      }
+
+                      // GREATER THAN 100
+                      if (value > 100) {
+                        value = 100;
+                      }
+
+                      setAdvanceInput(value);
+                    }}
+                    style={{
+                      width: "100%",
+                      padding: "12px 14px",
+                      borderRadius: 12,
+                      border: "1px solid #cbd5e1",
+                      outline: "none",
+                      marginBottom: 14,
+                      fontSize: 14,
+                      fontFamily: "Outfit",
+                    }}
+                  />
+
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: 10,
+                    }}
+                  >
+                    <button
+                      className="od-action-btn"
+                      onClick={requestAdvancePayment}
+                      disabled={updating}
+                      style={{
+                        background: "#f59e0b",
+                        color: "#fff",
+                        border: "none",
+                        flex: 1,
+                        boxShadow: "0 4px 14px rgba(245,158,11,0.35)",
+                      }}
+                    >
+                      <FiDollarSign size={15} />
+                      Send Request
+                    </button>
+
+                    <button
+                      className="od-action-btn"
+                      onClick={() => setAdvanceInput("")}
+                      style={{
+                        background: "#e2e8f0",
+                        color: "#334155",
+                        border: "none",
+                        flex: 1,
+                      }}
+                    >
+                      Clear
+                    </button>
+                  </div>
+                </div>
               )}
 
               {/* ADVANCE ALREADY REQUESTED — show as done chip */}
