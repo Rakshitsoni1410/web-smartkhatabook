@@ -224,7 +224,32 @@
   padding: 3px 10px;
   border-radius: 20px;
 }
+.back-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: none;
+    background: #fff;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.10);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    margin-bottom: 18px;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
 
+.back-btn:hover {
+    transform: scale(1.08);
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.15);
+}
+
+.back-arrow {
+    font-size: 26px;
+    color: #1E3A8A;
+    line-height: 1;
+    margin-top: -2px;
+}
 /* ── Empty ────────────────────────────────────────────── */
 .ledger-empty {
   text-align: center;
