@@ -14,6 +14,8 @@ import {
   FiSun,
   FiMoon,
   FiUser,
+  FiBookOpen,
+  FiTruck,
   FiSettings,
 } from "react-icons/fi";
 import "./Sidebar.css";
@@ -22,7 +24,8 @@ const WHOLESALER_MENU = [
   { icon: <FiGrid />, name: "Overview", path: "/dashboard" },
   { icon: <FiBox />, name: "Stock", path: "/stock" },
   { icon: <FiUsers />, name: "Employees", path: "/employees" },
-  { icon: <FiFileText />, name: "Orders", path: "/orders" },
+  { icon: <FiTruck />, name: "Orders", path: "/orders" },
+  { icon: <FiBookOpen />, name: "Ledger", path: "/ledger" },
   { icon: <FiMessageSquare />, name: "Reviews", path: "/reviews" },
 ];
 
@@ -31,8 +34,8 @@ const RETAILER_MENU = [
   { icon: <FiBox />, name: "Stock", path: "/stock" },
   { icon: <FiUsers />, name: "Customers", path: "/customers" },
   { icon: <FiUsers />, name: "Employees", path: "/employees" },
-  { icon: <FiFileText />, name: "Orders", path: "/orders" },
-  { icon: <FiFileText />, name: "Ledger", path: "/ledger" },
+  { icon: <FiTruck />, name: "Orders", path: "/orders" },
+  { icon: <FiBookOpen />, name: "Ledger", path: "/ledger" },
   { icon: <FiBarChart2 />, name: "Reports", path: "/reports" },
   { icon: <FiMessageSquare />, name: "Reviews", path: "/reviews" },
 ];
