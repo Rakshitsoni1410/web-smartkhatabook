@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiPhone, FiLock, FiEye, FiEyeOff, FiArrowRight } from "react-icons/fi";
 import axios from "axios";
@@ -11,7 +11,18 @@ export default function Login() {
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
   const [toast, setToast] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // true on mount = wakes server
+
+  // Ping server on mount so it wakes up before user hits Sign in
+  useEffect(() => {
+    axios
+      .post(
+        "https://backend-of-smartkhata-book.onrender.com/api/user/login",
+        {},
+      )
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -28,19 +39,27 @@ export default function Login() {
 
   const handleLogin = async () => {
     const errs = validate();
-    if (Object.keys(errs).length > 0) { setErrors(errs); return; }
+    if (Object.keys(errs).length > 0) {
+      setErrors(errs);
+      return;
+    }
 
     setLoading(true);
     try {
-      const res = await axios.post("https://backend-of-smartkhata-book.onrender.com/api/user/login", {
-        phone: form.phone,
-        password: form.password,
-      });
+      const res = await axios.post(
+        "https://backend-of-smartkhata-book.onrender.com/api/user/login",
+        {
+          phone: form.phone,
+          password: form.password,
+        },
+      );
       localStorage.setItem("user", JSON.stringify(res.data.user));
       setToast("Login successful!");
       setTimeout(() => navigate("/dashboard"), 1200);
     } catch (err) {
-      setErrors({ password: err.response?.data?.message || "Invalid phone or password" });
+      setErrors({
+        password: err.response?.data?.message || "Invalid phone or password",
+      });
     } finally {
       setLoading(false);
     }
@@ -52,7 +71,6 @@ export default function Login() {
 
   return (
     <div className="login-page">
-
       {/* Toast */}
       {toast && (
         <div className="toast">
@@ -66,7 +84,14 @@ export default function Login() {
         <div className="left-inner">
           <div className="brand">
             <div className="brand-icon">
-              <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <svg
+                width="22"
+                height="22"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                viewBox="0 0 24 24"
+              >
                 <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
                 <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
               </svg>
@@ -76,7 +101,10 @@ export default function Login() {
 
           <div className="left-hero">
             <h1>Track. Manage. Profit.</h1>
-            <p>Your complete business accounting platform — billing, customers, stock and reports in one place.</p>
+            <p>
+              Your complete business accounting platform — billing, customers,
+              stock and reports in one place.
+            </p>
           </div>
 
           <div className="stat-grid">
@@ -95,7 +123,10 @@ export default function Login() {
           </div>
 
           <div className="left-quote">
-            <p>"Smart Khatabook transformed how I manage my store. Everything is so much simpler now."</p>
+            <p>
+              "Smart Khatabook transformed how I manage my store. Everything is
+              so much simpler now."
+            </p>
             <div className="quote-author">
               <div className="author-avatar">RK</div>
               <div>
@@ -116,7 +147,6 @@ export default function Login() {
       {/* RIGHT PANEL */}
       <div className="login-right">
         <div className="login-card">
-
           <div className="card-header">
             <div className="welcome-badge">Welcome back 👋</div>
             <h2>Sign in to your account</h2>
@@ -145,11 +175,16 @@ export default function Login() {
             <div className="field-wrap">
               <div className="label-row">
                 <label className="field-label">Password</label>
-                <span className="forgot-link" onClick={() => navigate("/forgot-password")}>
+                <span
+                  className="forgot-link"
+                  onClick={() => navigate("/forgot-password")}
+                >
                   Forgot password?
                 </span>
               </div>
-              <div className={`field-box ${errors.password ? "has-error" : ""}`}>
+              <div
+                className={`field-box ${errors.password ? "has-error" : ""}`}
+              >
                 <FiLock className="field-icon" />
                 <input
                   type={showPassword ? "text" : "password"}
@@ -169,7 +204,9 @@ export default function Login() {
                   {showPassword ? <FiEyeOff size={15} /> : <FiEye size={15} />}
                 </button>
               </div>
-              {errors.password && <p className="field-error">{errors.password}</p>}
+              {errors.password && (
+                <p className="field-error">{errors.password}</p>
+              )}
             </div>
 
             <button
@@ -180,7 +217,9 @@ export default function Login() {
               {loading ? (
                 <span className="spinner" />
               ) : (
-                <>Sign in <FiArrowRight size={15} /></>
+                <>
+                  Sign in <FiArrowRight size={15} />
+                </>
               )}
             </button>
           </div>
@@ -193,7 +232,6 @@ export default function Login() {
           </p>
         </div>
       </div>
-
     </div>
   );
 }
