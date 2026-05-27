@@ -150,7 +150,7 @@ export default function Signup() {
 
   const handleSignup = async () => {
     try {
-      console.log(form);
+      
 
       const response = await axios.post(
         "https://backend-of-smartkhata-book.onrender.com/api/user/register",
