@@ -92,18 +92,6 @@ export default function Signup() {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const { toasts, addToast, removeToast } = useToast();
-  const [serverReady, setServerReady] = useState(false);
-
-  // Ping server on mount so it wakes up before user submits
-  useEffect(() => {
-    axios
-      .post(
-        "https://backend-of-smartkhata-book.onrender.com/api/user/register",
-        {},
-      )
-      .catch(() => {})
-      .finally(() => setServerReady(true));
-  }, []);
 
   const [form, setForm] = useState({
     name: "",
@@ -326,18 +314,8 @@ export default function Signup() {
                 error={errors.email}
               />
 
-              <button
-                className="btn-primary"
-                onClick={goNext}
-                disabled={!serverReady}
-              >
-                {!serverReady ? (
-                  <span className="spinner" />
-                ) : (
-                  <>
-                    Continue <FiArrowRight size={15} />
-                  </>
-                )}
+              <button className="btn-primary" onClick={goNext}>
+                Continue <FiArrowRight size={15} />
               </button>
             </div>
           )}
@@ -466,4 +444,4 @@ function SelectField({ icon, label, options, error, ...props }) {
       {error && <p className="field-error">{error}</p>}
     </div>
   );
-}    
+}
