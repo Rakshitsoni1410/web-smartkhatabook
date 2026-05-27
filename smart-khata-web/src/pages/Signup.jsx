@@ -12,6 +12,8 @@ import {
   FiPackage,
   FiArrowRight,
   FiCheck,
+  FiX,
+  FiAlertCircle,
 } from "react-icons/fi";
 import axios from "axios";
 import "./Signup.css";
@@ -29,9 +31,47 @@ const BUSINESS_TYPES = [
   "General Store", "Sports Shop", "Toy Shop", "Agriculture", "Other",
 ];
 
+/* ── Toast Component ─────────────────────────────────────── */
+function Toast({ toasts, removeToast }) {
+  return (
+    <div className="toast-container">
+      {toasts.map((t) => (
+        <div key={t.id} className={`toast toast-${t.type}`}>
+          <span className="toast-icon">
+            {t.type === "success" ? <FiCheck size={15} /> : <FiAlertCircle size={15} />}
+          </span>
+          <span className="toast-msg">{t.message}</span>
+          <button className="toast-close" onClick={() => removeToast(t.id)}>
+            <FiX size={13} />
+          </button>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ── useToast hook ───────────────────────────────────────── */
+function useToast() {
+  const [toasts, setToasts] = useState([]);
+
+  const addToast = (message, type = "success", duration = 3500) => {
+    const id = Date.now();
+    setToasts((prev) => [...prev, { id, message, type }]);
+    setTimeout(() => removeToast(id), duration);
+  };
+
+  const removeToast = (id) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  };
+
+  return { toasts, addToast, removeToast };
+}
+
+/* ── Main Component ──────────────────────────────────────── */
 export default function Signup() {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
+  const { toasts, addToast, removeToast } = useToast();
 
   const [form, setForm] = useState({
     name: "", phone: "", email: "", role: "",
@@ -89,16 +129,20 @@ export default function Signup() {
         businessType: form.businessType, address: form.address,
         password: form.password,
       });
-      alert("Account created successfully!");
-      navigate("/");
+      addToast("Account created successfully! Redirecting…", "success");
+      setTimeout(() => navigate("/"), 2000);
     } catch (err) {
-      setErrors({ phone: err.response?.data?.message || "Signup failed" });
+      const msg = err.response?.data?.message || "Signup failed. Please try again.";
+      addToast(msg, "error");
+      setErrors({ phone: msg });
       setStep(1);
     }
   };
 
   return (
     <div className="signup-page">
+      <Toast toasts={toasts} removeToast={removeToast} />
+
       <div className="signup-left">
         <div className="left-inner">
           <div className="brand">
