@@ -397,3 +397,105 @@
   .signup-card { padding: 1.5rem 1.25rem 1.25rem; }
   .field-grid { grid-template-columns: 1fr; }
 }
+/* ── Paste these styles into your Signup.css ── */
+
+/* Toast Container */
+.toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+}
+
+/* Individual Toast */
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  min-width: 280px;
+  max-width: 360px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+  font-size: 14px;
+  font-weight: 500;
+  pointer-events: all;
+  animation: toast-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateX(60px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+/* Success Toast */
+.toast-success {
+  background: #F0FDF4;
+  border: 1px solid #BBF7D0;
+  color: #15803D;
+}
+
+.toast-success .toast-icon {
+  background: #22C55E;
+  color: #fff;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Error Toast */
+.toast-error {
+  background: #FEF2F2;
+  border: 1px solid #FECACA;
+  color: #DC2626;
+}
+
+.toast-error .toast-icon {
+  background: #EF4444;
+  color: #fff;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Message text */
+.toast-msg {
+  flex: 1;
+  line-height: 1.4;
+}
+
+/* Close button */
+.toast-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px;
+  color: inherit;
+  opacity: 0.5;
+  display: flex;
+  align-items: center;
+  transition: opacity 0.15s;
+  flex-shrink: 0;
+}
+
+.toast-close:hover {
+  opacity: 1;
+}
