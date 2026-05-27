@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FiUser,
@@ -25,10 +25,26 @@ const ROLES = [
 ];
 
 const BUSINESS_TYPES = [
-  "Stationery", "Grocery", "Medical", "Clothing", "Electronics",
-  "Footwear", "Jewelry", "Hardware", "Furniture", "Cosmetic",
-  "Book Store", "Mobile Shop", "Bakery", "Restaurant", "Gift Shop",
-  "General Store", "Sports Shop", "Toy Shop", "Agriculture", "Other",
+  "Stationery",
+  "Grocery",
+  "Medical",
+  "Clothing",
+  "Electronics",
+  "Footwear",
+  "Jewelry",
+  "Hardware",
+  "Furniture",
+  "Cosmetic",
+  "Book Store",
+  "Mobile Shop",
+  "Bakery",
+  "Restaurant",
+  "Gift Shop",
+  "General Store",
+  "Sports Shop",
+  "Toy Shop",
+  "Agriculture",
+  "Other",
 ];
 
 /* ── Toast Component ─────────────────────────────────────── */
@@ -38,7 +54,11 @@ function Toast({ toasts, removeToast }) {
       {toasts.map((t) => (
         <div key={t.id} className={`toast toast-${t.type}`}>
           <span className="toast-icon">
-            {t.type === "success" ? <FiCheck size={15} /> : <FiAlertCircle size={15} />}
+            {t.type === "success" ? (
+              <FiCheck size={15} />
+            ) : (
+              <FiAlertCircle size={15} />
+            )}
           </span>
           <span className="toast-msg">{t.message}</span>
           <button className="toast-close" onClick={() => removeToast(t.id)}>
@@ -72,11 +92,29 @@ export default function Signup() {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const { toasts, addToast, removeToast } = useToast();
+  const [serverReady, setServerReady] = useState(false);
+
+  // Ping server on mount so it wakes up before user submits
+  useEffect(() => {
+    axios
+      .post(
+        "https://backend-of-smartkhata-book.onrender.com/api/user/register",
+        {},
+      )
+      .catch(() => {})
+      .finally(() => setServerReady(true));
+  }, []);
 
   const [form, setForm] = useState({
-    name: "", phone: "", email: "", role: "",
-    shopName: "", businessType: "", address: "",
-    password: "", confirm: "",
+    name: "",
+    phone: "",
+    email: "",
+    role: "",
+    shopName: "",
+    businessType: "",
+    address: "",
+    password: "",
+    confirm: "",
   });
 
   const [errors, setErrors] = useState({});
@@ -115,24 +153,38 @@ export default function Signup() {
 
   const goNext = () => {
     const errs = validateStep1();
-    if (Object.keys(errs).length > 0) { setErrors(errs); return; }
+    if (Object.keys(errs).length > 0) {
+      setErrors(errs);
+      return;
+    }
     setStep(2);
   };
 
   const handleSignup = async () => {
     const errs = validateStep2();
-    if (Object.keys(errs).length > 0) { setErrors(errs); return; }
+    if (Object.keys(errs).length > 0) {
+      setErrors(errs);
+      return;
+    }
     try {
-      await axios.post("https://backend-of-smartkhata-book.onrender.com/api/user/register", {
-        name: form.name, phone: form.phone, email: form.email,
-        role: form.role, shopName: form.shopName,
-        businessType: form.businessType, address: form.address,
-        password: form.password,
-      });
+      await axios.post(
+        "https://backend-of-smartkhata-book.onrender.com/api/user/register",
+        {
+          name: form.name,
+          phone: form.phone,
+          email: form.email,
+          role: form.role,
+          shopName: form.shopName,
+          businessType: form.businessType,
+          address: form.address,
+          password: form.password,
+        },
+      );
       addToast("Account created successfully! Redirecting…", "success");
       setTimeout(() => navigate("/"), 2000);
     } catch (err) {
-      const msg = err.response?.data?.message || "Signup failed. Please try again.";
+      const msg =
+        err.response?.data?.message || "Signup failed. Please try again.";
       addToast(msg, "error");
       setErrors({ phone: msg });
       setStep(1);
@@ -147,8 +199,16 @@ export default function Signup() {
         <div className="left-inner">
           <div className="brand">
             <div className="brand-icon">
-              <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+              <svg
+                width="22"
+                height="22"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                viewBox="0 0 24 24"
+              >
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
               </svg>
             </div>
             <span className="brand-name">Smart Khatabook</span>
@@ -160,16 +220,25 @@ export default function Signup() {
           </div>
 
           <ul className="feature-list">
-            {["Billing & Invoicing", "Customer Ledger", "Stock Tracking", "Business Reports"].map((f) => (
+            {[
+              "Billing & Invoicing",
+              "Customer Ledger",
+              "Stock Tracking",
+              "Business Reports",
+            ].map((f) => (
               <li key={f}>
-                <span className="feature-dot"><FiCheck size={11} /></span>
+                <span className="feature-dot">
+                  <FiCheck size={11} />
+                </span>
                 {f}
               </li>
             ))}
           </ul>
 
           <div className="left-footer">
-            <p>Trusted by <strong>10,000+ businesses</strong> across India</p>
+            <p>
+              Trusted by <strong>10,000+ businesses</strong> across India
+            </p>
           </div>
         </div>
 
@@ -192,7 +261,11 @@ export default function Signup() {
               </div>
             </div>
             <h2>{step === 1 ? "Create account" : "Business & security"}</h2>
-            <p>{step === 1 ? "Start with your basic information" : "Almost there — a few more details"}</p>
+            <p>
+              {step === 1
+                ? "Start with your basic information"
+                : "Almost there — a few more details"}
+            </p>
           </div>
 
           {step === 1 && (
@@ -209,22 +282,62 @@ export default function Signup() {
                     <span className="role-icon">{icon}</span>
                     <span>{label}</span>
                     {form.role === value && (
-                      <span className="role-check"><FiCheck size={10} /></span>
+                      <span className="role-check">
+                        <FiCheck size={10} />
+                      </span>
                     )}
                   </button>
                 ))}
               </div>
               {errors.role && <p className="field-error">{errors.role}</p>}
 
-              <div className="section-label" style={{ marginTop: "1.25rem" }}>Personal details</div>
-              <div className="field-grid">
-                <Field icon={<FiUser />} label="Full name" name="name" placeholder="Your full name" value={form.name} onChange={handleChange} error={errors.name} />
-                <Field icon={<FiPhone />} label="Phone" name="phone" placeholder="10-digit number" value={form.phone} onChange={handleChange} error={errors.phone} maxLength="10" />
+              <div className="section-label" style={{ marginTop: "1.25rem" }}>
+                Personal details
               </div>
-              <Field icon={<FiMail />} label="Email address" name="email" type="email" placeholder="you@example.com" value={form.email} onChange={handleChange} error={errors.email} />
+              <div className="field-grid">
+                <Field
+                  icon={<FiUser />}
+                  label="Full name"
+                  name="name"
+                  placeholder="Your full name"
+                  value={form.name}
+                  onChange={handleChange}
+                  error={errors.name}
+                />
+                <Field
+                  icon={<FiPhone />}
+                  label="Phone"
+                  name="phone"
+                  placeholder="10-digit number"
+                  value={form.phone}
+                  onChange={handleChange}
+                  error={errors.phone}
+                  maxLength="10"
+                />
+              </div>
+              <Field
+                icon={<FiMail />}
+                label="Email address"
+                name="email"
+                type="email"
+                placeholder="you@example.com"
+                value={form.email}
+                onChange={handleChange}
+                error={errors.email}
+              />
 
-              <button className="btn-primary" onClick={goNext}>
-                Continue <FiArrowRight size={15} />
+              <button
+                className="btn-primary"
+                onClick={goNext}
+                disabled={!serverReady}
+              >
+                {!serverReady ? (
+                  <span className="spinner" />
+                ) : (
+                  <>
+                    Continue <FiArrowRight size={15} />
+                  </>
+                )}
               </button>
             </div>
           )}
@@ -235,23 +348,74 @@ export default function Signup() {
                 <>
                   <div className="section-label">Business details</div>
                   <div className="field-grid">
-                    <Field icon={<FiHome />} label="Shop name" name="shopName" placeholder="Your shop name" value={form.shopName} onChange={handleChange} error={errors.shopName} />
-                    <SelectField icon={<FiBriefcase />} label="Business type" name="businessType" value={form.businessType} onChange={handleChange} error={errors.businessType} options={BUSINESS_TYPES} />
+                    <Field
+                      icon={<FiHome />}
+                      label="Shop name"
+                      name="shopName"
+                      placeholder="Your shop name"
+                      value={form.shopName}
+                      onChange={handleChange}
+                      error={errors.shopName}
+                    />
+                    <SelectField
+                      icon={<FiBriefcase />}
+                      label="Business type"
+                      name="businessType"
+                      value={form.businessType}
+                      onChange={handleChange}
+                      error={errors.businessType}
+                      options={BUSINESS_TYPES}
+                    />
                   </div>
                 </>
               )}
 
-              <div className="section-label" style={{ marginTop: form.role !== "Customer" ? "1.25rem" : 0 }}>Location</div>
-              <Field icon={<FiMapPin />} label="Address" name="address" placeholder="Shop or home address" value={form.address} onChange={handleChange} error={errors.address} />
+              <div
+                className="section-label"
+                style={{ marginTop: form.role !== "Customer" ? "1.25rem" : 0 }}
+              >
+                Location
+              </div>
+              <Field
+                icon={<FiMapPin />}
+                label="Address"
+                name="address"
+                placeholder="Shop or home address"
+                value={form.address}
+                onChange={handleChange}
+                error={errors.address}
+              />
 
-              <div className="section-label" style={{ marginTop: "1.25rem" }}>Security</div>
+              <div className="section-label" style={{ marginTop: "1.25rem" }}>
+                Security
+              </div>
               <div className="field-grid">
-                <Field icon={<FiLock />} label="Password" name="password" type="password" placeholder="Create password" value={form.password} onChange={handleChange} error={errors.password} />
-                <Field icon={<FiLock />} label="Confirm password" name="confirm" type="password" placeholder="Repeat password" value={form.confirm} onChange={handleChange} error={errors.confirm} />
+                <Field
+                  icon={<FiLock />}
+                  label="Password"
+                  name="password"
+                  type="password"
+                  placeholder="Create password"
+                  value={form.password}
+                  onChange={handleChange}
+                  error={errors.password}
+                />
+                <Field
+                  icon={<FiLock />}
+                  label="Confirm password"
+                  name="confirm"
+                  type="password"
+                  placeholder="Repeat password"
+                  value={form.confirm}
+                  onChange={handleChange}
+                  error={errors.confirm}
+                />
               </div>
 
               <div className="btn-row">
-                <button className="btn-ghost" onClick={() => setStep(1)}>← Back</button>
+                <button className="btn-ghost" onClick={() => setStep(1)}>
+                  ← Back
+                </button>
                 <button className="btn-primary" onClick={handleSignup}>
                   Create account <FiCheck size={15} />
                 </button>
@@ -261,7 +425,9 @@ export default function Signup() {
 
           <p className="login-hint">
             Already have an account?{" "}
-            <span onClick={() => navigate("/")} className="login-link">Sign in</span>
+            <span onClick={() => navigate("/")} className="login-link">
+              Sign in
+            </span>
           </p>
         </div>
       </div>
@@ -290,7 +456,11 @@ function SelectField({ icon, label, options, error, ...props }) {
         <span className="field-icon">{icon}</span>
         <select {...props}>
           <option value="">Select type</option>
-          {options.map((o) => <option key={o} value={o}>{o}</option>)}
+          {options.map((o) => (
+            <option key={o} value={o}>
+              {o}
+            </option>
+          ))}
         </select>
       </div>
       {error && <p className="field-error">{error}</p>}
