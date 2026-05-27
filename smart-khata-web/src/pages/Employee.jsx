@@ -22,7 +22,7 @@ import {
 export default function Employees() {
   const navigate = useNavigate();
 
-  const API = "http://localhost:4000/api/employees";
+  const API = "http://https://backend-of-smartkhata-book.onrender.com/api/employees";
 
   const [search, setSearch] = useState("");
 

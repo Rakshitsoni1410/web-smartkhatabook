@@ -32,7 +32,7 @@ export default function Login() {
 
     setLoading(true);
     try {
-      const res = await axios.post("http://localhost:4000/api/user/login", {
+      const res = await axios.post("http://https://backend-of-smartkhata-book.onrender.com/api/user/login", {
         phone: form.phone,
         password: form.password,
       });

@@ -15,7 +15,7 @@ export default function ForgotPassword() {
     try {
       setLoading(true);
       setError("");
-      await axios.post("http://localhost:4000/api/user/forgot-password", { email });
+      await axios.post("http://https://backend-of-smartkhata-book.onrender.com/api/user/forgot-password", { email });
       setSent(true);
     } catch (err) {
       setError("Something went wrong. Please try again.");

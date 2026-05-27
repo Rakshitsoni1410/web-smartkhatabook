@@ -27,8 +27,8 @@ export default function Orders() {
     try {
       const url =
         role === "wholesaler"
-          ? `http://localhost:4000/api/orders/wholesaler/${user._id}`
-          : `http://localhost:4000/api/orders/retailer/${user._id}`;
+          ? `http://https://backend-of-smartkhata-book.onrender.com/api/orders/wholesaler/${user._id}`
+          : `http://https://backend-of-smartkhata-book.onrender.com/api/orders/retailer/${user._id}`;
       const res = await axios.get(url);
       setOrders(res.data || []);
     } catch (error) {

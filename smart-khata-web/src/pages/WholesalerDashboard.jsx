@@ -24,7 +24,7 @@ export default function WholesalerDashboard() {
   const fetchWholesalers = async () => {
     try {
       const res = await axios.get(
-        `http://localhost:4000/api/user/wholesalers/${category}`,
+        `http://https://backend-of-smartkhata-book.onrender.com/api/user/wholesalers/${category}`,
       );
 
       setList(res.data.users || []);
@@ -36,7 +36,7 @@ export default function WholesalerDashboard() {
     try {
       const userData = JSON.parse(localStorage.getItem("user")) || {};
 
-      await axios.post("http://localhost:4000/api/orders/create", {
+      await axios.post("http://https://backend-of-smartkhata-book.onrender.com/api/orders/create", {
         retailerId: userData._id.toString(),
 
         wholesalerId: shop._id.toString(),

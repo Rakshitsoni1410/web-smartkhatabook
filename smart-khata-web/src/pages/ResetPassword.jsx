@@ -48,7 +48,7 @@ export default function ResetPassword() {
       setError("");
 
       await axios.post(
-        `http://localhost:4000/api/user/reset-password/${token}`,
+        `http://https://backend-of-smartkhata-book.onrender.com/api/user/reset-password/${token}`,
         {
           password,
         },
