@@ -149,36 +149,40 @@ export default function Signup() {
   };
 
   const handleSignup = async () => {
-    const errs = validateStep2();
-    if (Object.keys(errs).length > 0) {
-      setErrors(errs);
-      return;
-    }
     try {
-      await axios.post(
+      console.log(form);
+
+      const response = await axios.post(
         "https://backend-of-smartkhata-book.onrender.com/api/user/register",
         {
           name: form.name,
           phone: form.phone,
           email: form.email,
           role: form.role,
-          shopName: form.shopName,
-          businessType: form.businessType,
+          shopName: form.shopName || "N/A",
+          businessType: form.businessType || "N/A",
           address: form.address,
           password: form.password,
         },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        },
       );
-      addToast("Account created successfully! Redirecting…", "success");
-      setTimeout(() => navigate("/"), 2000);
+
+      addToast("Signup successful", "success");
+
+      setTimeout(() => {
+        navigate("/");
+      }, 1500);
     } catch (err) {
-      const msg =
-        err.response?.data?.message || "Signup failed. Please try again.";
-      addToast(msg, "error");
-      setErrors({ phone: msg });
-      setStep(1);
+      console.log("FULL ERROR:", err);
+      console.log("ERROR DATA:", err.response?.data);
+
+      addToast(err.response?.data?.message || "Signup failed", "error");
     }
   };
-
   return (
     <div className="signup-page">
       <Toast toasts={toasts} removeToast={removeToast} />
