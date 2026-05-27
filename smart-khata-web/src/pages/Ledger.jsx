@@ -33,9 +33,9 @@ export default function Ledger() {
     }
   };
 
-  // =========================
+ 
   // TOTAL CREDIT
-  // =========================
+
 
   const totalCredit = entries
 
@@ -47,9 +47,8 @@ export default function Ledger() {
       0,
     );
 
-  // =========================
   // TOTAL DEBIT
-  // =========================
+
 
   const totalDebit = entries
 
@@ -61,15 +60,14 @@ export default function Ledger() {
       0,
     );
 
-  // =========================
+
   // BALANCE
-  // =========================
+  
 
   const balance = totalCredit - totalDebit;
 
-  // =========================
   // FILTERED DATA
-  // =========================
+
 
   const filtered = entries.filter((e) => {
     const matchFilter =
