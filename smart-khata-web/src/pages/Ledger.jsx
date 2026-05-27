@@ -3,7 +3,9 @@ import { useState, useEffect } from "react";
 import "./Ledger.css";
 
 import axios from "axios";
-
+import {
+  useNavigate
+} from "react-router-dom";
 export default function Ledger() {
   const [filter, setFilter] = useState("All");
 
@@ -32,7 +34,8 @@ export default function Ledger() {
       console.log(error);
     }
   };
-
+const navigate =
+  useNavigate();
  
   // TOTAL CREDIT
 
