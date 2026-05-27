@@ -83,7 +83,7 @@ export default function Signup() {
     const errs = validateStep2();
     if (Object.keys(errs).length > 0) { setErrors(errs); return; }
     try {
-      await axios.post("http://https://backend-of-smartkhata-book.onrender.com/api/user/register", {
+      await axios.post("https://backend-of-smartkhata-book.onrender.com/api/user/register", {
         name: form.name, phone: form.phone, email: form.email,
         role: form.role, shopName: form.shopName,
         businessType: form.businessType, address: form.address,

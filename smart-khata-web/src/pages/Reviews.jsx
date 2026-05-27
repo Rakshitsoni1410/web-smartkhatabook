@@ -38,7 +38,7 @@ export default function Reviews() {
   const fetchReviews = async () => {
     try {
       const res = await axios.get(
-        `http://https://backend-of-smartkhata-book.onrender.com/api/reviews/${user._id}`,
+        `https://backend-of-smartkhata-book.onrender.com/api/reviews/${user._id}`,
       );
 
       setReviews(res.data.reviews || []);
@@ -52,7 +52,7 @@ const fetchSuggestions = async () => {
   try {
 
     const res = await axios.get(
-      `http://https://backend-of-smartkhata-book.onrender.com/api/reviews/suggestions/${user._id}`
+      `https://backend-of-smartkhata-book.onrender.com/api/reviews/suggestions/${user._id}`
     );
 
     setWholesalers(
@@ -67,7 +67,7 @@ const fetchSuggestions = async () => {
 };
   const submitReview = async () => {
     try {
-      await axios.post("http://https://backend-of-smartkhata-book.onrender.com/api/reviews/add", {
+      await axios.post("https://backend-of-smartkhata-book.onrender.com/api/reviews/add", {
         targetUserId: form.targetUserId,
         comment: form.comment,
         rating: form.rating,
@@ -97,7 +97,7 @@ const fetchSuggestions = async () => {
 
   const sendReply = async (id) => {
     try {
-      await axios.post(`http://https://backend-of-smartkhata-book.onrender.com/api/reviews/reply/${id}`, {
+      await axios.post(`https://backend-of-smartkhata-book.onrender.com/api/reviews/reply/${id}`, {
         text: reply[id],
         role: user.role,
         businessType: user.businessType,

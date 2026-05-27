@@ -24,7 +24,7 @@ export default function Ledger() {
   const fetchLedger = async () => {
     try {
       const res = await axios.get(
-        `http://https://backend-of-smartkhata-book.onrender.com/api/ledger/${user._id}`,
+        `https://backend-of-smartkhata-book.onrender.com/api/ledger/${user._id}`,
       );
 
       setEntries(res.data.entries || []);

@@ -22,7 +22,7 @@ export default function Dashboard() {
   const fetchDashboard = async () => {
     try {
       const res = await axios.get(
-        `http://https://backend-of-smartkhata-book.onrender.com/api/dashboard/${user.role}?userId=${user._id}`
+        `https://backend-of-smartkhata-book.onrender.com/api/dashboard/${user.role}?userId=${user._id}`
       );
       setStats(res.data);
     } catch (error) {
