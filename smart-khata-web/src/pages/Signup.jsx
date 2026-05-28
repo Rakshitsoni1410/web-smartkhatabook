@@ -148,41 +148,45 @@ export default function Signup() {
     setStep(2);
   };
 
-  const handleSignup = async () => {
-    try {
-       console.log("REGISTER API HIT");
+const handleSignup = async () => {
+  // ✅ VALIDATE FIRST before calling API
+  const errs = validateStep2();
+  if (Object.keys(errs).length > 0) {
+    setErrors(errs);
+    return;
+  }
 
-      const response = await axios.post(
-        "https://backend-of-smartkhata-book.onrender.com/api/user/register",
-        {
-          name: form.name,
-          phone: form.phone,
-          email: form.email,
-          role: form.role,
-          shopName: form.shopName || "N/A",
-          businessType: form.businessType || "N/A",
-          address: form.address,
-          password: form.password,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        },
-      );
+  try {
+    const response = await axios.post(
+      "https://backend-of-smartkhata-book.onrender.com/api/user/register",
+      {
+        name: form.name,
+        phone: form.phone,
+        email: form.email,
+        role: form.role,
+        shopName: form.shopName || "N/A",
+        businessType: form.businessType || "N/A",
+        address: form.address,
+        password: form.password,
+      },
+      {
+        headers: { "Content-Type": "application/json" },
+      }
+    );
 
-      addToast("Signup successful", "success");
-
-      setTimeout(() => {
-        navigate("/");
-      }, 1500);
-    } catch (err) {
-      console.log("FULL ERROR:", err);
-      console.log("ERROR DATA:", err.response?.data);
-
-      addToast(err.response?.data?.message || "Signup failed", "error");
+    // ✅ CHECK success flag from backend
+    if (response.data.success) {
+      addToast("Account created successfully! 🎉", "success");
+      setTimeout(() => navigate("/"), 1500);
+    } else {
+      addToast(response.data.message || "Signup failed", "error");
     }
-  };
+
+  } catch (err) {
+    console.error("Signup error:", err.response?.data);
+    addToast(err.response?.data?.message || "Signup failed. Try again.", "error");
+  }
+};
   return (
     <div className="signup-page">
       <Toast toasts={toasts} removeToast={removeToast} />
