@@ -11,9 +11,8 @@ export default function Login() {
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
   const [toast, setToast] = useState("");
-  const [loading, setLoading] = useState(true); // true on mount = wakes server
+  const [loading, setLoading] = useState(true);
 
-  // Ping server on mount so it wakes up before user hits Sign in
   useEffect(() => {
     axios
       .post(
@@ -48,10 +47,7 @@ export default function Login() {
     try {
       const res = await axios.post(
         "https://backend-of-smartkhata-book.onrender.com/api/user/login",
-        {
-          phone: form.phone,
-          password: form.password,
-        },
+        { phone: form.phone, password: form.password },
       );
       localStorage.setItem("user", JSON.stringify(res.data.user));
       setToast("Login successful!");
@@ -71,7 +67,6 @@ export default function Login() {
 
   return (
     <div className="login-page">
-      {/* Toast */}
       {toast && (
         <div className="toast">
           <span className="toast-dot" />
@@ -79,7 +74,7 @@ export default function Login() {
         </div>
       )}
 
-      {/* LEFT PANEL */}
+      {/* ── Left panel ── */}
       <div className="login-left">
         <div className="left-inner">
           <div className="brand">
@@ -144,7 +139,7 @@ export default function Login() {
         </div>
       </div>
 
-      {/* RIGHT PANEL */}
+      {/* ── Right panel ── */}
       <div className="login-right">
         <div className="login-card">
           <div className="card-header">

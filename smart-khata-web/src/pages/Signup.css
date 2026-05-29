@@ -1,8 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+
 /* ─── Reset & base ─── */
-*,
-*::before,
-*::after {
+*, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
@@ -16,9 +15,9 @@
   background: #f4f5f8;
 }
 
-/* ────────────────────────────────────────
+/* ════════════════════════════════════════
    LEFT PANEL
-──────────────────────────────────────── */
+════════════════════════════════════════ */
 .signup-left {
   width: 380px;
   flex-shrink: 0;
@@ -50,11 +49,7 @@
 .c2 { width: 200px; height: 200px; bottom: 60px; left: -70px; }
 
 /* brand */
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
+.brand { display: flex; align-items: center; gap: 10px; }
 .brand-icon {
   width: 40px; height: 40px;
   background: rgba(255,255,255,0.15);
@@ -86,16 +81,9 @@
 }
 
 /* features */
-.feature-list {
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
+.feature-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
 .feature-list li {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+  display: flex; align-items: center; gap: 10px;
   font-size: 13.5px;
   color: rgba(255,255,255,0.85);
   font-weight: 500;
@@ -124,9 +112,9 @@
   font-weight: 600;
 }
 
-/* ────────────────────────────────────────
+/* ════════════════════════════════════════
    RIGHT PANEL
-──────────────────────────────────────── */
+════════════════════════════════════════ */
 .signup-right {
   flex: 1;
   display: flex;
@@ -153,11 +141,8 @@
   margin-bottom: 1.25rem;
 }
 .step-pill {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  font-weight: 600;
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12px; font-weight: 600;
   color: #aab;
   padding: 4px 10px;
   border-radius: 20px;
@@ -167,43 +152,25 @@
 .step-pill span {
   width: 18px; height: 18px;
   border-radius: 50%;
-  background: #ccd;
-  color: #fff;
+  background: #ccd; color: #fff;
   display: flex; align-items: center; justify-content: center;
-  font-size: 10px;
-  font-weight: 700;
+  font-size: 10px; font-weight: 700;
 }
-.step-pill.active {
-  color: #1a4fa8;
-  background: #e8f0fc;
-}
-.step-pill.active span {
-  background: #1a4fa8;
-}
-.step-line {
-  flex: 1;
-  height: 1px;
-  background: #e0e4f0;
-}
+.step-pill.active { color: #1a4fa8; background: #e8f0fc; }
+.step-pill.active span { background: #1a4fa8; }
+.step-line { flex: 1; height: 1px; background: #e0e4f0; }
 
 /* ─── Card header ─── */
 .card-header { margin-bottom: 1.25rem; }
 .card-header h2 {
-  font-size: 20px;
-  font-weight: 700;
-  color: #111;
-  letter-spacing: -0.02em;
+  font-size: 20px; font-weight: 700;
+  color: #111; letter-spacing: -0.02em;
 }
-.card-header p {
-  font-size: 13px;
-  color: #7a8a82;
-  margin-top: 3px;
-}
+.card-header p { font-size: 13px; color: #7a8a82; margin-top: 3px; }
 
 /* ─── Section label ─── */
 .section-label {
-  font-size: 11px;
-  font-weight: 700;
+  font-size: 11px; font-weight: 700;
   letter-spacing: 0.07em;
   text-transform: uppercase;
   color: #9aaac8;
@@ -218,44 +185,29 @@
 }
 .role-btn {
   position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
   padding: 12px 8px 10px;
   border: 1.5px solid #e4e8f0;
   border-radius: 10px;
   background: #f9fafc;
   cursor: pointer;
   font-family: 'Plus Jakarta Sans', sans-serif;
-  font-size: 12.5px;
-  font-weight: 600;
+  font-size: 12.5px; font-weight: 600;
   color: #556;
   transition: all 0.15s;
 }
-.role-btn:hover {
-  border-color: #1a4fa8;
-  background: #f0f4fc;
-  color: #1a4fa8;
-}
+.role-btn:hover { border-color: #1a4fa8; background: #f0f4fc; color: #1a4fa8; }
 .role-icon {
-  font-size: 20px;
-  color: #7a92c8;
+  font-size: 20px; color: #7a92c8;
   display: flex; align-items: center; justify-content: center;
 }
-.role-btn.selected {
-  border-color: #1a4fa8;
-  background: #eef3fd;
-  color: #1a4fa8;
-}
+.role-btn.selected { border-color: #1a4fa8; background: #eef3fd; color: #1a4fa8; }
 .role-btn.selected .role-icon { color: #1a4fa8; }
 .role-check {
-  position: absolute;
-  top: 6px; right: 6px;
+  position: absolute; top: 6px; right: 6px;
   width: 16px; height: 16px;
   border-radius: 50%;
-  background: #1a4fa8;
-  color: #fff;
+  background: #1a4fa8; color: #fff;
   display: flex; align-items: center; justify-content: center;
 }
 
@@ -268,20 +220,12 @@
 
 /* ─── Field ─── */
 .field-wrap {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
+  display: flex; flex-direction: column; gap: 5px;
   margin-bottom: 10px;
 }
-.field-label {
-  font-size: 12px;
-  font-weight: 600;
-  color: #445;
-}
+.field-label { font-size: 12px; font-weight: 600; color: #445; }
 .field-box {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  display: flex; align-items: center; gap: 8px;
   background: #f7f8fc;
   border: 1.5px solid #e2e8e5;
   border-radius: 9px;
@@ -289,55 +233,34 @@
   height: 40px;
   transition: border-color 0.15s, background 0.15s;
 }
-.field-box:focus-within {
-  border-color: #1a4fa8;
-  background: #fff;
-}
-.field-box.has-error {
-  border-color: #e05050;
-  background: #fff8f8;
-}
+.field-box:focus-within { border-color: #1a4fa8; background: #fff; }
+.field-box.has-error { border-color: #e05050; background: #fff8f8; }
 .field-icon {
   color: #9aaac8;
   display: flex; align-items: center;
-  font-size: 15px;
-  flex-shrink: 0;
+  font-size: 15px; flex-shrink: 0;
 }
 .field-box input,
 .field-box select {
   flex: 1;
-  border: none;
-  background: transparent;
+  border: none; background: transparent;
   font-family: 'Plus Jakarta Sans', sans-serif;
-  font-size: 13px;
-  color: #222;
-  outline: none;
-  min-width: 0;
+  font-size: 13px; color: #222;
+  outline: none; min-width: 0;
 }
 .field-box select { cursor: pointer; }
 .field-box input::placeholder { color: #b0bbb5; }
-.field-error {
-  font-size: 11.5px;
-  color: #e05050;
-  font-weight: 500;
-}
+.field-error { font-size: 11.5px; color: #e05050; font-weight: 500; }
 
 /* ─── Buttons ─── */
 .btn-primary {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-  width: 100%;
-  height: 42px;
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  width: 100%; height: 42px;
   margin-top: 1.25rem;
-  background: #1a4fa8;
-  color: #fff;
-  border: none;
-  border-radius: 10px;
+  background: #1a4fa8; color: #fff;
+  border: none; border-radius: 10px;
   font-family: 'Plus Jakarta Sans', sans-serif;
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 14px; font-weight: 600;
   cursor: pointer;
   transition: background 0.15s, transform 0.1s;
 }
@@ -345,156 +268,187 @@
 .btn-primary:active { transform: scale(0.98); }
 
 .btn-ghost {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  height: 42px;
-  padding: 0 18px;
-  background: transparent;
-  color: #556;
-  border: 1.5px solid #e2e8e5;
-  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  height: 42px; padding: 0 18px;
+  background: transparent; color: #556;
+  border: 1.5px solid #e2e8e5; border-radius: 10px;
   font-family: 'Plus Jakarta Sans', sans-serif;
-  font-size: 13.5px;
-  font-weight: 600;
+  font-size: 13.5px; font-weight: 600;
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s;
 }
-.btn-ghost:hover {
-  background: #f4f5f8;
-  border-color: #c8d4ce;
-}
+.btn-ghost:hover { background: #f4f5f8; border-color: #c8d4ce; }
 
-.btn-row {
-  display: flex;
-  gap: 10px;
-  margin-top: 1.25rem;
-}
+.btn-row { display: flex; gap: 10px; margin-top: 1.25rem; }
 .btn-row .btn-primary { flex: 1; margin-top: 0; }
 
 /* ─── Login hint ─── */
 .login-hint {
   margin-top: 1.25rem;
   text-align: center;
-  font-size: 13px;
-  color: #7a8a82;
+  font-size: 13px; color: #7a8a82;
   padding-top: 1rem;
   border-top: 1px solid #f0f2f8;
 }
-.login-link {
-  color: #1a4fa8;
-  font-weight: 600;
-  cursor: pointer;
-}
+.login-link { color: #1a4fa8; font-weight: 600; cursor: pointer; }
 .login-link:hover { text-decoration: underline; }
 
-/* ─── Responsive ─── */
-@media (max-width: 768px) {
-  .signup-left { display: none; }
-  .signup-right { padding: 1.25rem 1rem; }
-  .signup-card { padding: 1.5rem 1.25rem 1.25rem; }
-  .field-grid { grid-template-columns: 1fr; }
-}
-/* ── Paste these styles into your Signup.css ── */
-
-/* Toast Container */
+/* ════════════════════════════════════════
+   TOAST
+════════════════════════════════════════ */
 .toast-container {
   position: fixed;
-  top: 20px;
-  right: 20px;
+  top: 20px; right: 20px;
   z-index: 9999;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  display: flex; flex-direction: column; gap: 10px;
   pointer-events: none;
 }
-
-/* Individual Toast */
 .toast {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+  display: flex; align-items: center; gap: 10px;
   padding: 12px 16px;
   border-radius: 12px;
-  min-width: 280px;
-  max-width: 360px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
-  font-size: 14px;
-  font-weight: 500;
+  min-width: 280px; max-width: 360px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+  font-size: 14px; font-weight: 500;
   pointer-events: all;
   animation: toast-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
-
 @keyframes toast-in {
-  from {
-    opacity: 0;
-    transform: translateX(60px) scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0) scale(1);
-  }
+  from { opacity: 0; transform: translateX(60px) scale(0.95); }
+  to   { opacity: 1; transform: translateX(0) scale(1); }
 }
-
-/* Success Toast */
-.toast-success {
-  background: #F0FDF4;
-  border: 1px solid #BBF7D0;
-  color: #15803D;
-}
-
+.toast-success { background: #F0FDF4; border: 1px solid #BBF7D0; color: #15803D; }
 .toast-success .toast-icon {
-  background: #22C55E;
-  color: #fff;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
+  background: #22C55E; color: #fff;
+  width: 24px; height: 24px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
-
-/* Error Toast */
-.toast-error {
-  background: #FEF2F2;
-  border: 1px solid #FECACA;
-  color: #DC2626;
-}
-
+.toast-error { background: #FEF2F2; border: 1px solid #FECACA; color: #DC2626; }
 .toast-error .toast-icon {
-  background: #EF4444;
-  color: #fff;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
+  background: #EF4444; color: #fff;
+  width: 24px; height: 24px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
-
-/* Message text */
-.toast-msg {
-  flex: 1;
-  line-height: 1.4;
-}
-
-/* Close button */
+.toast-msg { flex: 1; line-height: 1.4; }
 .toast-close {
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 2px;
-  color: inherit;
-  opacity: 0.5;
-  display: flex;
-  align-items: center;
-  transition: opacity 0.15s;
-  flex-shrink: 0;
+  background: none; border: none; cursor: pointer;
+  padding: 2px; color: inherit; opacity: 0.5;
+  display: flex; align-items: center;
+  transition: opacity 0.15s; flex-shrink: 0;
+}
+.toast-close:hover { opacity: 1; }
+
+/* ════════════════════════════════════════
+   RESPONSIVE — Tablet (≤1024px)
+════════════════════════════════════════ */
+@media (max-width: 1024px) {
+  .signup-left {
+    width: 300px;
+  }
+  .left-hero h1 {
+    font-size: 22px;
+  }
+  .left-inner {
+    padding: 2rem 1.5rem;
+    gap: 1.5rem;
+  }
 }
 
-.toast-close:hover {
-  opacity: 1;
+/* ════════════════════════════════════════
+   RESPONSIVE — Small tablet / large phone (≤768px)
+════════════════════════════════════════ */
+@media (max-width: 768px) {
+  /* Hide the left branding panel entirely */
+  .signup-left { display: none; }
+
+  .signup-right {
+    padding: 1rem;
+    align-items: flex-start;
+  }
+
+  .signup-card {
+    padding: 1.5rem 1.25rem 1.25rem;
+    border-radius: 14px;
+    /* Add subtle top-of-screen branding bar on mobile */
+    border-top: 4px solid #1a4fa8;
+  }
+
+  /* 2-col field grid on tablet where it still fits */
+  .field-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .card-header h2 { font-size: 18px; }
+
+  .btn-primary { height: 44px; font-size: 14px; }
+  .btn-ghost   { height: 44px; }
+}
+
+/* ════════════════════════════════════════
+   RESPONSIVE — Mobile (≤480px)
+════════════════════════════════════════ */
+@media (max-width: 480px) {
+  .signup-right {
+    padding: 0;
+    align-items: stretch;
+    background: #fff;       /* Full-bleed white on small screens */
+  }
+
+  .signup-card {
+    border-radius: 0;
+    box-shadow: none;
+    padding: 1.25rem 1rem 1.5rem;
+    min-height: 100vh;
+    border-top: 4px solid #1a4fa8;
+  }
+
+  /* Stack field grid to single column */
+  .field-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Slightly smaller role buttons to fit 3 in a row comfortably */
+  .role-btn {
+    padding: 10px 4px 8px;
+    font-size: 11.5px;
+    gap: 4px;
+  }
+  .role-icon { font-size: 18px; }
+
+  .card-header h2 { font-size: 17px; }
+  .card-header p  { font-size: 12px; }
+
+  /* Step pills — keep them compact */
+  .step-pill { font-size: 11px; padding: 4px 8px; }
+
+  /* Taller tap targets on mobile */
+  .btn-primary, .btn-ghost { height: 46px; }
+
+  /* Toast repositions to bottom-center on mobile for thumb reach */
+  .toast-container {
+    top: auto;
+    bottom: 20px;
+    right: 50%;
+    transform: translateX(50%);
+    align-items: center;
+  }
+  @keyframes toast-in {
+    from { opacity: 0; transform: translateY(20px) scale(0.95); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  .toast {
+    min-width: 0;
+    width: calc(100vw - 2rem);
+    max-width: 380px;
+  }
+}
+
+/* ════════════════════════════════════════
+   RESPONSIVE — Very small (≤360px)
+════════════════════════════════════════ */
+@media (max-width: 360px) {
+  .role-btn { font-size: 11px; padding: 8px 2px; }
+  .role-icon { font-size: 16px; }
+  .field-box { height: 38px; }
+  .section-label { font-size: 10px; }
 }

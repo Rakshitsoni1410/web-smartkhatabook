@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FiUser,
@@ -47,7 +47,7 @@ const BUSINESS_TYPES = [
   "Other",
 ];
 
-/* ── Toast Component ─────────────────────────────────────── */
+/* ── Toast ─────────────────────────────────────────────── */
 function Toast({ toasts, removeToast }) {
   return (
     <div className="toast-container">
@@ -70,24 +70,19 @@ function Toast({ toasts, removeToast }) {
   );
 }
 
-/* ── useToast hook ───────────────────────────────────────── */
 function useToast() {
   const [toasts, setToasts] = useState([]);
-
+  const removeToast = (id) =>
+    setToasts((prev) => prev.filter((t) => t.id !== id));
   const addToast = (message, type = "success", duration = 3500) => {
     const id = Date.now();
     setToasts((prev) => [...prev, { id, message, type }]);
     setTimeout(() => removeToast(id), duration);
   };
-
-  const removeToast = (id) => {
-    setToasts((prev) => prev.filter((t) => t.id !== id));
-  };
-
   return { toasts, addToast, removeToast };
 }
 
-/* ── Main Component ──────────────────────────────────────── */
+/* ── Main ───────────────────────────────────────────────── */
 export default function Signup() {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
@@ -104,7 +99,6 @@ export default function Signup() {
     password: "",
     confirm: "",
   });
-
   const [errors, setErrors] = useState({});
 
   const handleChange = (e) => {
@@ -148,49 +142,48 @@ export default function Signup() {
     setStep(2);
   };
 
-const handleSignup = async () => {
-  // ✅ VALIDATE FIRST before calling API
-  const errs = validateStep2();
-  if (Object.keys(errs).length > 0) {
-    setErrors(errs);
-    return;
-  }
-
-  try {
-    const response = await axios.post(
-      "https://backend-of-smartkhata-book.onrender.com/api/user/register",
-      {
-        name: form.name,
-        phone: form.phone,
-        email: form.email,
-        role: form.role,
-        shopName: form.shopName || "N/A",
-        businessType: form.businessType || "N/A",
-        address: form.address,
-        password: form.password,
-      },
-      {
-        headers: { "Content-Type": "application/json" },
-      }
-    );
-
-    // ✅ CHECK success flag from backend
-    if (response.data.success) {
-      addToast("Account created successfully! 🎉", "success");
-      setTimeout(() => navigate("/"), 1500);
-    } else {
-      addToast(response.data.message || "Signup failed", "error");
+  const handleSignup = async () => {
+    const errs = validateStep2();
+    if (Object.keys(errs).length > 0) {
+      setErrors(errs);
+      return;
     }
 
-  } catch (err) {
-    console.error("Signup error:", err.response?.data);
-    addToast(err.response?.data?.message || "Signup failed. Try again.", "error");
-  }
-};
+    try {
+      const response = await axios.post(
+        "https://backend-of-smartkhata-book.onrender.com/api/user/register",
+        {
+          name: form.name,
+          phone: form.phone,
+          email: form.email,
+          role: form.role,
+          shopName: form.shopName || "N/A",
+          businessType: form.businessType || "N/A",
+          address: form.address,
+          password: form.password,
+        },
+        { headers: { "Content-Type": "application/json" } },
+      );
+
+      if (response.data.success) {
+        addToast("Account created successfully! 🎉", "success");
+        setTimeout(() => navigate("/"), 1500);
+      } else {
+        addToast(response.data.message || "Signup failed", "error");
+      }
+    } catch (err) {
+      addToast(
+        err.response?.data?.message || "Signup failed. Try again.",
+        "error",
+      );
+    }
+  };
+
   return (
     <div className="signup-page">
       <Toast toasts={toasts} removeToast={removeToast} />
 
+      {/* ── Left panel ── */}
       <div className="signup-left">
         <div className="left-inner">
           <div className="brand">
@@ -244,6 +237,7 @@ const handleSignup = async () => {
         </div>
       </div>
 
+      {/* ── Right panel ── */}
       <div className="signup-right">
         <div className="signup-card">
           <div className="card-header">

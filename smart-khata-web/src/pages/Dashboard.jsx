@@ -26,12 +26,7 @@ export default function Dashboard() {
   const user = JSON.parse(localStorage.getItem("user")) || {};
   const navigate = useNavigate();
 
-  const [stats, setStats] = useState({
-    stock: 0,
-    employees: 0,
-    orders: 0,
-    reviews: 0,
-  });
+  const [stats, setStats] = useState({ stock: 0, employees: 0, orders: 0, reviews: 0 });
   const [loading, setLoading] = useState(true);
   const [quote, setQuote] = useState("");
   const [time, setTime] = useState(new Date());
@@ -46,7 +41,7 @@ export default function Dashboard() {
   const fetchDashboard = async () => {
     try {
       const res = await axios.get(
-        `https://backend-of-smartkhata-book.onrender.com/api/dashboard/${user.role}?userId=${user._id}`,
+        `https://backend-of-smartkhata-book.onrender.com/api/dashboard/${user.role}?userId=${user._id}`
       );
       setStats(res.data);
     } catch (error) {
@@ -58,16 +53,15 @@ export default function Dashboard() {
 
   const pickQuote = () => {
     const h = new Date().getHours();
-    const pool =
-      h < 12 ? QUOTES.morning : h < 17 ? QUOTES.afternoon : QUOTES.evening;
+    const pool = h < 12 ? QUOTES.morning : h < 17 ? QUOTES.afternoon : QUOTES.evening;
     setQuote(pool[Math.floor(Math.random() * pool.length)]);
   };
 
   const getGreeting = () => {
     const h = time.getHours();
-    if (h < 12) return { text: "Good Morning", emoji: "🌅" };
-    if (h < 17) return { text: "Good Afternoon", emoji: "☀️" };
-    return { text: "Good Evening", emoji: "🌙" };
+    if (h < 12) return { text: "Good Morning", icon: "ti-sun" };
+    if (h < 17) return { text: "Good Afternoon", icon: "ti-sun-high" };
+    return { text: "Good Evening", icon: "ti-moon" };
   };
 
   const greeting = getGreeting();
@@ -76,7 +70,7 @@ export default function Dashboard() {
     {
       title: "Stock Items",
       value: stats.stock,
-      icon: "📦",
+      icon: "ti-package",
       color: "#2563EB",
       bg: "#EFF6FF",
       accent: "#BFDBFE",
@@ -87,7 +81,7 @@ export default function Dashboard() {
     {
       title: "Employees",
       value: stats.employees,
-      icon: "👥",
+      icon: "ti-users",
       color: "#7C3AED",
       bg: "#F5F3FF",
       accent: "#DDD6FE",
@@ -98,7 +92,7 @@ export default function Dashboard() {
     {
       title: "Orders",
       value: stats.orders,
-      icon: "🚚",
+      icon: "ti-truck",
       color: "#059669",
       bg: "#ECFDF5",
       accent: "#A7F3D0",
@@ -109,7 +103,7 @@ export default function Dashboard() {
     {
       title: "Reviews",
       value: stats.reviews,
-      icon: "⭐",
+      icon: "ti-star",
       color: "#D97706",
       bg: "#FFFBEB",
       accent: "#FDE68A",
@@ -117,6 +111,20 @@ export default function Dashboard() {
       route: "/reviews",
       trend: "4.8 avg rating",
     },
+  ];
+
+  const quickActions = [
+    { label: "Add Stock",     icon: "ti-package",   route: "/stock"     },
+    { label: "New Order",     icon: "ti-truck",      route: "/orders"    },
+    { label: "Add Employee",  icon: "ti-user-plus",  route: "/employees" },
+    { label: "View Reviews",  icon: "ti-star",       route: "/reviews"   },
+  ];
+
+  const focusItems = [
+    { text: "Check low-stock items",         color: "#2563EB" },
+    { text: "Review pending orders",          color: "#059669" },
+    { text: "Track employee performance",     color: "#7C3AED" },
+    { text: "Respond to new reviews",         color: "#D97706" },
   ];
 
   const initials = (user.name || "U")
@@ -131,19 +139,14 @@ export default function Dashboard() {
       <Sidebar role={user.role} />
 
       <div className="dashboard-main">
-        {/* Topbar */}
+
+        {/* ── Topbar ── */}
         <header className="topbar">
           <div className="topbar-left">
-            <div className="topbar-breadcrumb-row">
-              <span className="topbar-brand">SmartKhata</span>
-              <span className="topbar-sep">/</span>
-              <span className="topbar-current">Dashboard</span>
-            </div>
-            <p className="topbar-time">
-              {time.toLocaleTimeString("en-IN", {
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
+            <div className="tb-brand">SmartKhatabook</div>
+            <div className="tb-page">Dashboard</div>
+            <p className="tb-time">
+              {time.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
               &nbsp;·&nbsp;
               {time.toLocaleDateString("en-IN", {
                 weekday: "long",
@@ -153,75 +156,91 @@ export default function Dashboard() {
               })}
             </p>
           </div>
+
           <div className="topbar-right">
-            <button className="topbar-notify">
-              <span className="notify-dot" />
-              🔔
+            <button className="notif-btn" aria-label="Notifications">
+              <span className="notif-dot" />
+              <i className="ti ti-bell" aria-hidden="true" />
             </button>
-            <div className="topbar-profile">
-              <div className="topbar-avatar">{initials}</div>
-              <div className="topbar-profile-info">
+
+            {/* Clickable profile → /profile */}
+            <button
+              className="profile-pill"
+              onClick={() => navigate("/profile")}
+              title="View profile"
+            >
+              <div className="tb-avatar">{initials}</div>
+              <div className="profile-text">
                 <span className="profile-name">{user.name}</span>
                 <span className="profile-role">{user.role}</span>
               </div>
-            </div>
+              <i className="ti ti-chevron-right profile-chevron" aria-hidden="true" />
+            </button>
           </div>
         </header>
 
-        {/* Hero Greeting */}
+        {/* ── Hero ── */}
         <section className="hero-card">
-          <div className="hero-orb orb1" />
-          <div className="hero-orb orb2" />
-          <div className="hero-orb orb3" />
+          <div className="hero-blobs" aria-hidden="true">
+            <div className="blob b1" />
+            <div className="blob b2" />
+            <div className="blob b3" />
+          </div>
 
           <div className="hero-left">
-            <div className="hero-greeting-row">
-              <span className="hero-emoji">{greeting.emoji}</span>
+            <div className="hero-greet-row">
+              <i className={`ti ${greeting.icon} hero-greet-icon`} aria-hidden="true" />
               <div>
-                <p className="hero-greeting-label">{greeting.text}</p>
+                <p className="hero-label">{greeting.text}</p>
                 <h1 className="hero-name">{user.name}</h1>
               </div>
             </div>
+
             <div className="hero-chips">
               {user.shopName && (
-                <span className="hero-chip chip-shop">🏪 {user.shopName}</span>
+                <span className="chip chip-shop">
+                  <i className="ti ti-building-store" aria-hidden="true" />
+                  {user.shopName}
+                </span>
               )}
               {user.businessType && (
-                <span className="hero-chip chip-biz">{user.businessType}</span>
+                <span className="chip chip-biz">{user.businessType}</span>
               )}
-              <span className="hero-chip chip-role">{user.role}</span>
+              <span className="chip chip-role">{user.role}</span>
             </div>
+
             <blockquote className="hero-quote">
-              <span className="qmark">"</span>
-              {quote}
+              <span className="qmark">"</span>{quote}
             </blockquote>
           </div>
 
           <div className="hero-right">
-            <div className="hero-store-icon">🏪</div>
-            <div className="hero-date-badge">
-              <span className="hdb-day">
+            <div className="date-badge">
+              <span className="date-day">
                 {time.toLocaleDateString("en-IN", { day: "numeric" })}
               </span>
-              <span className="hdb-month">
-                {time.toLocaleDateString("en-IN", { month: "short" })}
+              <span className="date-month">
+                {time.toLocaleDateString("en-IN", { month: "short" }).toUpperCase()}
+              </span>
+              <span className="date-dow">
+                {time.toLocaleDateString("en-IN", { weekday: "long" })}
               </span>
             </div>
           </div>
         </section>
 
-        {/* Section header */}
-        <div className="section-header">
+        {/* ── Section header ── */}
+        <div className="section-hdr">
           <div>
             <h2 className="section-title">Business Overview</h2>
             <p className="section-sub">Click any card to explore details</p>
           </div>
           <button className="refresh-btn" onClick={fetchDashboard}>
-            ↻ Refresh
+            <i className="ti ti-refresh" aria-hidden="true" /> Refresh
           </button>
         </div>
 
-        {/* Stat Cards */}
+        {/* ── Stat Cards ── */}
         {loading ? (
           <div className="loading-wrap">
             <div className="spinner" />
@@ -233,48 +252,45 @@ export default function Dashboard() {
               <button
                 key={i}
                 className="stat-card"
-                style={{
-                  "--cc": item.color,
-                  "--cb": item.bg,
-                  "--ca": item.accent,
-                }}
+                style={{ "--cc": item.color, "--cb": item.bg, "--ca": item.accent }}
                 onClick={() => navigate(item.route)}
               >
+                <div className="sc-stripe" />
                 <div className="sc-top">
-                  <div className="sc-icon">{item.icon}</div>
-                  <span className="sc-trend">{item.trend}</span>
+                  <div className="sc-icon-wrap">
+                    <i className={`ti ${item.icon} sc-icon`} aria-hidden="true" />
+                  </div>
+                  <span className="sc-badge">{item.trend}</span>
                 </div>
                 <div className="sc-value">{item.value}</div>
                 <div className="sc-title">{item.title}</div>
                 <div className="sc-desc">{item.desc}</div>
-                <div className="sc-footer">
+                <div className="sc-foot">
                   <div className="sc-bar">
                     <div className="sc-bar-fill" />
                   </div>
-                  <span className="sc-arrow">→</span>
+                  <i className="ti ti-arrow-right sc-arrow" aria-hidden="true" />
                 </div>
               </button>
             ))}
           </div>
         )}
 
-        {/* Bottom Row */}
+        {/* ── Bottom Row ── */}
         <div className="bottom-row">
           <div className="quick-card">
-            <h3 className="quick-title">⚡ Quick Actions</h3>
+            <h3 className="quick-title">
+              <i className="ti ti-bolt" aria-hidden="true" />
+              Quick Actions
+            </h3>
             <div className="quick-grid">
-              {[
-                { label: "Add Stock", icon: "📦", route: "/stock" },
-                { label: "New Order", icon: "🚚", route: "/orders" },
-                { label: "Add Employee", icon: "👤", route: "/employees" },
-                { label: "View Reviews", icon: "⭐", route: "/reviews" },
-              ].map((a) => (
+              {quickActions.map((a) => (
                 <button
                   key={a.label}
                   className="quick-btn"
                   onClick={() => navigate(a.route)}
                 >
-                  <span className="quick-icon">{a.icon}</span>
+                  <i className={`ti ${a.icon} quick-icon`} aria-hidden="true" />
                   <span>{a.label}</span>
                 </button>
               ))}
@@ -282,27 +298,22 @@ export default function Dashboard() {
           </div>
 
           <div className="focus-card">
-            <div className="focus-head">
-              <span>🎯</span>
-              <h3>Today's Focus</h3>
-            </div>
+            <h3 className="focus-title">
+              <i className="ti ti-target" aria-hidden="true" />
+              Today's Focus
+            </h3>
             <ul className="focus-list">
-              {[
-                { text: "Check low-stock items", color: "#2563EB" },
-                { text: "Review pending orders", color: "#059669" },
-                { text: "Track employee performance", color: "#7C3AED" },
-                { text: "Respond to new reviews", color: "#D97706" },
-              ].map((f) => (
+              {focusItems.map((f) => (
                 <li key={f.text}>
-                  <span className="fl-dot" style={{ background: f.color }} />
+                  <span className="focus-dot" style={{ background: f.color }} />
                   {f.text}
                 </li>
               ))}
             </ul>
           </div>
         </div>
+
       </div>
     </div>
   );
 }
-
