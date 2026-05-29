@@ -553,3 +553,74 @@
   .hero-chips  { display: none; }
   .dashboard-main { padding: 12px 12px 28px; }
 }
+/* MOBILE FIX */
+@media (max-width: 768px) {
+
+  .dashboard-layout {
+    flex-direction: column;
+  }
+
+  .dashboard-main {
+    width: 100%;
+    padding: 12px;
+    overflow-x: hidden;
+  }
+
+  .topbar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .topbar-right {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .hero-card {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 20px;
+  }
+
+  .hero-right {
+    width: 100%;
+    display: flex;
+    justify-content: flex-start;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .bottom-row {
+    grid-template-columns: 1fr;
+  }
+
+  .quick-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .stat-card {
+    width: 100%;
+  }
+
+  .hero-name {
+    font-size: 20px;
+    white-space: normal;
+  }
+
+  .section-hdr {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .profile-pill {
+    max-width: 100%;
+  }
+
+  body {
+    overflow-x: hidden;
+  }
+}

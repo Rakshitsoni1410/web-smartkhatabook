@@ -41,7 +41,7 @@ export default function Dashboard() {
   const fetchDashboard = async () => {
     try {
       const res = await axios.get(
-        `https://backend-of-smartkhata-book-vkcv.vercel.app//api/dashboard/${user.role}?userId=${user._id}`
+        `https://backend-of-smartkhata-book-vkcv.vercel.app/api/dashboard/${user.role}?userId=${user._id}`
       );
       setStats(res.data);
     } catch (error) {
