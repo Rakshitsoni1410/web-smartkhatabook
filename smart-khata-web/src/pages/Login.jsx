@@ -11,18 +11,16 @@ export default function Login() {
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
   const [toast, setToast] = useState("");
+  
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // warm up server with ping instead of fake login
     axios
-      .post(
-        "https://backend-of-smartkhata-book-vkcv.vercel.app/api/user/login",
-        {},
-      )
+      .get("https://backend-of-smartkhata-book-vkcv.vercel.app/ping")
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
-
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
     setErrors({ ...errors, [e.target.name]: "" });
