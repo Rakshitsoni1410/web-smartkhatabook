@@ -38,8 +38,8 @@ export default function OrderDetails() {
     try {
       const url =
         role === "wholesaler"
-          ? `http://https://backend-of-smartkhata-book.onrender.com/api/orders/wholesaler/${user._id}`
-          : `http://https://backend-of-smartkhata-book.onrender.com/api/orders/retailer/${user._id}`;
+          ? `https://backend-of-smartkhata-book-vkcv.vercel.app/api/orders/wholesaler/${user._id}`
+          : `https://backend-of-smartkhata-book-vkcv.vercel.app/api/orders/retailer/${user._id}`;
       const res = await axios.get(url);
       const found = res.data.find((item) => item._id === id);
       setOrder(found);
@@ -51,7 +51,7 @@ export default function OrderDetails() {
   const updateStatus = async (status) => {
     try {
       setUpdating(true);
-      await axios.patch(`http://https://backend-of-smartkhata-book.onrender.com/api/orders/${id}/status`, {
+      await axios.patch(`https://backend-of-smartkhata-book-vkcv.vercel.app/api/orders/${id}/status`, {
         status,
       });
       showToast(`Order marked as ${status}`);
@@ -66,7 +66,7 @@ export default function OrderDetails() {
   const payAdvance = async () => {
     try {
       setUpdating(true);
-      await axios.patch(`http://https://backend-of-smartkhata-book.onrender.com/api/orders/${id}/pay-advance`);
+      await axios.patch(`https://backend-of-smartkhata-book-vkcv.vercel.app/api/orders/${id}/pay-advance`);
       showToast("Advance payment successful");
       fetchOrder();
     } catch (error) {
@@ -80,7 +80,7 @@ export default function OrderDetails() {
     try {
       setUpdating(true);
       await axios.patch(
-        `http://https://backend-of-smartkhata-book.onrender.com/api/orders/${id}/complete-payment`,
+        `https://backend-of-smartkhata-book-vkcv.vercel.app/api/orders/${id}/complete-payment`,
       );
       showToast("Payment completed successfully");
       fetchOrder();
@@ -108,7 +108,7 @@ export default function OrderDetails() {
       setUpdating(true);
 
       await axios.patch(
-        `http://https://backend-of-smartkhata-book.onrender.com/api/orders/${id}/request-advance`,
+        `https://backend-of-smartkhata-book-vkcv.vercel.app/api/orders/${id}/request-advance`,
 
         {
           advancePercentage: Number(advanceInput),
@@ -131,7 +131,7 @@ export default function OrderDetails() {
     try {
       setUpdating(true);
       await axios.patch(
-        `http://https://backend-of-smartkhata-book.onrender.com/api/orders/${id}/request-final-payment`,
+        `https://backend-of-smartkhata-book-vkcv.vercel.app/api/orders/${id}/request-final-payment`,
       );
       showToast("Final payment requested");
       fetchOrder();

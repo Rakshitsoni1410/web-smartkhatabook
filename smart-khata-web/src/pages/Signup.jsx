@@ -151,7 +151,7 @@ export default function Signup() {
 
     try {
       const response = await axios.post(
-        "https://backend-of-smartkhata-book.onrender.com/api/user/register",
+        "https://backend-of-smartkhata-book-vkcv.vercel.app/api/user/register",
         {
           name: form.name,
           phone: form.phone,

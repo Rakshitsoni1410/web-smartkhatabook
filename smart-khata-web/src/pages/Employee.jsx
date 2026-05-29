@@ -22,7 +22,7 @@ import {
 export default function Employees() {
   const navigate = useNavigate();
 
-  const API = "https://backend-of-smartkhata-book.onrender.com/api/employees";
+  const API = "https://backend-of-smartkhata-book-vkcv.vercel.app/api/employees";
 
   const [search, setSearch] = useState("");
 

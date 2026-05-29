@@ -16,7 +16,7 @@ export default function Login() {
   useEffect(() => {
     axios
       .post(
-        "https://backend-of-smartkhata-book.onrender.com/api/user/login",
+        "https://backend-of-smartkhata-book-vkcv.vercel.app/api/user/login",
         {},
       )
       .catch(() => {})
@@ -46,7 +46,7 @@ export default function Login() {
     setLoading(true);
     try {
       const res = await axios.post(
-        "https://backend-of-smartkhata-book.onrender.com/api/user/login",
+        "https://backend-of-smartkhata-book-vkcv.vercel.app/api/user/login",
         { phone: form.phone, password: form.password },
       );
       localStorage.setItem("user", JSON.stringify(res.data.user));

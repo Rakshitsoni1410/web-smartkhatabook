@@ -27,8 +27,8 @@ export default function Orders() {
     try {
       const url =
         role === "wholesaler"
-          ? `https://backend-of-smartkhata-book.onrender.com/api/orders/wholesaler/${user._id}`
-          : `https://backend-of-smartkhata-book.onrender.com/api/orders/retailer/${user._id}`;
+          ? `https://backend-of-smartkhata-book-vkcv.vercel.app/api/orders/wholesaler/${user._id}`
+          : `https://backend-of-smartkhata-book-vkcv.vercel.app/api/orders/retailer/${user._id}`;
       const res = await axios.get(url);
       setOrders(res.data || []);
     } catch (error) {

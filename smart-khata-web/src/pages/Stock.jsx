@@ -52,7 +52,7 @@ export default function Stock() {
   const fetchProducts = async () => {
     try {
       const res = await axios.get(
-        `https://backend-of-smartkhata-book.onrender.com/api/product/list/${user._id}`,
+        `https://backend-of-smartkhata-book-vkcv.vercel.app/api/product/list/${user._id}`,
       );
       const data = res.data.products || [];
       setProducts(data);
@@ -65,7 +65,7 @@ export default function Stock() {
   const fetchWholesalers = async (category) => {
     try {
       const res = await axios.get(
-        `https://backend-of-smartkhata-book.onrender.com/api/user/wholesalers/${category}`,
+        `https://backend-of-smartkhata-book-vkcv.vercel.app/api/user/wholesalers/${category}`,
       );
       setWholesalers((prev) => ({
         ...prev,
@@ -79,7 +79,7 @@ export default function Stock() {
   const fetchSuggestions = async () => {
     try {
       const res = await axios.get(
-        `https://backend-of-smartkhata-book.onrender.com/api/product/suggestions/${user._id}`,
+        `https://backend-of-smartkhata-book-vkcv.vercel.app/api/product/suggestions/${user._id}`,
       );
       setSuggestions(res.data.suggestions || []);
     } catch (error) {
@@ -109,7 +109,7 @@ export default function Stock() {
 
   const handleAdd = async () => {
     try {
-      await axios.post("https://backend-of-smartkhata-book.onrender.com/api/product/add", {
+      await axios.post("https://backend-of-smartkhata-book-vkcv.vercel.app/api/product/add", {
         ownerId: user._id,
         businessType: user.businessType,
         ...form,
@@ -142,7 +142,7 @@ export default function Stock() {
   const handleUpdate = async () => {
     try {
       await axios.put(
-        `https://backend-of-smartkhata-book.onrender.com/api/product/update/${selected._id}`,
+        `https://backend-of-smartkhata-book-vkcv.vercel.app/api/product/update/${selected._id}`,
         form,
       );
       setEditOpen(false);
@@ -154,7 +154,7 @@ export default function Stock() {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`https://backend-of-smartkhata-book.onrender.com/api/product/delete/${id}`);
+      await axios.delete(`https://backend-of-smartkhata-book-vkcv.vercel.app/api/product/delete/${id}`);
       fetchProducts();
     } catch (error) {
       console.log(error);
@@ -163,7 +163,7 @@ export default function Stock() {
 
   const handleOrderNow = async (item) => {
     try {
-      const res = await axios.post("https://backend-of-smartkhata-book.onrender.com/api/orders/create", {
+      const res = await axios.post("https://backend-of-smartkhata-book-vkcv.vercel.app/api/orders/create", {
         retailerId: user._id,
         productName: item.name,
         quantity: 1,

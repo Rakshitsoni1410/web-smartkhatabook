@@ -24,7 +24,7 @@ export default function WholesalerDashboard() {
   const fetchWholesalers = async () => {
     try {
       const res = await axios.get(
-        `https://backend-of-smartkhata-book.onrender.com/api/user/wholesalers/${category}`,
+        `https://backend-of-smartkhata-book-vkcv.vercel.app/api/user/wholesalers/${category}`,
       );
 
       setList(res.data.users || []);
@@ -36,7 +36,7 @@ export default function WholesalerDashboard() {
     try {
       const userData = JSON.parse(localStorage.getItem("user")) || {};
 
-      await axios.post("https://backend-of-smartkhata-book.onrender.com/api/orders/create", {
+      await axios.post("https://backend-of-smartkhata-book-vkcv.vercel.app/api/orders/create", {
         retailerId: userData._id.toString(),
 
         wholesalerId: shop._id.toString(),
