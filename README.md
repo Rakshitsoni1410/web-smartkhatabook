@@ -3,6 +3,8 @@
 Smart Khata Book is a modern business management system for **Retailers** and **Wholesalers**.
 It includes a **Web Panel**, **Backend API**, and **Mobile App Repository** for future expansion.
 
+## live project 
+https://smartkhatabooks.netlify.app/
 ---
 
 # 🚀 Repositories
