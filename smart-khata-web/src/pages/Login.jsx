@@ -102,73 +102,18 @@ export default function Login() {
 
           <div className="stat-grid">
             <div className="stat-card">
-              <p
-                style={{
-                  fontSize: "22px",
-                  fontWeight: "700",
-                  color: "#fff",
-                  margin: "0 0 4px 0",
-                  lineHeight: "1.2",
-                }}
-              >
-                10K+
-              </p>
-              <p
-                style={{
-                  fontSize: "12px",
-                  fontWeight: "500",
-                  color: "rgba(255,255,255,0.75)",
-                  margin: "0",
-                }}
-              >
-                Businesses
-              </p>
+              <div className="stat-num">10K+</div>
+              <div className="stat-label">Businesses</div>
             </div>
+
             <div className="stat-card">
-              <p
-                style={{
-                  fontSize: "22px",
-                  fontWeight: "700",
-                  color: "#fff",
-                  margin: "0 0 4px 0",
-                  lineHeight: "1.2",
-                }}
-              >
-                ₹50Cr+
-              </p>
-              <p
-                style={{
-                  fontSize: "12px",
-                  fontWeight: "500",
-                  color: "rgba(255,255,255,0.75)",
-                  margin: "0",
-                }}
-              >
-                Transactions
-              </p>
+              <div className="stat-num">₹50Cr+</div>
+              <div className="stat-label">Transactions</div>
             </div>
+
             <div className="stat-card">
-              <p
-                style={{
-                  fontSize: "22px",
-                  fontWeight: "700",
-                  color: "#fff",
-                  margin: "0 0 4px 0",
-                  lineHeight: "1.2",
-                }}
-              >
-                4.8★
-              </p>
-              <p
-                style={{
-                  fontSize: "12px",
-                  fontWeight: "500",
-                  color: "rgba(255,255,255,0.75)",
-                  margin: "0",
-                }}
-              >
-                Rating
-              </p>
+              <div className="stat-num">4.8★</div>
+              <div className="stat-label">Rating</div>
             </div>
           </div>
 
