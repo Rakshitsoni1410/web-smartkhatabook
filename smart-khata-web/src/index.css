@@ -1,3 +1,109 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+/* ══════════════════════════════════════════
+   LIGHT THEME (default)
+══════════════════════════════════════════ */
+:root,
+[data-theme="light"] {
+  --bg-app:           #F1F5F9;
+  --bg-card:          #ffffff;
+  --bg-input:         #f7f8fc;
+  --bg-hover:         #f4f4fb;
+  --bg-topbar:        #ffffff;
+  --bg-sidebar:       #ffffff;
+
+  --border-card:      #E2E8F0;
+  --border-input:     #e2e6f0;
+  --border-sidebar:   #e8e8f0;
+
+  --text-primary:     #0F172A;
+  --text-secondary:   #475569;
+  --text-muted:       #94A3B8;
+  --text-placeholder: #b0bec8;
+  --text-label:       #334155;
+
+  --accent:           #6c63ff;
+  --accent-blue:      #1a4fa8;
+  --accent-light:     #ede9ff;
+  --accent-text:      #ffffff;
+
+  --shadow-card:      0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.05);
+  --shadow-sidebar:   2px 0 12px rgba(0,0,0,0.05);
+
+  --stat-green-bg:    #f0fdf4;
+  --stat-green-text:  #16a34a;
+  --stat-blue-bg:     #eff6ff;
+  --stat-blue-text:   #1d4ed8;
+  --stat-purple-bg:   #faf5ff;
+  --stat-purple-text: #7c3aed;
+  --stat-orange-bg:   #fff7ed;
+  --stat-orange-text: #c2410c;
+
+  --scrollbar:        #ddd;
+}
+
+/* ══════════════════════════════════════════
+   DARK THEME
+══════════════════════════════════════════ */
+[data-theme="dark"] {
+  --bg-app:           #0b0d17;
+  --bg-card:          #111827;
+  --bg-input:         #1a1f2e;
+  --bg-hover:         #161c2a;
+  --bg-topbar:        #111827;
+  --bg-sidebar:       #0f0f1a;
+
+  --border-card:      #1e2640;
+  --border-input:     #252d42;
+  --border-sidebar:   #1e1e30;
+
+  --text-primary:     #f0f4ff;
+  --text-secondary:   #94a3c0;
+  --text-muted:       #4a5568;
+  --text-placeholder: #4a5568;
+  --text-label:       #8892a4;
+
+  --accent:           #8b83ff;
+  --accent-blue:      #4878d4;
+  --accent-light:     #1e1840;
+  --accent-text:      #ffffff;
+
+  --shadow-card:      0 2px 8px rgba(0,0,0,0.3), 0 8px 32px rgba(0,0,0,0.2);
+  --shadow-sidebar:   2px 0 12px rgba(0,0,0,0.3);
+
+  --stat-green-bg:    #0d2318;
+  --stat-green-text:  #4ade80;
+  --stat-blue-bg:     #0d1b38;
+  --stat-blue-text:   #60a5fa;
+  --stat-purple-bg:   #1a1240;
+  --stat-purple-text: #a78bfa;
+  --stat-orange-bg:   #2a1500;
+  --stat-orange-text: #fb923c;
+
+  --scrollbar:        #2a3040;
+}
+
+/* ══════════════════════════════════════════
+   GLOBAL
+══════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  margin: 0; padding: 0;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar) transparent;
+}
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-thumb { background: var(--scrollbar); border-radius: 4px; }
