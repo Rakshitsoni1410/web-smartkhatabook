@@ -236,32 +236,6 @@ export default function SplashScreen({ onComplete }) {
         </div>
       </div>
 
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&display=swap');
-
-        @keyframes writeLine {
-          from { transform: scaleX(0); opacity: 0.6; }
-          to   { transform: scaleX(1); opacity: 1; }
-        }
-        @keyframes fadeInScale {
-          from { opacity: 0; transform: scale(0.5); }
-          to   { opacity: 1; transform: scale(1); }
-        }
-        @keyframes pencilWrite {
-          0%   { opacity: 0; transform: rotate(45deg) translate(0, 0); }
-          20%  { opacity: 1; }
-          80%  { opacity: 1; transform: rotate(45deg) translate(10px, 40px); }
-          100% { opacity: 0; transform: rotate(45deg) translate(12px, 50px); }
-        }
-        @keyframes loadBar {
-          0%   { transform: scaleX(0); }
-          100% { transform: scaleX(1); }
-        }
-        @keyframes floatDot {
-          0%, 100% { transform: translateY(0px); }
-          50%       { transform: translateY(-12px); }
-        }
-      `}</style>
     </div>
   );
 }

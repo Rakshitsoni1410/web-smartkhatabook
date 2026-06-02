@@ -1,5 +1,6 @@
-import { useState } from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
+
 
 import SplashScreen from "./components/SplashScreen";
 import Login from "./pages/Login";
@@ -24,21 +25,27 @@ function ProtectedRoute({ children }) {
 }
 
 export default function App() {
-  const [showSplash, setShowSplash] = useState(() => {
-    // Only show once per browser session
-    return !sessionStorage.getItem("skb-splash-seen");
-  });
+  const location = useLocation();
+
+  // run splash every time the route changes
+  const [showSplash, setShowSplash] = useState(true);
+  const [splashKey, setSplashKey] = useState(0);
+
+  useEffect(() => {
+    setSplashKey((k) => k + 1);
+    setShowSplash(true);
+  }, [location.pathname]);
 
   const handleSplashComplete = () => {
-    sessionStorage.setItem("skb-splash-seen", "true");
     setShowSplash(false);
   };
 
   return (
     <>
-      {showSplash && <SplashScreen onComplete={handleSplashComplete} />}
+      {showSplash && <SplashScreen key={splashKey} onComplete={handleSplashComplete} />}
 
       <Routes>
+
         {/* AUTH */}
         <Route path="/" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
