@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 
-
-import SplashScreen from "./components/SplashScreen";
+import SplashScreen from "./components/Splashscreen";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Signup from "./pages/Signup";
