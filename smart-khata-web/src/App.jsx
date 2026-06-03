@@ -17,6 +17,13 @@ import ResetPassword from "./pages/ResetPassword";
 import Profile from "./pages/Profile";
 import Ledger from "./pages/Ledger.jsx";
 
+// ✅ NEW — Customer Portal
+import CustomerLayout    from "./components/customer/CustomerLayout";
+import CustomerDashboard from "./pages/customer/CustomerDashboard";
+import CustomerProducts  from "./pages/customer/CustomerProducts";
+import CustomerOrders    from "./pages/customer/CustomerOrders";
+import CustomerBills     from "./pages/customer/CustomerBills";
+
 function ProtectedRoute({ children }) {
   const user = localStorage.getItem("user");
   if (!user) return <Navigate to="/" />;
@@ -26,7 +33,6 @@ function ProtectedRoute({ children }) {
 export default function App() {
   const location = useLocation();
 
-  // run splash every time the route changes
   const [showSplash, setShowSplash] = useState(true);
   const [splashKey, setSplashKey] = useState(0);
 
@@ -51,87 +57,29 @@ export default function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password/:token" element={<ResetPassword />} />
 
-        {/* PROTECTED */}
+        {/* PROTECTED — existing */}
+        <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+        <Route path="/stock" element={<ProtectedRoute><Stock /></ProtectedRoute>} />
+        <Route path="/wholesalers/:category" element={<ProtectedRoute><WholesalerDashboard /></ProtectedRoute>} />
+        <Route path="/employees" element={<ProtectedRoute><Employee /></ProtectedRoute>} />
+        <Route path="/employee-detail" element={<ProtectedRoute><EmployeeDetail /></ProtectedRoute>} />
+        <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
+        <Route path="/order/:id" element={<ProtectedRoute><OrderDetails /></ProtectedRoute>} />
+        <Route path="/reviews" element={<ProtectedRoute><Reviews /></ProtectedRoute>} />
+        <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+        <Route path="/ledger" element={<ProtectedRoute><Ledger /></ProtectedRoute>} />
+
+        {/* ✅ NEW — Customer Portal */}
         <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/stock"
-          element={
-            <ProtectedRoute>
-              <Stock />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/wholesalers/:category"
-          element={
-            <ProtectedRoute>
-              <WholesalerDashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/employees"
-          element={
-            <ProtectedRoute>
-              <Employee />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/employee-detail"
-          element={
-            <ProtectedRoute>
-              <EmployeeDetail />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/orders"
-          element={
-            <ProtectedRoute>
-              <Orders />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/order/:id"
-          element={
-            <ProtectedRoute>
-              <OrderDetails />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/reviews"
-          element={
-            <ProtectedRoute>
-              <Reviews />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/profile"
-          element={
-            <ProtectedRoute>
-              <Profile />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/ledger"
-          element={
-            <ProtectedRoute>
-              <Ledger />
-            </ProtectedRoute>
-          }
-        />
+          path="/customer"
+          element={<ProtectedRoute><CustomerLayout /></ProtectedRoute>}
+        >
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<CustomerDashboard />} />
+          <Route path="products"  element={<CustomerProducts />} />
+          <Route path="orders"    element={<CustomerOrders />} />
+          <Route path="bills"     element={<CustomerBills />} />
+        </Route>
 
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
