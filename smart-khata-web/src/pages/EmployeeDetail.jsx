@@ -7,9 +7,10 @@ import {
   FiUser,
   FiPhone,
   FiBriefcase,
-  FiDollarSign,
   FiCalendar,
 } from "react-icons/fi";
+
+import { FaRupeeSign } from "react-icons/fa";
 
 export default function EmployeeDetail() {
   const { state } = useLocation();
@@ -182,7 +183,7 @@ export default function EmployeeDetail() {
 
           <div className="detail-card">
             <h3>
-              <FiDollarSign /> Salary
+              <FaRupeeSign /> Salary
             </h3>
 
             <p>₹{state.salary}</p>
@@ -190,7 +191,7 @@ export default function EmployeeDetail() {
 
           <div className="detail-card">
             <h3>
-              <FiDollarSign /> Paid
+              <FaRupeeSign /> Paid
             </h3>
 
             <p>₹{paid}</p>
@@ -198,7 +199,7 @@ export default function EmployeeDetail() {
 
           <div className="detail-card">
             <h3>
-              <FiDollarSign /> Pending
+              <FaRupeeSign /> Pending
             </h3>
 
             <p>₹{pending}</p>

@@ -13,6 +13,9 @@ export default function Ledger() {
 
   const [entries, setEntries] = useState([]);
 
+  // NEW: period filter -> All | Monthly | Quarterly | Yearly
+  const [periodFilter, setPeriodFilter] = useState("All");
+
   const user = JSON.parse(localStorage.getItem("user"));
 
   // =========================
@@ -36,11 +39,52 @@ export default function Ledger() {
   };
 const navigate =
   useNavigate();
- 
-  // TOTAL CREDIT
+
+  // =========================
+  // PERIOD HELPERS
+  // =========================
+  const isSamePeriod = (dateStr) => {
+    if (periodFilter === "All") return true;
+
+    const entryDate = new Date(dateStr);
+    const now = new Date();
+
+    if (periodFilter === "Monthly") {
+      return (
+        entryDate.getMonth() === now.getMonth() &&
+        entryDate.getFullYear() === now.getFullYear()
+      );
+    }
+
+    if (periodFilter === "Quarterly") {
+      const entryQuarter = Math.floor(entryDate.getMonth() / 3);
+      const nowQuarter = Math.floor(now.getMonth() / 3);
+      return (
+        entryQuarter === nowQuarter &&
+        entryDate.getFullYear() === now.getFullYear()
+      );
+    }
+
+    if (periodFilter === "Yearly") {
+      return entryDate.getFullYear() === now.getFullYear();
+    }
+
+    return true;
+  };
+
+  // =========================
+  // PRINT
+  // =========================
+  const handlePrint = () => {
+    window.print();
+  };
+
+  // TOTAL CREDIT (respecting period filter)
 
 
-  const totalCredit = entries
+  const periodEntries = entries.filter((e) => isSamePeriod(e.createdAt));
+
+  const totalCredit = periodEntries
 
     .filter((e) => e.type === "credit")
 
@@ -53,7 +97,7 @@ const navigate =
   // TOTAL DEBIT
 
 
-  const totalDebit = entries
+  const totalDebit = periodEntries
 
     .filter((e) => e.type === "debit")
 
@@ -72,7 +116,7 @@ const navigate =
   // FILTERED DATA
 
 
-  const filtered = entries.filter((e) => {
+  const filtered = periodEntries.filter((e) => {
     const matchFilter =
       filter === "All" || e.type.toLowerCase() === filter.toLowerCase();
 
@@ -90,13 +134,18 @@ const navigate =
   return (
     <div className="ledger-page">
       {/* HEADER */}
-       <button className="back-btn" onClick={() => navigate(-1)}>
+       <button className="back-btn no-print" onClick={() => navigate(-1)}>
   <span className="back-arrow">‹</span>
 </button>
       <div className="ledger-header">
         <div>
           <h1>Ledger Book</h1>
           <p>Track all your credits and debits</p>
+        </div>
+        <div className="ledger-header-actions no-print">
+          <button className="print-btn" onClick={handlePrint}>
+            🖨️ Print
+          </button>
         </div>
         <div className="ledger-header-icon">📒</div>
       </div>
@@ -129,7 +178,7 @@ const navigate =
       </div>
 
       {/* FILTERS */}
-      <div className="ledger-toolbar">
+      <div className="ledger-toolbar no-print">
         <div className="ledger-search">
           <span className="search-icon">🔍</span>
           <input
@@ -147,6 +196,19 @@ const navigate =
               onClick={() => setFilter(f)}
             >
               {f}
+            </button>
+          ))}
+        </div>
+
+        {/* NEW: PERIOD FILTERS */}
+        <div className="ledger-filters ledger-period-filters">
+          {["All", "Monthly", "Quarterly", "Yearly"].map((p) => (
+            <button
+              key={p}
+              className={`filter-btn ${periodFilter === p ? "filter-btn--active" : ""}`}
+              onClick={() => setPeriodFilter(p)}
+            >
+              {p}
             </button>
           ))}
         </div>

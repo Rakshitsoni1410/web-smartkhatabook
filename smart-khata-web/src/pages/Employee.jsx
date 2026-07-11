@@ -16,8 +16,9 @@ import {
   FiCheckCircle,
   FiXCircle,
   FiEye,
-  FiDollarSign,
 } from "react-icons/fi";
+
+import { FaRupeeSign } from "react-icons/fa";
 
 export default function Employees() {
   const navigate = useNavigate();
@@ -35,6 +36,11 @@ export default function Employees() {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   const [selectedEmployee, setSelectedEmployee] = useState(null);
+
+  // NEW: delete confirmation modal state
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   const [paymentData, setPaymentData] = useState({
     amount: "",
@@ -99,14 +105,33 @@ export default function Employees() {
   // =========================
   // DELETE
   // =========================
-  const handleDelete = async (id) => {
+
+  // Step 1: open confirmation modal instead of deleting directly
+  const requestDelete = (emp) => {
+    setDeleteTarget(emp);
+    setShowDeleteModal(true);
+  };
+
+  // Step 2: user confirmed -> actually delete
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+
     try {
-      await axios.delete(`${API}/delete/${id}`);
+      await axios.delete(`${API}/delete/${deleteTarget._id}`);
 
       fetchEmployees();
     } catch (err) {
       console.log(err);
+    } finally {
+      setShowDeleteModal(false);
+      setDeleteTarget(null);
     }
+  };
+
+  // Step 3: user cancelled
+  const cancelDelete = () => {
+    setShowDeleteModal(false);
+    setDeleteTarget(null);
   };
 
   // =========================
@@ -593,6 +618,20 @@ body{
   background:#64748b;
 }
 
+.delete-confirm-text{
+  color:#374151;
+  margin-bottom:24px;
+  line-height:1.6;
+}
+
+.delete-confirm-text b{
+  color:#111827;
+}
+
+.confirm-delete-btn{
+  background:#ef4444;
+}
+
 @media(max-width:768px){
 
   .employee-page{
@@ -786,7 +825,7 @@ body{
 
                   <button
                     className="action-btn delete-btn"
-                    onClick={() => handleDelete(emp._id)}
+                    onClick={() => requestDelete(emp)}
                   >
                     <FiTrash2 />
                   </button>
@@ -799,7 +838,7 @@ body{
                       setShowPaymentModal(true);
                     }}
                   >
-                    <FiDollarSign />
+                    <FaRupeeSign />
                   </button>
 
                   <button
@@ -953,6 +992,34 @@ body{
                   className="cancel-btn"
                   onClick={() => setShowPaymentModal(false)}
                 >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* DELETE CONFIRMATION MODAL */}
+
+        {showDeleteModal && deleteTarget && (
+          <div className="modal-overlay">
+            <div className="modal">
+              <h2>Delete Employee?</h2>
+
+              <p className="delete-confirm-text">
+                Are you sure you want to delete{" "}
+                <b>{deleteTarget.name}</b>? This action cannot be undone.
+              </p>
+
+              <div className="modal-buttons">
+                <button
+                  className="save-btn confirm-delete-btn"
+                  onClick={confirmDelete}
+                >
+                  Yes, Delete
+                </button>
+
+                <button className="cancel-btn" onClick={cancelDelete}>
                   Cancel
                 </button>
               </div>

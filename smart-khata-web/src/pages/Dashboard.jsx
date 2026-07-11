@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
@@ -22,40 +22,66 @@ const QUOTES = {
   ],
 };
 
+const getPeriod = (hour) => (hour < 12 ? "morning" : hour < 17 ? "afternoon" : "evening");
+
 export default function Dashboard() {
-  const user = JSON.parse(localStorage.getItem("user")) || {};
+  const user = JSON.parse(localStorage.getItem("user") || "{}") || {};
   const navigate = useNavigate();
 
   const [stats, setStats] = useState({ stock: 0, employees: 0, orders: 0, reviews: 0 });
   const [loading, setLoading] = useState(true);
-  const [quote, setQuote] = useState("");
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState(null);
+  const [period, setPeriod] = useState(getPeriod(new Date().getHours()));
+  const [quote, setQuote] = useState(
+    QUOTES[getPeriod(new Date().getHours())][
+      Math.floor(Math.random() * QUOTES[getPeriod(new Date().getHours())].length)
+    ]
+  );
   const [time, setTime] = useState(new Date());
+
+  const fetchDashboard = useCallback(
+    async (isManualRefresh = false) => {
+      if (!user.role || !user._id) {
+        setError("Missing user session. Please log in again.");
+        setLoading(false);
+        return;
+      }
+
+      try {
+        if (isManualRefresh) setRefreshing(true);
+        setError(null);
+
+        const res = await axios.get(
+          `https://backend-of-smartkhata-book-vkcv.vercel.app/api/dashboard/${user.role}?userId=${user._id}`
+        );
+        setStats(res.data);
+      } catch (err) {
+        console.log(err);
+        setError("Couldn't load your dashboard data. Check your connection and try again.");
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
+      }
+    },
+    [user.role, user._id]
+  );
 
   useEffect(() => {
     fetchDashboard();
-    pickQuote();
     const timer = setInterval(() => setTime(new Date()), 60000);
     return () => clearInterval(timer);
-  }, []);
+  }, [fetchDashboard]);
 
-  const fetchDashboard = async () => {
-    try {
-      const res = await axios.get(
-        `https://backend-of-smartkhata-book-vkcv.vercel.app/api/dashboard/${user.role}?userId=${user._id}`
-      );
-      setStats(res.data);
-    } catch (error) {
-      console.log(error);
-    } finally {
-      setLoading(false);
+  // Re-pick a quote whenever the time-of-day period changes (morning -> afternoon -> evening)
+  useEffect(() => {
+    const currentPeriod = getPeriod(time.getHours());
+    if (currentPeriod !== period) {
+      setPeriod(currentPeriod);
+      const pool = QUOTES[currentPeriod];
+      setQuote(pool[Math.floor(Math.random() * pool.length)]);
     }
-  };
-
-  const pickQuote = () => {
-    const h = new Date().getHours();
-    const pool = h < 12 ? QUOTES.morning : h < 17 ? QUOTES.afternoon : QUOTES.evening;
-    setQuote(pool[Math.floor(Math.random() * pool.length)]);
-  };
+  }, [time, period]);
 
   const getGreeting = () => {
     const h = time.getHours();
@@ -114,17 +140,17 @@ export default function Dashboard() {
   ];
 
   const quickActions = [
-    { label: "Add Stock",     icon: "ti-package",   route: "/stock"     },
-    { label: "New Order",     icon: "ti-truck",      route: "/orders"    },
-    { label: "Add Employee",  icon: "ti-user-plus",  route: "/employees" },
-    { label: "View Reviews",  icon: "ti-star",       route: "/reviews"   },
+    { label: "Add Stock", icon: "ti-package", route: "/stock" },
+    { label: "New Order", icon: "ti-truck", route: "/orders" },
+    { label: "Add Employee", icon: "ti-user-plus", route: "/employees" },
+    { label: "View Reviews", icon: "ti-star", route: "/reviews" },
   ];
 
   const focusItems = [
-    { text: "Check low-stock items",         color: "#2563EB" },
-    { text: "Review pending orders",          color: "#059669" },
-    { text: "Track employee performance",     color: "#7C3AED" },
-    { text: "Respond to new reviews",         color: "#D97706" },
+    { text: "Check low-stock items", color: "#2563EB" },
+    { text: "Review pending orders", color: "#059669" },
+    { text: "Track employee performance", color: "#7C3AED" },
+    { text: "Respond to new reviews", color: "#D97706" },
   ];
 
   const initials = (user.name || "U")
@@ -139,7 +165,6 @@ export default function Dashboard() {
       <Sidebar role={user.role} />
 
       <div className="dashboard-main">
-
         {/* ── Topbar ── */}
         <header className="topbar">
           <div className="topbar-left">
@@ -171,8 +196,8 @@ export default function Dashboard() {
             >
               <div className="tb-avatar">{initials}</div>
               <div className="profile-text">
-                <span className="profile-name">{user.name}</span>
-                <span className="profile-role">{user.role}</span>
+                <span className="profile-name">{user.name || "User"}</span>
+                <span className="profile-role">{user.role || "—"}</span>
               </div>
               <i className="ti ti-chevron-right profile-chevron" aria-hidden="true" />
             </button>
@@ -192,7 +217,7 @@ export default function Dashboard() {
               <i className={`ti ${greeting.icon} hero-greet-icon`} aria-hidden="true" />
               <div>
                 <p className="hero-label">{greeting.text}</p>
-                <h1 className="hero-name">{user.name}</h1>
+                <h1 className="hero-name">{user.name || "there"}</h1>
               </div>
             </div>
 
@@ -203,14 +228,13 @@ export default function Dashboard() {
                   {user.shopName}
                 </span>
               )}
-              {user.businessType && (
-                <span className="chip chip-biz">{user.businessType}</span>
-              )}
-              <span className="chip chip-role">{user.role}</span>
+              {user.businessType && <span className="chip chip-biz">{user.businessType}</span>}
+              {user.role && <span className="chip chip-role">{user.role}</span>}
             </div>
 
             <blockquote className="hero-quote">
-              <span className="qmark">"</span>{quote}
+              <span className="qmark">"</span>
+              {quote}
             </blockquote>
           </div>
 
@@ -235,10 +259,30 @@ export default function Dashboard() {
             <h2 className="section-title">Business Overview</h2>
             <p className="section-sub">Click any card to explore details</p>
           </div>
-          <button className="refresh-btn" onClick={fetchDashboard}>
-            <i className="ti ti-refresh" aria-hidden="true" /> Refresh
+          <button
+            className="refresh-btn"
+            onClick={() => fetchDashboard(true)}
+            disabled={refreshing}
+            aria-busy={refreshing}
+          >
+            <i
+              className={`ti ti-refresh ${refreshing ? "spin" : ""}`}
+              aria-hidden="true"
+            />
+            {refreshing ? "Refreshing…" : "Refresh"}
           </button>
         </div>
+
+        {/* ── Error banner ── */}
+        {error && (
+          <div className="error-banner" role="alert">
+            <i className="ti ti-alert-circle" aria-hidden="true" />
+            <span>{error}</span>
+            <button className="error-retry" onClick={() => fetchDashboard(true)}>
+              Retry
+            </button>
+          </div>
+        )}
 
         {/* ── Stat Cards ── */}
         {loading ? (
@@ -247,13 +291,14 @@ export default function Dashboard() {
             <p>Fetching your data…</p>
           </div>
         ) : (
-          <div className="stats-grid">
+          <div className="stats-grid" aria-live="polite">
             {cards.map((item, i) => (
               <button
                 key={i}
                 className="stat-card"
                 style={{ "--cc": item.color, "--cb": item.bg, "--ca": item.accent }}
                 onClick={() => navigate(item.route)}
+                aria-label={`${item.title}: ${item.value}. ${item.desc}`}
               >
                 <div className="sc-stripe" />
                 <div className="sc-top">
@@ -285,11 +330,7 @@ export default function Dashboard() {
             </h3>
             <div className="quick-grid">
               {quickActions.map((a) => (
-                <button
-                  key={a.label}
-                  className="quick-btn"
-                  onClick={() => navigate(a.route)}
-                >
+                <button key={a.label} className="quick-btn" onClick={() => navigate(a.route)}>
                   <i className={`ti ${a.icon} quick-icon`} aria-hidden="true" />
                   <span>{a.label}</span>
                 </button>
@@ -312,7 +353,6 @@ export default function Dashboard() {
             </ul>
           </div>
         </div>
-
       </div>
     </div>
   );
