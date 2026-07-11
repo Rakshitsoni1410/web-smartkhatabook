@@ -27,6 +27,12 @@ export default function Reviews() {
 
   const [toast, setToast] = useState("");
 
+  // NEW: star rating filter -> 0 means "All"
+  const [starFilter, setStarFilter] = useState(0);
+
+  // NEW: month filter -> "All" or "YYYY-MM"
+  const [monthFilter, setMonthFilter] = useState("All");
+
   useEffect(() => {
     fetchReviews();
 
@@ -121,6 +127,46 @@ const fetchSuggestions = async () => {
       : "0.0";
 
   const positive = reviews.filter((r) => r.rating >= 4).length;
+
+  // =========================
+  // MONTH OPTIONS (built from actual review dates)
+  // =========================
+  const monthOptions = Array.from(
+    new Set(
+      reviews
+        .filter((r) => r.createdAt)
+        .map((r) => {
+          const d = new Date(r.createdAt);
+          return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+        }),
+    ),
+  ).sort((a, b) => (a < b ? 1 : -1)); // newest first
+
+  const monthLabel = (ym) => {
+    const [y, m] = ym.split("-");
+    const d = new Date(Number(y), Number(m) - 1, 1);
+    return d.toLocaleDateString("en-IN", { month: "long", year: "numeric" });
+  };
+
+  // =========================
+  // FILTERED REVIEWS
+  // =========================
+  const filteredReviews = reviews.filter((item) => {
+    const matchStar = starFilter === 0 || item.rating === starFilter;
+
+    let matchMonth = true;
+    if (monthFilter !== "All") {
+      if (!item.createdAt) {
+        matchMonth = false;
+      } else {
+        const d = new Date(item.createdAt);
+        const ym = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+        matchMonth = ym === monthFilter;
+      }
+    }
+
+    return matchStar && matchMonth;
+  });
 
   return (
     <div className="dashboard-main">
@@ -310,22 +356,101 @@ const fetchSuggestions = async () => {
         </div>
       )}
 
-      {/* Reviews List */}
-      <h3
+      {/* Filters */}
+      <div
         style={{
+          display: "flex",
+          flexWrap: "wrap",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: "14px",
           marginBottom: "15px",
         }}
       >
-        Recent Reviews
-      </h3>
+        <h3 style={{ margin: 0 }}>Recent Reviews</h3>
 
-      {reviews.length === 0 ? (
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            alignItems: "center",
+            gap: "10px",
+          }}
+        >
+          {/* STAR FILTER */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              background: "#fff",
+              padding: "6px 10px",
+              borderRadius: "999px",
+              border: "1px solid #e2e8f0",
+            }}
+          >
+            {[0, 5, 4, 3, 2, 1].map((num) => (
+              <button
+                key={num}
+                onClick={() => setStarFilter(num)}
+                style={{
+                  border: "none",
+                  cursor: "pointer",
+                  padding: "6px 12px",
+                  borderRadius: "999px",
+                  fontWeight: 700,
+                  fontSize: "13px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "4px",
+                  background: starFilter === num ? "#f59e0b" : "transparent",
+                  color: starFilter === num ? "#fff" : "#475569",
+                }}
+              >
+                {num === 0 ? (
+                  "All"
+                ) : (
+                  <>
+                    {num} <FiStar size={12} />
+                  </>
+                )}
+              </button>
+            ))}
+          </div>
+
+          {/* MONTH FILTER */}
+          <select
+            value={monthFilter}
+            onChange={(e) => setMonthFilter(e.target.value)}
+            style={{
+              padding: "10px 14px",
+              borderRadius: "999px",
+              border: "1px solid #e2e8f0",
+              fontWeight: 600,
+              fontSize: "13px",
+              color: "#334155",
+              background: "#fff",
+              cursor: "pointer",
+            }}
+          >
+            <option value="All">All Months</option>
+            {monthOptions.map((ym) => (
+              <option key={ym} value={ym}>
+                {monthLabel(ym)}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* Reviews List */}
+      {filteredReviews.length === 0 ? (
         <div className="focus-card">
-          <p>No reviews yet</p>
+          <p>No reviews found</p>
         </div>
       ) : (
         <div className="stats-grid">
-          {reviews.map((item) => (
+          {filteredReviews.map((item) => (
             <div key={item._id} className="stat-card">
               <h3>{item.author}</h3>
 
@@ -345,6 +470,22 @@ const fetchSuggestions = async () => {
               >
                 {"★".repeat(item.rating)}
               </p>
+
+              {item.createdAt && (
+                <p
+                  style={{
+                    color: "#94a3b8",
+                    fontSize: "12px",
+                    marginTop: "6px",
+                  }}
+                >
+                  {new Date(item.createdAt).toLocaleDateString("en-IN", {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                  })}
+                </p>
+              )}
 
               {item.reply?.text ? (
                 <div
