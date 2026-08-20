@@ -166,10 +166,6 @@ export default function Signup() {
       );
       if (response.data.success) {
         addToast("Account created successfully! 🎉", "success");
-
-        localStorage.setItem("skb_tour_seen", "false");
-
-        setTimeout(() => navigate("/tour"), 1500);
       } else {
         addToast(response.data.message || "Signup failed", "error");
       }
