@@ -164,10 +164,12 @@ export default function Signup() {
         },
         { headers: { "Content-Type": "application/json" } },
       );
-
       if (response.data.success) {
         addToast("Account created successfully! 🎉", "success");
-        setTimeout(() => navigate("/"), 1500);
+
+        localStorage.setItem("skb_tour_seen", "false");
+
+        setTimeout(() => navigate("/tour"), 1500);
       } else {
         addToast(response.data.message || "Signup failed", "error");
       }
