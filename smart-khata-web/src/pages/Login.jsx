@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiPhone, FiLock, FiEye, FiEyeOff, FiArrowRight } from "react-icons/fi";
 import axios from "axios";
+import OnboardingTour from "../components/OnboardingTour";
 import "./Login.css";
 
 export default function Login() {
@@ -11,6 +12,7 @@ export default function Login() {
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
   const [toast, setToast] = useState("");
+  const [showTour, setShowTour] = useState(false);
 
   const [loading, setLoading] = useState(true);
 
@@ -221,12 +223,21 @@ export default function Login() {
 
           <p className="signup-hint">
             Don't have an account?{" "}
-            <span className="signup-link" onClick={() => navigate("/signup")}>
+            <span className="signup-link" onClick={() => setShowTour(true)}>
               Create account
             </span>
           </p>
         </div>
       </div>
+
+      {showTour && (
+        <OnboardingTour
+          onFinish={() => {
+            setShowTour(false);
+            navigate("/signup");
+          }}
+        />
+      )}
     </div>
   );
 }

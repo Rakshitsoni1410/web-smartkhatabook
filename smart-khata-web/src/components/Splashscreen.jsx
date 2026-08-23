@@ -1,16 +1,34 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
+import { createPortal } from "react-dom";
 
-export default function SplashScreen({ onComplete }) {
+export default function SplashScreen({ onComplete = () => {} }) {
   const [phase, setPhase] = useState("init");
   // init → bookOpen → writeLines → brandReveal → exit
 
+  const prefersReducedMotion = useRef(
+    typeof window !== "undefined" &&
+      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches,
+  ).current;
+
   useEffect(() => {
+    // Respect reduced-motion: skip straight to the brand, exit quickly.
+    if (prefersReducedMotion) {
+      setPhase("brandReveal");
+      const t = setTimeout(() => {
+        setPhase("exit");
+        setTimeout(onComplete, 200);
+      }, 900);
+      return () => clearTimeout(t);
+    }
+
     const t1 = setTimeout(() => setPhase("bookOpen"), 300);
     const t2 = setTimeout(() => setPhase("writeLines"), 1150);
     const t3 = setTimeout(() => setPhase("brandReveal"), 2000);
     const t4 = setTimeout(() => setPhase("exit"), 3600);
-    const t5 = setTimeout(() => onComplete(), 4300);
+    // Fire onComplete only after the exit fade/scale transition (0.75s) has finished.
+    const t5 = setTimeout(() => onComplete(), 4380);
     return () => [t1, t2, t3, t4, t5].forEach(clearTimeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const isOpen = phase !== "init";
@@ -21,8 +39,16 @@ export default function SplashScreen({ onComplete }) {
 
   const brandText = "Smart Khatabook";
 
-  return (
+  // Portal straight to document.body — guarantees this is centered on the
+  // real viewport even if a parent wrapper has a CSS transform/filter/
+  // perspective on it (any of those turns `position: fixed` into
+  // "fixed relative to that ancestor" instead of the whole screen, which
+  // is what was pushing the book off to one side).
+  return createPortal(
     <div
+      role="status"
+      aria-live="polite"
+      aria-label="Loading Smart Khatabook"
       style={{
         position: "fixed",
         inset: 0,
@@ -41,6 +67,23 @@ export default function SplashScreen({ onComplete }) {
         transform: isExiting ? "scale(1.08)" : "scale(1)",
       }}
     >
+      {/* Screen-reader-only text — decorative visuals below are hidden from AT */}
+      <span
+        style={{
+          position: "absolute",
+          width: 1,
+          height: 1,
+          padding: 0,
+          margin: -1,
+          overflow: "hidden",
+          clip: "rect(0,0,0,0)",
+          whiteSpace: "nowrap",
+          border: 0,
+        }}
+      >
+        Smart Khatabook is loading, please wait.
+      </span>
+
       {/* ── Keyframes & animation styles ── */}
       <style>{`
         @keyframes writeLine {
@@ -87,10 +130,14 @@ export default function SplashScreen({ onComplete }) {
           from { letter-spacing: 0.4em; opacity: 0; }
           to   { letter-spacing: 0.2em; opacity: 1; }
         }
+        @media (prefers-reduced-motion: reduce) {
+          * { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
+        }
       `}</style>
 
-      {/* Ambient glow — now pulsing */}
+      {/* Ambient glow — pulsing */}
       <div
+        aria-hidden="true"
         style={{
           position: "absolute",
           top: "38%",
@@ -102,44 +149,54 @@ export default function SplashScreen({ onComplete }) {
             "radial-gradient(circle, rgba(108,99,255,0.16) 0%, rgba(72,185,248,0.06) 45%, transparent 72%)",
           transition: "opacity 1s",
           opacity: showBrand ? 1 : 0,
-          animation: showBrand ? "glowPulse 3.2s ease-in-out infinite" : "none",
+          animation:
+            showBrand && !prefersReducedMotion
+              ? "glowPulse 3.2s ease-in-out infinite"
+              : "none",
           pointerEvents: "none",
         }}
       />
 
       {/* Floating particles */}
-      {[...Array(9)].map((_, i) => (
-        <div
-          key={i}
-          style={{
-            position: "absolute",
-            width: i % 3 === 0 ? 5 : 3,
-            height: i % 3 === 0 ? 5 : 3,
-            borderRadius: "50%",
-            background: i % 2 === 0 ? "#6c63ff" : "#48b9f8",
-            left: `${10 + i * 9}%`,
-            top: `${18 + (i % 4) * 20}%`,
-            boxShadow: i % 2 === 0
-              ? "0 0 8px rgba(108,99,255,0.8)"
-              : "0 0 8px rgba(72,185,248,0.8)",
-            opacity: showBrand ? 0.6 : 0,
-            transition: `opacity 0.9s ease ${i * 0.08}s`,
-            animation: showBrand
-              ? `floatDot ${2.4 + (i % 3) * 0.6}s ease-in-out infinite ${i * 0.35}s`
-              : "none",
-          }}
-        />
-      ))}
+      {!prefersReducedMotion &&
+        [...Array(9)].map((_, i) => (
+          <div
+            key={i}
+            aria-hidden="true"
+            style={{
+              position: "absolute",
+              width: i % 3 === 0 ? 5 : 3,
+              height: i % 3 === 0 ? 5 : 3,
+              borderRadius: "50%",
+              background: i % 2 === 0 ? "#6c63ff" : "#48b9f8",
+              left: `${10 + i * 9}%`,
+              top: `${18 + (i % 4) * 20}%`,
+              boxShadow:
+                i % 2 === 0
+                  ? "0 0 8px rgba(108,99,255,0.8)"
+                  : "0 0 8px rgba(72,185,248,0.8)",
+              opacity: showBrand ? 0.6 : 0,
+              transition: `opacity 0.9s ease ${i * 0.08}s`,
+              animation: showBrand
+                ? `floatDot ${2.4 + (i % 3) * 0.6}s ease-in-out infinite ${i * 0.35}s`
+                : "none",
+            }}
+          />
+        ))}
 
       {/* ── BOOK ── */}
       <div
+        aria-hidden="true"
         style={{
           position: "relative",
           width: 160,
           height: 200,
           marginBottom: 36,
           perspective: 900,
-          animation: isOpen ? "bookSettle 0.9s cubic-bezier(0.34,1.35,0.64,1) 0.05s both" : "none",
+          animation:
+            isOpen && !prefersReducedMotion
+              ? "bookSettle 0.9s cubic-bezier(0.34,1.35,0.64,1) 0.05s both"
+              : "none",
         }}
       >
         {/* Book spine / back cover */}
@@ -154,13 +211,13 @@ export default function SplashScreen({ onComplete }) {
           }}
         />
 
-        {/* Front cover — flips open */}
+        {/* Front cover — flips fully open */}
         <div
           style={{
             position: "absolute",
             inset: 0,
             transformOrigin: "left center",
-            transform: isOpen ? "rotateY(-165deg)" : "rotateY(0deg)",
+            transform: isOpen ? "rotateY(-180deg)" : "rotateY(0deg)",
             transition: "transform 1s cubic-bezier(0.34,1.15,0.64,1)",
             transformStyle: "preserve-3d",
             zIndex: 3,
@@ -236,8 +293,18 @@ export default function SplashScreen({ onComplete }) {
           }}
         >
           {[...Array(8)].map((_, i) => (
-            <div key={i} style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <div style={{ width: 1, height: 12, background: "#ffb3b3", flexShrink: 0 }} />
+            <div
+              key={i}
+              style={{ display: "flex", alignItems: "center", gap: 6 }}
+            >
+              <div
+                style={{
+                  width: 1,
+                  height: 12,
+                  background: "#ffb3b3",
+                  flexShrink: 0,
+                }}
+              />
               <div
                 style={{
                   flex: 1,
@@ -257,14 +324,18 @@ export default function SplashScreen({ onComplete }) {
                         i % 3 === 0
                           ? "linear-gradient(to right, #6c63ff, #8b83ff)"
                           : i % 3 === 1
-                          ? "linear-gradient(to right, #1a4fa8, #4878d4)"
-                          : "linear-gradient(to right, #48b9f8, #7dd4fc)",
+                            ? "linear-gradient(to right, #1a4fa8, #4878d4)"
+                            : "linear-gradient(to right, #48b9f8, #7dd4fc)",
                       borderRadius: 1,
                       transformOrigin: "left",
-                      animation: "writeLine 0.42s cubic-bezier(0.4,0,0.2,1) forwards",
+                      animation: prefersReducedMotion
+                        ? "none"
+                        : "writeLine 0.42s cubic-bezier(0.4,0,0.2,1) forwards",
                       animationDelay: `${i * 0.075}s`,
-                      transform: "scaleX(0)",
-                      width: `${50 + (i * 7) % 45}%`,
+                      transform: prefersReducedMotion
+                        ? "scaleX(1)"
+                        : "scaleX(0)",
+                      width: `${50 + ((i * 7) % 45)}%`,
                     }}
                   />
                 )}
@@ -282,8 +353,10 @@ export default function SplashScreen({ onComplete }) {
                 fontSize: 22,
                 color: "#6c63ff",
                 fontWeight: 800,
-                opacity: 0,
-                animation: "fadeInScale 0.45s cubic-bezier(0.34,1.6,0.64,1) 0.65s forwards",
+                opacity: prefersReducedMotion ? 1 : 0,
+                animation: prefersReducedMotion
+                  ? "none"
+                  : "fadeInScale 0.45s cubic-bezier(0.34,1.6,0.64,1) 0.65s forwards",
               }}
             >
               ₹
@@ -300,14 +373,15 @@ export default function SplashScreen({ onComplete }) {
               top: "10%",
               bottom: "10%",
               width: 6,
-              background: "linear-gradient(to right, rgba(0,0,0,0.14), transparent)",
+              background:
+                "linear-gradient(to right, rgba(0,0,0,0.14), transparent)",
               borderRadius: "0 4px 4px 0",
             }}
           />
         )}
 
         {/* Pencil writing animation */}
-        {showLines && (
+        {showLines && !prefersReducedMotion && (
           <div
             style={{
               position: "absolute",
@@ -330,7 +404,8 @@ export default function SplashScreen({ onComplete }) {
           textAlign: "center",
           transform: showBrand ? "translateY(0)" : "translateY(24px)",
           opacity: showBrand ? 1 : 0,
-          transition: "transform 0.7s cubic-bezier(0.34,1.4,0.64,1), opacity 0.7s ease",
+          transition:
+            "transform 0.7s cubic-bezier(0.34,1.4,0.64,1), opacity 0.7s ease",
         }}
       >
         <h1
@@ -353,10 +428,11 @@ export default function SplashScreen({ onComplete }) {
               style={{
                 display: "inline-block",
                 whiteSpace: "pre",
-                opacity: 0,
-                animation: showBrand
-                  ? `letterUp 0.5s cubic-bezier(0.2,0.9,0.3,1.2) ${0.05 * i}s forwards`
-                  : "none",
+                opacity: prefersReducedMotion ? 1 : 0,
+                animation:
+                  showBrand && !prefersReducedMotion
+                    ? `letterUp 0.5s cubic-bezier(0.2,0.9,0.3,1.2) ${0.05 * i}s forwards`
+                    : "none",
               }}
             >
               {ch}
@@ -371,10 +447,11 @@ export default function SplashScreen({ onComplete }) {
             textTransform: "uppercase",
             fontWeight: 700,
             margin: "0 0 20px",
-            opacity: 0,
-            animation: showBrand
-              ? "taglineWave 0.6s ease 0.55s forwards"
-              : "none",
+            opacity: prefersReducedMotion ? 1 : 0,
+            animation:
+              showBrand && !prefersReducedMotion
+                ? "taglineWave 0.6s ease 0.55s forwards"
+                : "none",
           }}
         >
           Track · Manage · Profit
@@ -397,8 +474,11 @@ export default function SplashScreen({ onComplete }) {
               height: "100%",
               background: "linear-gradient(to right, #6c63ff, #48b9f8)",
               borderRadius: 10,
-              animation: showBrand ? "loadBar 1.6s cubic-bezier(0.4,0,0.2,1) 0.2s forwards" : "none",
-              transform: "scaleX(0)",
+              animation:
+                showBrand && !prefersReducedMotion
+                  ? "loadBar 1.6s cubic-bezier(0.4,0,0.2,1) 0.2s forwards"
+                  : "none",
+              transform: prefersReducedMotion ? "scaleX(1)" : "scaleX(0)",
               transformOrigin: "left",
               position: "relative",
               overflow: "hidden",
@@ -411,12 +491,16 @@ export default function SplashScreen({ onComplete }) {
                 background:
                   "linear-gradient(90deg, transparent, rgba(255,255,255,0.7), transparent)",
                 width: "40%",
-                animation: showBrand ? "shimmer 1.3s ease-in-out 0.5s infinite" : "none",
+                animation:
+                  showBrand && !prefersReducedMotion
+                    ? "shimmer 1.3s ease-in-out 0.5s infinite"
+                    : "none",
               }}
             />
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

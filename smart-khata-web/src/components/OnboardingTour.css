@@ -16,7 +16,7 @@
   width: 100%;
   max-width: 560px;
   overflow: hidden;
-  font-family: "Segoe UI", sans-serif;
+  font-family: 'Segoe UI', sans-serif;
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25);
 }
 
@@ -62,6 +62,7 @@
   background: #fff;
   transition: background 0.15s;
 }
+
 .tour-skip:hover {
   background: #f5f5f5;
 }
@@ -70,11 +71,13 @@
 .tour-slide {
   animation: tourFade 0.35s ease;
 }
+
 @keyframes tourFade {
   from {
     opacity: 0;
     transform: translateY(8px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -85,12 +88,14 @@
   padding: 14px 18px 10px;
   text-align: center;
 }
+
 .tour-slide-title {
   font-size: 16px;
   font-weight: 700;
   color: #1a1a2e;
   margin-bottom: 5px;
 }
+
 .tour-slide-desc {
   font-size: 12px;
   color: #6b7280;
@@ -110,6 +115,7 @@
   display: flex;
   gap: 5px;
 }
+
 .tour-dot {
   width: 7px;
   height: 7px;
@@ -118,6 +124,7 @@
   cursor: pointer;
   transition: all 0.2s;
 }
+
 .tour-dot--active {
   width: 20px;
   border-radius: 4px;
@@ -131,6 +138,7 @@
   border-radius: 2px;
   overflow: hidden;
 }
+
 .tour-bar {
   height: 100%;
   background: #4f46e5;
@@ -141,6 +149,7 @@
   display: flex;
   gap: 7px;
 }
+
 .tour-btn {
   font-size: 12px;
   border: 1px solid #e0e0e0;
@@ -151,14 +160,17 @@
   color: #1a1a2e;
   transition: background 0.15s;
 }
+
 .tour-btn:hover {
   background: #f5f5f5;
 }
+
 .tour-btn--primary {
   background: #4f46e5;
   color: #fff;
   border-color: #4f46e5;
 }
+
 .tour-btn--primary:hover {
   background: #4338ca;
 }
@@ -171,65 +183,77 @@
   padding: 18px 20px 14px;
   color: #fff;
 }
+
 .tour-s1-topbar {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   margin-bottom: 12px;
 }
+
 .tour-s1-greet {
   font-size: 10px;
   color: #aaa;
-  letter-spacing: 0.5px;
+  letter-spacing: .5px;
 }
+
 .tour-s1-name {
   font-size: 18px;
   font-weight: 700;
 }
+
 .tour-s1-badge {
   display: inline-block;
-  background: rgba(99, 102, 241, 0.4);
-  border: 1px solid rgba(99, 102, 241, 0.6);
+  background: rgba(99, 102, 241, .4);
+  border: 1px solid rgba(99, 102, 241, .6);
   color: #a5b4fc;
   font-size: 9px;
   padding: 2px 8px;
   border-radius: 12px;
   margin-top: 3px;
 }
+
 .tour-s1-date {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, .1);
   border-radius: 8px;
   padding: 6px 10px;
   text-align: center;
 }
+
 .tour-s1-day {
   font-size: 20px;
   font-weight: 700;
 }
+
 .tour-s1-mo {
   font-size: 9px;
   color: #aaa;
 }
+
 .tour-s1-cards {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
   gap: 8px;
 }
+
 .tour-s1-card {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, .08);
+  border: 1px solid rgba(255, 255, 255, .12);
   border-radius: 10px;
   padding: 10px;
   text-align: center;
 }
+
 .tour-s1-accent {
   color: #a5b4fc;
   font-size: 8px;
 }
+
 .tour-s1-num {
   font-size: 18px;
   font-weight: 700;
 }
+
 .tour-s1-lbl {
   font-size: 8px;
   color: #9ca3af;
@@ -242,17 +266,20 @@
 .tour-s2-wrap {
   padding: 14px 18px;
 }
+
 .tour-s2-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 12px;
 }
+
 .tour-s2-title {
   font-size: 15px;
   font-weight: 700;
   color: #1a1a2e;
 }
+
 .tour-s2-addbtn {
   background: #4f46e5;
   color: #fff;
@@ -262,63 +289,76 @@
   border: none;
   cursor: pointer;
 }
+
 .tour-s2-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
 }
+
 .tour-s2-card {
   background: #fff;
   border: 1px solid #e8e8f0;
   border-radius: 12px;
   padding: 12px;
 }
+
 .tour-s2-pname {
   font-size: 12px;
   font-weight: 600;
   color: #1a1a2e;
   margin-bottom: 6px;
 }
+
 .tour-s2-tags {
   display: flex;
   gap: 5px;
   margin-bottom: 8px;
 }
+
 .tour-s2-tag {
   font-size: 9px;
   padding: 2px 8px;
   border-radius: 10px;
   font-weight: 500;
 }
+
 .tour-s2-cat {
   background: #e0e7ff;
   color: #4f46e5;
 }
+
 .tour-s2-stk {
   background: #d1fae5;
   color: #059669;
 }
+
 .tour-s2-low {
   background: #fef3c7;
   color: #d97706;
 }
+
 .tour-s2-stats {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
   gap: 4px;
 }
+
 .tour-s2-stat {
   text-align: center;
 }
+
 .tour-s2-slbl {
   font-size: 8px;
   color: #9ca3af;
 }
+
 .tour-s2-sval {
   font-size: 11px;
   font-weight: 600;
   color: #1a1a2e;
 }
+
 .tour-s2-sval.warn {
   color: #d97706;
 }
@@ -329,28 +369,33 @@
 .tour-s3-wrap {
   padding: 14px 18px;
 }
+
 .tour-s3-cards {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
   margin-bottom: 12px;
 }
+
 .tour-s3-stat {
   background: #f8f9ff;
   border: 1px solid #e8e8f0;
   border-radius: 10px;
   padding: 10px;
 }
+
 .tour-s3-slbl {
   font-size: 9px;
   color: #9ca3af;
 }
+
 .tour-s3-sval {
   font-size: 14px;
   font-weight: 700;
   color: #1a1a2e;
   margin-top: 2px;
 }
+
 .tour-s3-sval.warn {
   color: #d97706;
 }
@@ -361,12 +406,14 @@
   border-radius: 12px;
   padding: 12px;
 }
+
 .tour-emp-top {
   display: flex;
   align-items: center;
   gap: 10px;
   margin-bottom: 8px;
 }
+
 .tour-emp-av {
   width: 36px;
   height: 36px;
@@ -377,15 +424,18 @@
   justify-content: center;
   font-size: 18px;
 }
+
 .tour-emp-name {
   font-size: 13px;
   font-weight: 600;
   color: #1a1a2e;
 }
+
 .tour-emp-phone {
   font-size: 9px;
   color: #9ca3af;
 }
+
 .tour-emp-role {
   display: inline-block;
   background: #e0e7ff;
@@ -394,6 +444,7 @@
   padding: 2px 8px;
   border-radius: 10px;
 }
+
 .tour-emp-active {
   margin-left: auto;
   font-size: 10px;
@@ -410,12 +461,14 @@
   font-size: 9px;
   color: #9ca3af;
 }
+
 .tour-emp-bar-wrap {
   background: #f0f0f5;
   border-radius: 4px;
   height: 4px;
   margin: 6px 0;
 }
+
 .tour-emp-bar {
   background: #4f46e5;
   height: 4px;
@@ -427,6 +480,7 @@
   display: flex;
   gap: 6px;
 }
+
 .tour-emp-btn {
   flex: 1;
   padding: 6px;
@@ -437,15 +491,19 @@
   text-align: center;
   cursor: pointer;
 }
+
 .tour-emp-btn--cyan {
   background: #06b6d4;
 }
+
 .tour-emp-btn--indigo {
   background: #4f46e5;
 }
+
 .tour-emp-btn--red {
   background: #ef4444;
 }
+
 .tour-emp-btn--amber {
   background: #f59e0b;
 }
@@ -456,12 +514,14 @@
 .tour-s4-wrap {
   padding: 14px 18px;
 }
+
 .tour-s4-header {
   font-size: 13px;
   font-weight: 700;
   color: #1a1a2e;
   margin-bottom: 10px;
 }
+
 .tour-s4-count {
   background: #4f46e5;
   color: #fff;
@@ -470,17 +530,20 @@
   padding: 2px 8px;
   margin-left: 4px;
 }
+
 .tour-s4-grid {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
   gap: 8px;
 }
+
 .tour-s4-card {
   background: #fff;
   border: 1px solid #e8e8f0;
   border-radius: 12px;
   padding: 10px;
 }
+
 .tour-s4-status {
   display: inline-block;
   font-size: 9px;
@@ -489,41 +552,50 @@
   font-weight: 600;
   margin-bottom: 8px;
 }
+
 .tour-s4-done {
   background: #d1fae5;
   color: #059669;
 }
+
 .tour-s4-pend {
   background: #fef3c7;
   color: #d97706;
 }
+
 .tour-s4-proc {
   background: #e0e7ff;
   color: #4f46e5;
 }
+
 .tour-s4-pname {
   font-size: 11px;
   font-weight: 600;
   color: #1a1a2e;
   margin-bottom: 6px;
 }
+
 .tour-s4-row {
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
 }
+
 .tour-s4-right {
   text-align: right;
 }
+
 .tour-s4-qlbl {
   font-size: 8px;
   color: #9ca3af;
 }
+
 .tour-s4-qval {
   font-size: 11px;
   font-weight: 600;
   color: #1a1a2e;
 }
+
 .tour-s4-price {
   font-size: 12px;
   font-weight: 700;
@@ -538,76 +610,92 @@
   padding: 14px 18px;
   color: #fff;
 }
+
 .tour-s5-user {
   font-size: 13px;
   font-weight: 700;
 }
+
 .tour-s5-sub {
   font-size: 10px;
-  opacity: 0.8;
+  opacity: .8;
   margin-bottom: 10px;
 }
+
 .tour-s5-stats {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
   gap: 8px;
 }
+
 .tour-s5-scard {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, .15);
   border-radius: 8px;
   padding: 8px;
 }
+
 .tour-s5-sval {
   font-size: 16px;
   font-weight: 700;
 }
+
 .tour-s5-sval--gold {
   color: #facc15;
 }
+
 .tour-s5-sval--white {
   color: #fff;
 }
+
 .tour-s5-sval--green {
   color: #4ade80;
 }
+
 .tour-s5-slbl {
   font-size: 9px;
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(255, 255, 255, .8);
 }
 
 .tour-s5-body {
   padding: 12px 18px;
 }
+
 .tour-s5-rtitle {
   font-size: 12px;
   font-weight: 600;
   color: #1a1a2e;
   margin-bottom: 8px;
 }
+
 .tour-s5-rev {
   background: #f8f9ff;
   border-radius: 10px;
   padding: 10px;
 }
+
 .tour-s5-rname {
   font-size: 12px;
   font-weight: 600;
   color: #1a1a2e;
 }
+
 .tour-s5-rtxt {
   font-size: 11px;
   color: #6b7280;
   margin: 3px 0;
 }
+
 .tour-s5-stars {
   color: #f59e0b;
   font-size: 12px;
 }
+
 .tour-s5-rdate {
   font-size: 9px;
   color: #9ca3af;
   margin-top: 2px;
 }
+
 .tour-s5-reply {
   font-size: 10px;
   color: #4f46e5;
