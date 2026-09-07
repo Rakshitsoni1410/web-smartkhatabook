@@ -17,6 +17,7 @@ import ResetPassword from "./pages/ResetPassword";
 import Profile from "./pages/Profile";
 import Ledger from "./pages/Ledger.jsx";
 import OnboardingTour from "./components/OnboardingTour";
+import ChatBot from "./components/ChatBot";
 // ✅ NEW — Customer Portal
 import CustomerLayout from "./components/customer/CustomerLayout";
 import CustomerDashboard from "./pages/customer/CustomerDashboard";
@@ -158,6 +159,9 @@ export default function App() {
 
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
+
+      {/* Floating rule-based assistant — renders on every route above */}
+      <ChatBot />
     </>
   );
 }
