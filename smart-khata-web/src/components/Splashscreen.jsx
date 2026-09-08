@@ -193,6 +193,9 @@ export default function SplashScreen({ onComplete = () => {} }) {
           height: 200,
           marginBottom: 36,
           perspective: 900,
+          WebkitPerspective: 900,
+          transformStyle: "preserve-3d",
+          WebkitTransformStyle: "preserve-3d",
           animation:
             isOpen && !prefersReducedMotion
               ? "bookSettle 0.9s cubic-bezier(0.34,1.35,0.64,1) 0.05s both"
