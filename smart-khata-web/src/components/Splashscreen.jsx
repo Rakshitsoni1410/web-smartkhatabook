@@ -221,8 +221,10 @@ export default function SplashScreen({ onComplete = () => {} }) {
             inset: 0,
             transformOrigin: "left center",
             transform: isOpen ? "rotateY(-180deg)" : "rotateY(0deg)",
+            WebkitTransform: isOpen ? "rotateY(-180deg)" : "rotateY(0deg)",
             transition: "transform 1s cubic-bezier(0.34,1.15,0.64,1)",
             transformStyle: "preserve-3d",
+            WebkitTransformStyle: "preserve-3d",
             zIndex: 3,
           }}
         >
@@ -234,6 +236,7 @@ export default function SplashScreen({ onComplete = () => {} }) {
               background: "linear-gradient(160deg, #2563eb 0%, #1a4fa8 100%)",
               borderRadius: "4px 14px 14px 4px",
               backfaceVisibility: "hidden",
+              WebkitBackfaceVisibility: "hidden",
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
@@ -274,7 +277,9 @@ export default function SplashScreen({ onComplete = () => {} }) {
               background: "#f8f9ff",
               borderRadius: "4px 14px 14px 4px",
               backfaceVisibility: "hidden",
+              WebkitBackfaceVisibility: "hidden",
               transform: "rotateY(180deg)",
+              WebkitTransform: "rotateY(180deg)",
             }}
           />
         </div>
