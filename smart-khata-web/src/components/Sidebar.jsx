@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   FiGrid,
@@ -40,6 +40,16 @@ const RETAILER_MENU = [
   { icon: <FiMessageSquare />, name: "Reviews", path: "/reviews" },
 ];
 
+// Safe JSON parse — a corrupted or missing "user" entry no longer crashes the sidebar.
+function getStoredUser() {
+  try {
+    const raw = localStorage.getItem("user");
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
 function Tooltip({ label, children, visible }) {
   if (!visible) return children;
   return (
@@ -50,32 +60,95 @@ function Tooltip({ label, children, visible }) {
   );
 }
 
+// Wraps any clickable div as a real, keyboard-operable control without
+// changing its markup/classes — Enter and Space both activate it.
+function Clickable({ as: Tag = "div", onClick, className, children, ...rest }) {
+  return (
+    <Tag
+      className={className}
+      role="button"
+      tabIndex={0}
+      onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onClick?.(e);
+        }
+      }}
+      {...rest}
+    >
+      {children}
+    </Tag>
+  );
+}
+
+const COLLAPSED_KEY = "skb_sidebar_collapsed";
+const THEME_KEY = "skb_theme";
+
 export default function Sidebar() {
-  const user = JSON.parse(localStorage.getItem("user")) || {};
+  const user = getStoredUser();
   const role = user.role || "Retailer";
   const userName = user.name || user.fullName || "User";
 
-  const [collapsed, setCollapsed] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
+  const [collapsed, setCollapsed] = useState(
+    () => localStorage.getItem(COLLAPSED_KEY) === "true",
+  );
+  const [darkMode, setDarkMode] = useState(
+    () => localStorage.getItem(THEME_KEY) === "dark",
+  );
   const [showProfile, setShowProfile] = useState(false);
+  const profileRef = useRef(null);
 
   const navigate = useNavigate();
   const location = useLocation();
 
   const menu = role === "Wholesaler" ? WHOLESALER_MENU : RETAILER_MENU;
 
+  // Persist collapsed state.
+  useEffect(() => {
+    localStorage.setItem(COLLAPSED_KEY, String(collapsed));
+  }, [collapsed]);
+
+  // Persist + actually apply theme app-wide via a root attribute, so any
+  // global CSS keyed on [data-theme="dark"] picks it up — not just the sidebar.
+  useEffect(() => {
+    localStorage.setItem(THEME_KEY, darkMode ? "dark" : "light");
+    document.documentElement.setAttribute(
+      "data-theme",
+      darkMode ? "dark" : "light",
+    );
+  }, [darkMode]);
+
+  // Close the profile dropdown on outside click.
+  useEffect(() => {
+    if (!showProfile) return;
+    const handleClickOutside = (e) => {
+      if (profileRef.current && !profileRef.current.contains(e.target)) {
+        setShowProfile(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showProfile]);
+
+  // Only clear auth-related state — preserves unrelated preferences like
+  // the chatbot's saved language and "tour seen" flag.
   const handleLogout = () => {
-    localStorage.clear();
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
     sessionStorage.clear();
     navigate("/");
   };
 
-  const initials = userName
-    .split(" ")
-    .map((w) => w[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
+  const initials =
+    userName
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean)
+      .map((w) => w[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2) || "U";
 
   return (
     <aside
@@ -107,7 +180,7 @@ export default function Sidebar() {
         <button
           className="sb-toggle"
           onClick={() => setCollapsed(!collapsed)}
-          aria-label="Toggle sidebar"
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
           {collapsed ? <FiMenu size={16} /> : <FiChevronLeft size={16} />}
         </button>
@@ -123,17 +196,19 @@ export default function Sidebar() {
             const active = location.pathname === item.path;
             return (
               <Tooltip key={i} label={item.name} visible={collapsed}>
-                <div
+                <Clickable
                   className={`sb-item ${active ? "sb-item-active" : ""}`}
                   onClick={() => navigate(item.path)}
                   title={collapsed ? item.name : undefined}
+                  aria-current={active ? "page" : undefined}
+                  aria-label={item.name}
                 >
                   {active && <span className="sb-active-bar" />}
                   <span className="sb-item-icon">{item.icon}</span>
                   {!collapsed && (
                     <span className="sb-item-label">{item.name}</span>
                   )}
-                </div>
+                </Clickable>
               </Tooltip>
             );
           })}
@@ -149,9 +224,13 @@ export default function Sidebar() {
           label={darkMode ? "Light mode" : "Dark mode"}
           visible={collapsed}
         >
-          <div
+          <Clickable
             className="sb-item sb-theme-toggle"
             onClick={() => setDarkMode(!darkMode)}
+            aria-pressed={darkMode}
+            aria-label={
+              darkMode ? "Switch to light mode" : "Switch to dark mode"
+            }
           >
             <span className="sb-item-icon">
               {darkMode ? <FiSun size={16} /> : <FiMoon size={16} />}
@@ -161,45 +240,51 @@ export default function Sidebar() {
                 {darkMode ? "Light mode" : "Dark mode"}
               </span>
             )}
-          </div>
+          </Clickable>
         </Tooltip>
 
         {/* Profile */}
-        <div className="sb-profile-wrap">
+        <div className="sb-profile-wrap" ref={profileRef}>
           {showProfile && !collapsed && (
-            <div className="sb-dropdown">
-              <div
+            <div className="sb-dropdown" role="menu">
+              <Clickable
                 className="sb-dropdown-item"
+                role="menuitem"
                 onClick={() => {
                   setShowProfile(false);
                   navigate("/profile");
                 }}
               >
                 <FiUser size={13} /> View profile
-              </div>
-              <div
+              </Clickable>
+              <Clickable
                 className="sb-dropdown-item"
+                role="menuitem"
                 onClick={() => {
                   setShowProfile(false);
                   navigate("/settings");
                 }}
               >
                 <FiSettings size={13} /> Settings
-              </div>
+              </Clickable>
               <div className="sb-dropdown-divider" />
-              <div
+              <Clickable
                 className="sb-dropdown-item sb-dropdown-logout"
+                role="menuitem"
                 onClick={handleLogout}
               >
                 <FiLogOut size={13} /> Logout
-              </div>
+              </Clickable>
             </div>
           )}
 
           <Tooltip label={userName} visible={collapsed}>
-            <div
+            <Clickable
               className={`sb-profile ${showProfile ? "sb-profile-open" : ""}`}
               onClick={() => setShowProfile(!showProfile)}
+              aria-haspopup="menu"
+              aria-expanded={showProfile}
+              aria-label={`${userName}, account menu`}
             >
               <div className="sb-avatar">{initials}</div>
               {!collapsed && (
@@ -214,18 +299,22 @@ export default function Sidebar() {
                   />
                 </>
               )}
-            </div>
+            </Clickable>
           </Tooltip>
         </div>
 
         {/* Collapsed logout shortcut */}
         {collapsed && (
           <Tooltip label="Logout" visible={true}>
-            <div className="sb-item sb-logout-icon" onClick={handleLogout}>
+            <Clickable
+              className="sb-item sb-logout-icon"
+              onClick={handleLogout}
+              aria-label="Logout"
+            >
               <span className="sb-item-icon">
                 <FiLogOut size={16} />
               </span>
-            </div>
+            </Clickable>
           </Tooltip>
         )}
       </div>

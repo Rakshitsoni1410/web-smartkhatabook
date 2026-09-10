@@ -1,14 +1,15 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 
 export default function SplashScreen({ onComplete = () => {} }) {
   const [phase, setPhase] = useState("init");
   // init → bookOpen → writeLines → brandReveal → exit
 
-  const prefersReducedMotion = useRef(
-    typeof window !== "undefined" &&
-      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches,
-  ).current;
+  const [prefersReducedMotion] = useState(
+    () =>
+      typeof window !== "undefined" &&
+      Boolean(window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches),
+  );
 
   useEffect(() => {
     // Respect reduced-motion: skip straight to the brand, exit quickly.
@@ -49,6 +50,7 @@ export default function SplashScreen({ onComplete = () => {} }) {
       role="status"
       aria-live="polite"
       aria-label="Loading Smart Khatabook"
+      className="skb-splash-root"
       style={{
         position: "fixed",
         inset: 0,
@@ -131,7 +133,7 @@ export default function SplashScreen({ onComplete = () => {} }) {
           to   { letter-spacing: 0.2em; opacity: 1; }
         }
         @media (prefers-reduced-motion: reduce) {
-          * { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
+          .skb-splash-root, .skb-splash-root * { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
         }
       `}</style>
 
