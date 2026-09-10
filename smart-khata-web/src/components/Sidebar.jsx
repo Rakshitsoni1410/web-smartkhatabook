@@ -36,7 +36,6 @@ const RETAILER_MENU = [
   { icon: <FiUsers />, name: "Employees", path: "/employees" },
   { icon: <FiTruck />, name: "Orders", path: "/orders" },
   { icon: <FiBookOpen />, name: "Ledger", path: "/ledger" },
-  { icon: <FiBarChart2 />, name: "Reports", path: "/reports" },
   { icon: <FiMessageSquare />, name: "Reviews", path: "/reviews" },
 ];
 
