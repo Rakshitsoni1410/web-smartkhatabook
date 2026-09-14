@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import api from "../api";
+import { getStoredUser } from "../utils/session";
 import Sidebar from "../components/Sidebar";
 import "./Dashboard.css";
 
@@ -25,7 +26,7 @@ const QUOTES = {
 const getPeriod = (hour) => (hour < 12 ? "morning" : hour < 17 ? "afternoon" : "evening");
 
 export default function Dashboard() {
-  const user = JSON.parse(localStorage.getItem("user") || "{}") || {};
+  const user = getStoredUser();
   const navigate = useNavigate();
 
   const [stats, setStats] = useState({ stock: 0, employees: 0, orders: 0, reviews: 0 });
@@ -52,8 +53,8 @@ export default function Dashboard() {
         if (isManualRefresh) setRefreshing(true);
         setError(null);
 
-        const res = await axios.get(
-          `https://backend-of-smartkhata-book-vkcv.vercel.app/api/dashboard/${user.role}?userId=${user._id}`
+        const res = await api.get(
+          `/api/dashboard/${user.role}?userId=${encodeURIComponent(user._id)}`
         );
         setStats(res.data);
       } catch (err) {
