@@ -5,10 +5,15 @@ import {
   FiSend,
   FiCheck,
   FiClock,
+  FiX,
+  FiAlertCircle,
 } from "react-icons/fi";
+
 import { useNavigate } from "react-router-dom";
+
 import api from "../api";
 import GenerateBillButton from "../components/GenerateBillButton";
+
 import "./Billing.css";
 
 const STATUS_LABEL = {
@@ -42,9 +47,17 @@ export default function Billing() {
   const navigate = useNavigate();
 
   const [bills, setBills] = useState([]);
+
   const [loading, setLoading] = useState(true);
+
   const [error, setError] = useState("");
+
   const [sendingBillId, setSendingBillId] = useState(null);
+
+  // Confirmation modal
+  const [billToSend, setBillToSend] = useState(null);
+
+  const [sendError, setSendError] = useState("");
 
   const user = JSON.parse(localStorage.getItem("user") || "{}");
 
@@ -100,7 +113,7 @@ export default function Billing() {
   };
 
   // ============================================
-  // BILL CAN BE GENERATED / SENT
+  // BILL READY
   // ============================================
 
   const billIsReady = (bill) => {
@@ -108,19 +121,47 @@ export default function Billing() {
   };
 
   // ============================================
-  // SEND BILL
+  // OPEN CONFIRMATION DIALOG
   // ============================================
 
-  const handleSendBill = async (billId) => {
-    try {
-      setSendingBillId(billId);
+  const openSendConfirmation = (bill) => {
+    setSendError("");
+    setBillToSend(bill);
+  };
 
-      const res = await api.patch(`/api/orders/${billId}/send-bill`);
+  // ============================================
+  // CLOSE CONFIRMATION DIALOG
+  // ============================================
+
+  const closeSendConfirmation = () => {
+    if (sendingBillId) {
+      return;
+    }
+
+    setBillToSend(null);
+    setSendError("");
+  };
+
+  // ============================================
+  // CONFIRM + SEND BILL
+  // ============================================
+
+  const handleConfirmSendBill = async () => {
+    if (!billToSend?._id) {
+      return;
+    }
+
+    try {
+      setSendingBillId(billToSend._id);
+
+      setSendError("");
+
+      const res = await api.patch(`/api/orders/${billToSend._id}/send-bill`);
 
       if (res.data.success) {
         setBills((previousBills) =>
           previousBills.map((bill) =>
-            bill._id === billId
+            bill._id === billToSend._id
               ? {
                   ...bill,
 
@@ -133,12 +174,15 @@ export default function Billing() {
           ),
         );
 
-        alert("Bill sent to retailer successfully.");
+        // Close dialog after successful send
+        setBillToSend(null);
       }
     } catch (err) {
       console.error("SEND BILL ERROR:", err);
 
-      alert(err.response?.data?.message || "Failed to send bill to retailer.");
+      setSendError(
+        err.response?.data?.message || "Failed to send bill to retailer.",
+      );
     } finally {
       setSendingBillId(null);
     }
@@ -218,8 +262,8 @@ export default function Billing() {
             return (
               <div className="bill-card" key={bill._id}>
                 {/* =========================
-                      TOP
-                  ========================== */}
+                        TOP
+                    ========================== */}
 
                 <div className="bill-card-top">
                   <div>
@@ -242,8 +286,8 @@ export default function Billing() {
                 </div>
 
                 {/* =========================
-                      BODY
-                  ========================== */}
+                        BODY
+                    ========================== */}
 
                 <div className="bill-card-body">
                   <div className="bill-product">{bill.productName}</div>
@@ -271,8 +315,8 @@ export default function Billing() {
                   </div>
 
                   {/* =========================
-                        BILL NOT READY
-                    ========================== */}
+                          BILL NOT READY
+                      ========================== */}
 
                   {isWholesaler && !canUseBill && !bill.billSentToRetailer && (
                     <div className="bill-waiting-info">
@@ -285,8 +329,8 @@ export default function Billing() {
                   )}
 
                   {/* =========================
-                        SENT INFO
-                    ========================== */}
+                          SENT INFO
+                      ========================== */}
 
                   {isWholesaler && bill.billSentToRetailer && (
                     <div className="bill-sent-info">
@@ -310,8 +354,8 @@ export default function Billing() {
                 </div>
 
                 {/* =========================
-                      FOOTER
-                  ========================== */}
+                        FOOTER
+                    ========================== */}
 
                 <div className="bill-card-footer">
                   <span className="bill-date">
@@ -324,9 +368,8 @@ export default function Billing() {
 
                   <div className="bill-actions">
                     {/* =================================
-                          WHOLESALER:
-                          GENERATE BILL ONLY AFTER DELIVERY
-                      ================================== */}
+                            WHOLESALER GENERATE BILL
+                        ================================== */}
 
                     {isWholesaler && canUseBill && (
                       <GenerateBillButton
@@ -358,9 +401,8 @@ export default function Billing() {
                     )}
 
                     {/* =================================
-                          RETAILER:
-                          DOWNLOAD SENT BILL
-                      ================================== */}
+                            RETAILER DOWNLOAD BILL
+                        ================================== */}
 
                     {!isWholesaler && (
                       <GenerateBillButton
@@ -394,8 +436,8 @@ export default function Billing() {
                     )}
 
                     {/* =================================
-                          SEND BILL
-                      ================================== */}
+                            SEND BILL
+                        ================================== */}
 
                     {isWholesaler && canUseBill && (
                       <button
@@ -403,7 +445,7 @@ export default function Billing() {
                         className={`send-bill-btn ${
                           bill.billSentToRetailer ? "send-bill-btn--sent" : ""
                         }`}
-                        onClick={() => handleSendBill(bill._id)}
+                        onClick={() => openSendConfirmation(bill)}
                         disabled={
                           bill.billSentToRetailer || sendingBillId === bill._id
                         }
@@ -413,8 +455,6 @@ export default function Billing() {
                             <FiCheck size={15} />
                             Sent
                           </>
-                        ) : sendingBillId === bill._id ? (
-                          "Sending..."
                         ) : (
                           <>
                             <FiSend size={15} />
@@ -425,8 +465,8 @@ export default function Billing() {
                     )}
 
                     {/* =================================
-                          BEFORE DELIVERY
-                      ================================== */}
+                            BEFORE DELIVERY
+                        ================================== */}
 
                     {isWholesaler && !canUseBill && (
                       <span className="bill-waiting-delivery">
@@ -438,6 +478,114 @@ export default function Billing() {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* ==========================================
+          SEND BILL CONFIRMATION MODAL
+      ========================================== */}
+
+      {billToSend && (
+        <div className="bill-confirm-overlay" onClick={closeSendConfirmation}>
+          <div
+            className="bill-confirm-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* CLOSE */}
+
+            <button
+              type="button"
+              className="bill-confirm-close"
+              onClick={closeSendConfirmation}
+              disabled={Boolean(sendingBillId)}
+              aria-label="Close"
+            >
+              <FiX size={18} />
+            </button>
+
+            {/* ICON */}
+
+            <div className="bill-confirm-icon">
+              <FiSend size={25} />
+            </div>
+
+            {/* TITLE */}
+
+            <h2>Send Bill to Retailer?</h2>
+
+            <p className="bill-confirm-message">
+              Are you sure you want to send this bill to{" "}
+              <strong>{counterpartyOf(billToSend)}</strong>?
+            </p>
+
+            {/* BILL DETAILS */}
+
+            <div className="bill-confirm-details">
+              <div>
+                <span>Invoice</span>
+
+                <strong>{billToSend.invoiceNumber || "-"}</strong>
+              </div>
+
+              <div>
+                <span>Product</span>
+
+                <strong>{billToSend.productName}</strong>
+              </div>
+
+              <div>
+                <span>Amount</span>
+
+                <strong className="bill-confirm-amount">
+                  ₹{Number(billToSend.totalAmount || 0).toLocaleString("en-IN")}
+                </strong>
+              </div>
+            </div>
+
+            {/* WARNING */}
+
+            <div className="bill-confirm-warning">
+              <FiAlertCircle size={16} />
+
+              <span>
+                After sending, this bill will appear in the retailer's Billing
+                section.
+              </span>
+            </div>
+
+            {/* ERROR */}
+
+            {sendError && <div className="bill-confirm-error">{sendError}</div>}
+
+            {/* ACTIONS */}
+
+            <div className="bill-confirm-actions">
+              <button
+                type="button"
+                className="bill-confirm-cancel"
+                onClick={closeSendConfirmation}
+                disabled={Boolean(sendingBillId)}
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                className="bill-confirm-send"
+                onClick={handleConfirmSendBill}
+                disabled={Boolean(sendingBillId)}
+              >
+                {sendingBillId ? (
+                  "Sending..."
+                ) : (
+                  <>
+                    <FiSend size={15} />
+                    Confirm & Send
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
