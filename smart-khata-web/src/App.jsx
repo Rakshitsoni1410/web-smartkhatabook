@@ -17,9 +17,12 @@ import ResetPassword from "./pages/ResetPassword";
 import Profile from "./pages/Profile";
 import Ledger from "./pages/Ledger.jsx";
 import Billing from "./pages/Billing.jsx";
+import Report from "./pages/Report.jsx"; 
+
 import OnboardingTour from "./components/OnboardingTour";
 import ChatBot from "./components/ChatBot";
-// ✅ NEW — Customer Portal
+
+// ✅ Customer Portal
 import CustomerLayout from "./components/customer/CustomerLayout";
 import CustomerDashboard from "./pages/customer/CustomerDashboard";
 import CustomerProducts from "./pages/customer/CustomerProducts";
@@ -28,7 +31,11 @@ import CustomerBills from "./pages/customer/CustomerBills";
 
 function ProtectedRoute({ children }) {
   const user = localStorage.getItem("user");
-  if (!user) return <Navigate to="/" />;
+
+  if (!user) {
+    return <Navigate to="/" />;
+  }
+
   return children;
 }
 
@@ -55,12 +62,17 @@ export default function App() {
 
       <Routes>
         {/* AUTH */}
+
         <Route path="/" element={<Login />} />
+
         <Route path="/signup" element={<Signup />} />
+
         <Route path="/forgot-password" element={<ForgotPassword />} />
+
         <Route path="/reset-password/:token" element={<ResetPassword />} />
 
-        {/* PROTECTED — existing */}
+        {/* PROTECTED */}
+
         <Route
           path="/dashboard"
           element={
@@ -69,6 +81,7 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/stock"
           element={
@@ -77,6 +90,7 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/wholesalers/:category"
           element={
@@ -85,6 +99,7 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/employees"
           element={
@@ -93,6 +108,7 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/employee-detail"
           element={
@@ -101,6 +117,7 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/orders"
           element={
@@ -109,6 +126,7 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/order/:id"
           element={
@@ -117,6 +135,7 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/reviews"
           element={
@@ -125,6 +144,7 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/profile"
           element={
@@ -133,6 +153,7 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/ledger"
           element={
@@ -141,6 +162,7 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/billing"
           element={
@@ -149,8 +171,24 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+
+        {/* ✅ REPORT */}
+
+        <Route
+          path="/reports"
+          element={
+            <ProtectedRoute>
+              <Report />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* TOUR */}
+
         <Route path="/tour" element={<OnboardingTour />} />
-        {/* ✅ NEW — Customer Portal */}
+
+        {/* ✅ CUSTOMER PORTAL */}
+
         <Route
           path="/customer"
           element={
@@ -160,16 +198,22 @@ export default function App() {
           }
         >
           <Route index element={<Navigate to="dashboard" replace />} />
+
           <Route path="dashboard" element={<CustomerDashboard />} />
+
           <Route path="products" element={<CustomerProducts />} />
+
           <Route path="orders" element={<CustomerOrders />} />
+
           <Route path="bills" element={<CustomerBills />} />
         </Route>
+
+        {/* FALLBACK */}
 
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
 
-      {/* Floating rule-based assistant — renders on every route above */}
+      {/* Floating rule-based assistant */}
       <ChatBot />
     </>
   );
