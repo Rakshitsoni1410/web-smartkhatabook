@@ -3,7 +3,6 @@ import { FiFileText, FiChevronLeft } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import api from "../api";
 import GenerateBillButton from "../components/GenerateBillButton";
-import "../components/GenerateBillButton.css";
 import "./Billing.css";
 
 const STATUS_LABEL = {
@@ -127,25 +126,30 @@ export default function Billing() {
                   })}
                 </span>
                 <GenerateBillButton
-                  label="Download"
-                  order={{
-                    orderId: bill.invoiceNumber || bill._id,
-                    businessName: isWholesaler
-                      ? user.shopName
-                      : bill.wholesalerId?.shopName || bill.wholesalerId?.name,
-                    customerName: counterpartyOf(bill),
-                    items: [
-                      {
-                        name: bill.productName,
-                        qty: bill.quantity,
-                        pricePerUnit: bill.pricePerUnit,
-                      },
-                    ],
-                    paymentStatus: bill.paymentStatus,
-                    orderStatus: bill.orderStatus,
-                    date: bill.createdAt,
-                  }}
-                />
+  label="Download"
+  order={{
+    orderId: bill.invoiceNumber || bill._id,
+
+    businessName: isWholesaler
+      ? user.shopName || user.name
+      : bill.wholesalerId?.shopName ||
+        bill.wholesalerId?.name,
+
+    customerName: counterpartyOf(bill),
+
+    items: [
+      {
+        name: bill.productName,
+        qty: bill.quantity,
+        pricePerUnit: bill.pricePerUnit,
+      },
+    ],
+
+    paymentStatus: bill.paymentStatus,
+    orderStatus: bill.orderStatus,
+    date: bill.createdAt,
+  }}
+/>
               </div>
             </div>
           ))}
