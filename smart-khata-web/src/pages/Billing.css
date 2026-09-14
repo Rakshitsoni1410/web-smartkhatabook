@@ -615,3 +615,327 @@
         align-self: flex-start;
     }
 }
+/* =========================================
+   SEND BILL CONFIRMATION DIALOG
+========================================= */
+
+.bill-confirm-overlay {
+  position: fixed;
+  inset: 0;
+
+  background: rgba(15, 23, 42, 0.55);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 20px;
+
+  z-index: 9999;
+
+  backdrop-filter: blur(3px);
+}
+
+.bill-confirm-modal {
+  position: relative;
+
+  width: 100%;
+  max-width: 430px;
+
+  background: #ffffff;
+
+  border-radius: 20px;
+
+  padding: 28px;
+
+  box-shadow:
+    0 25px 60px
+    rgba(15, 23, 42, 0.25);
+
+  animation:
+    billModalOpen
+    0.2s ease;
+}
+
+@keyframes billModalOpen {
+  from {
+    opacity: 0;
+    transform:
+      translateY(12px)
+      scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform:
+      translateY(0)
+      scale(1);
+  }
+}
+
+/* CLOSE */
+
+.bill-confirm-close {
+  position: absolute;
+
+  top: 16px;
+  right: 16px;
+
+  width: 34px;
+  height: 34px;
+
+  border: none;
+  border-radius: 9px;
+
+  background: #f8fafc;
+
+  color: #64748b;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+}
+
+.bill-confirm-close:hover:not(:disabled) {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.bill-confirm-close:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ICON */
+
+.bill-confirm-icon {
+  width: 54px;
+  height: 54px;
+
+  margin-bottom: 18px;
+
+  border-radius: 16px;
+
+  background: #eff6ff;
+
+  color: #2563eb;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* TITLE */
+
+.bill-confirm-modal h2 {
+  margin: 0 0 8px;
+
+  color: #0f172a;
+
+  font-size: 21px;
+  font-weight: 700;
+}
+
+.bill-confirm-message {
+  margin: 0 0 20px;
+
+  color: #64748b;
+
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.bill-confirm-message strong {
+  color: #0f172a;
+}
+
+/* BILL DETAILS */
+
+.bill-confirm-details {
+  padding: 14px;
+
+  background: #f8fafc;
+
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+
+  margin-bottom: 14px;
+}
+
+.bill-confirm-details > div {
+  display: flex;
+  justify-content: space-between;
+
+  gap: 15px;
+
+  padding: 7px 0;
+}
+
+.bill-confirm-details span {
+  color: #64748b;
+
+  font-size: 12px;
+}
+
+.bill-confirm-details strong {
+  max-width: 65%;
+
+  color: #0f172a;
+
+  font-size: 12px;
+
+  text-align: right;
+
+  word-break: break-word;
+}
+
+.bill-confirm-amount {
+  color: #059669 !important;
+
+  font-size: 14px !important;
+}
+
+/* WARNING */
+
+.bill-confirm-warning {
+  display: flex;
+  align-items: flex-start;
+
+  gap: 8px;
+
+  margin-bottom: 18px;
+
+  padding: 10px 12px;
+
+  background: #fffbeb;
+
+  border: 1px solid #fde68a;
+  border-radius: 10px;
+
+  color: #92400e;
+
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.bill-confirm-warning svg {
+  flex-shrink: 0;
+
+  margin-top: 1px;
+}
+
+/* ERROR */
+
+.bill-confirm-error {
+  margin-bottom: 14px;
+
+  padding: 10px 12px;
+
+  background: #fef2f2;
+
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+
+  color: #dc2626;
+
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* ACTION BUTTONS */
+
+.bill-confirm-actions {
+  display: grid;
+
+  grid-template-columns:
+    1fr 1fr;
+
+  gap: 10px;
+}
+
+.bill-confirm-cancel,
+.bill-confirm-send {
+  min-height: 42px;
+
+  border: none;
+
+  border-radius: 10px;
+
+  font-size: 13px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 7px;
+
+  transition: all 0.2s ease;
+}
+
+.bill-confirm-cancel {
+  background: #f1f5f9;
+
+  color: #475569;
+}
+
+.bill-confirm-cancel:hover:not(:disabled) {
+  background: #e2e8f0;
+}
+
+.bill-confirm-send {
+  background: #2563eb;
+
+  color: #ffffff;
+}
+
+.bill-confirm-send:hover:not(:disabled) {
+  background: #1d4ed8;
+
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 5px 14px
+    rgba(37, 99, 235, 0.25);
+}
+
+.bill-confirm-cancel:disabled,
+.bill-confirm-send:disabled {
+  opacity: 0.6;
+
+  cursor: not-allowed;
+}
+
+/* MOBILE */
+
+@media (max-width: 500px) {
+  .bill-confirm-overlay {
+    padding: 14px;
+  }
+
+  .bill-confirm-modal {
+    padding: 24px 18px 18px;
+
+    border-radius: 17px;
+  }
+
+  .bill-confirm-modal h2 {
+    font-size: 19px;
+  }
+
+  .bill-confirm-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .bill-confirm-send {
+    order: 1;
+  }
+
+  .bill-confirm-cancel {
+    order: 2;
+  }
+}
