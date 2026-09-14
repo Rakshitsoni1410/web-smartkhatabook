@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../api";
+import { getStoredUser } from "../utils/session";
 import {
   FiSearch,
   FiPlus,
@@ -16,7 +17,7 @@ import "./Stock.css";
 export default function Stock() {
   const navigate = useNavigate();
 
-  const user = JSON.parse(localStorage.getItem("user")) || {};
+  const user = getStoredUser();
 
   const [products, setProducts] = useState([]);
   const [wholesalers, setWholesalers] = useState({});
@@ -39,11 +40,6 @@ export default function Stock() {
     weightUnit: "kg",
   });
 
-  useEffect(() => {
-    fetchProducts();
-    fetchSuggestions();
-  }, []);
-
   const showToast = (msg, type = "success") => {
     setToast({ msg, type });
     setTimeout(() => setToast({ msg: "", type: "success" }), 3000);
@@ -51,9 +47,7 @@ export default function Stock() {
 
   const fetchProducts = async () => {
     try {
-      const res = await axios.get(
-        `https://backend-of-smartkhata-book-vkcv.vercel.app/api/product/list/${user._id}`,
-      );
+      const res = await api.get(`/api/product/list/${user._id}`);
       const data = res.data.products || [];
       setProducts(data);
       data.forEach((item) => fetchWholesalers(item.category));
@@ -64,9 +58,7 @@ export default function Stock() {
 
   const fetchWholesalers = async (category) => {
     try {
-      const res = await axios.get(
-        `https://backend-of-smartkhata-book-vkcv.vercel.app/api/user/wholesalers/${category}`,
-      );
+      const res = await api.get(`/api/user/wholesalers/${encodeURIComponent(category)}`);
       setWholesalers((prev) => ({
         ...prev,
         [category]: res.data.users || [],
@@ -78,14 +70,17 @@ export default function Stock() {
 
   const fetchSuggestions = async () => {
     try {
-      const res = await axios.get(
-        `https://backend-of-smartkhata-book-vkcv.vercel.app/api/product/suggestions/${user._id}`,
-      );
+      const res = await api.get(`/api/product/suggestions/${user._id}`);
       setSuggestions(res.data.suggestions || []);
     } catch (error) {
       console.log(error);
     }
   };
+
+  useEffect(() => {
+    fetchProducts();
+    fetchSuggestions();
+  }, []);
 
   const resetForm = () => {
     setForm({
@@ -109,7 +104,7 @@ export default function Stock() {
 
   const handleAdd = async () => {
     try {
-      await axios.post("https://backend-of-smartkhata-book-vkcv.vercel.app/api/product/add", {
+      await api.post("/api/product/add", {
         ownerId: user._id,
         businessType: user.businessType,
         ...form,
@@ -141,8 +136,8 @@ export default function Stock() {
 
   const handleUpdate = async () => {
     try {
-      await axios.put(
-        `https://backend-of-smartkhata-book-vkcv.vercel.app/api/product/update/${selected._id}`,
+      await api.put(
+        `/api/product/update/${selected._id}`,
         form,
       );
       setEditOpen(false);
@@ -154,7 +149,7 @@ export default function Stock() {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`https://backend-of-smartkhata-book-vkcv.vercel.app/api/product/delete/${id}`);
+      await api.delete(`/api/product/delete/${id}`);
       fetchProducts();
     } catch (error) {
       console.log(error);
@@ -163,7 +158,7 @@ export default function Stock() {
 
   const handleOrderNow = async (item) => {
     try {
-      const res = await axios.post("https://backend-of-smartkhata-book-vkcv.vercel.app/api/orders/create", {
+      const res = await api.post("/api/orders/create", {
         retailerId: user._id,
         productName: item.name,
         quantity: 1,

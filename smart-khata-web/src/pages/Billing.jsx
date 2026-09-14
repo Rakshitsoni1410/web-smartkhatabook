@@ -15,6 +15,7 @@ import api from "../api";
 import GenerateBillButton from "../components/GenerateBillButton";
 
 import "./Billing.css";
+import { getStoredUser } from "../utils/session";
 
 const STATUS_LABEL = {
   unpaid: "Unpaid",
@@ -59,7 +60,7 @@ export default function Billing() {
 
   const [sendError, setSendError] = useState("");
 
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const user = getStoredUser();
 
   const isWholesaler = user.role?.trim().toLowerCase() === "wholesaler";
 

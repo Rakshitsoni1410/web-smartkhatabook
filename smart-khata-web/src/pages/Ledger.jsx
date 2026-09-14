@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 
 import "./Ledger.css";
 
-import axios from "axios";
+import api from "../api";
+import { getStoredUser } from "../utils/session";
 import {
   useNavigate
 } from "react-router-dom";
@@ -16,27 +17,25 @@ export default function Ledger() {
   // NEW: period filter -> All | Monthly | Quarterly | Yearly
   const [periodFilter, setPeriodFilter] = useState("All");
 
-  const user = JSON.parse(localStorage.getItem("user"));
+  const user = getStoredUser();
 
   // =========================
   // FETCH LEDGER
   // =========================
 
-  useEffect(() => {
-    fetchLedger();
-  }, []);
-
   const fetchLedger = async () => {
     try {
-      const res = await axios.get(
-        `https://backend-of-smartkhata-book-vkcv.vercel.app/api/ledger/${user._id}`,
-      );
+      const res = await api.get(`/api/ledger/${user._id}`);
 
       setEntries(res.data.entries || []);
     } catch (error) {
       console.log(error);
     }
   };
+
+  useEffect(() => {
+    fetchLedger();
+  }, []);
 const navigate =
   useNavigate();
 

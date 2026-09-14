@@ -21,6 +21,7 @@ import Report from "./pages/Report.jsx";
 
 import OnboardingTour from "./components/OnboardingTour";
 import ChatBot from "./components/ChatBot";
+import { getStoredUser } from "./utils/session";
 
 // ✅ Customer Portal
 import CustomerLayout from "./components/customer/CustomerLayout";
@@ -30,9 +31,10 @@ import CustomerOrders from "./pages/customer/CustomerOrders";
 import CustomerBills from "./pages/customer/CustomerBills";
 
 function ProtectedRoute({ children }) {
-  const user = localStorage.getItem("user");
+  const user = getStoredUser();
+  const token = localStorage.getItem("token");
 
-  if (!user) {
+  if (!token || !user._id || !user.role) {
     return <Navigate to="/" />;
   }
 

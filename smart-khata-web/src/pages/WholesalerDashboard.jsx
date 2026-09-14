@@ -4,39 +4,38 @@ import { FiArrowLeft, FiPhone, FiMapPin, FiShoppingCart } from "react-icons/fi";
 
 import { useEffect, useState } from "react";
 
-import axios from "axios";
+import api from "../api";
+import { getStoredUser } from "../utils/session";
 import "./Dashboard.css";
 
 export default function WholesalerDashboard() {
   const navigate = useNavigate();
   const { category } = useParams();
 
-  const user = JSON.parse(localStorage.getItem("user")) || {};
+  const user = getStoredUser();
 
   const [list, setList] = useState([]);
 
   const [toast, setToast] = useState("");
 
-  useEffect(() => {
-    fetchWholesalers();
-  }, []);
-
   const fetchWholesalers = async () => {
     try {
-      const res = await axios.get(
-        `https://backend-of-smartkhata-book-vkcv.vercel.app/api/user/wholesalers/${category}`,
-      );
+      const res = await api.get(`/api/user/wholesalers/${encodeURIComponent(category)}`);
 
       setList(res.data.users || []);
     } catch (error) {
       console.log(error);
     }
   };
+
+  useEffect(() => {
+    fetchWholesalers();
+  }, []);
   const handleOrder = async (shop) => {
     try {
-      const userData = JSON.parse(localStorage.getItem("user")) || {};
+      const userData = getStoredUser();
 
-      await axios.post("https://backend-of-smartkhata-book-vkcv.vercel.app/api/orders/create", {
+      await api.post("/api/orders/create", {
         retailerId: userData._id.toString(),
 
         wholesalerId: shop._id.toString(),

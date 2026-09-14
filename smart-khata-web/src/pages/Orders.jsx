@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../api";
+import { getStoredUser } from "../utils/session";
 
 import {
   FiArrowLeft,
@@ -12,8 +13,7 @@ import {
 export default function Orders() {
   const navigate = useNavigate();
 
-  const user =
-    JSON.parse(localStorage.getItem("user")) || {};
+  const user = getStoredUser();
 
   const role = user.role?.trim().toLowerCase();
 
@@ -41,7 +41,7 @@ export default function Orders() {
           ? `https://backend-of-smartkhata-book-vkcv.vercel.app/api/orders/wholesaler/${user._id}`
           : `https://backend-of-smartkhata-book-vkcv.vercel.app/api/orders/retailer/${user._id}`;
 
-      const res = await axios.get(url);
+      const res = await api.get(url);
 
       setOrders(res.data || []);
     } catch (error) {

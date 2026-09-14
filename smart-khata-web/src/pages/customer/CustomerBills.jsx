@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../../api";
 import {
   FaSpinner,
   FaFileInvoiceDollar,
@@ -10,7 +10,7 @@ import {
   FaClock,
 } from "react-icons/fa";
 
-const API = "https://backend-of-smartkhata-book-vkcv.vercel.app/api";
+const API = "/api";
 
 const paymentBadge = {
   paid: "bg-green-100 text-green-700 border border-green-200",
@@ -23,13 +23,9 @@ const CustomerBills = () => {
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState(null);
   const [filter, setFilter] = useState("all");
-  const token = localStorage.getItem("token");
-
   useEffect(() => {
-    axios
-      .get(`${API}/customer-portal/bills`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+    api
+      .get(`${API}/customer-portal/bills`)
       .then((res) => setBills(res.data.bills || []))
       .catch(console.error)
       .finally(() => setLoading(false));

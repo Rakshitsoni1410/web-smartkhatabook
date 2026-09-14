@@ -4,6 +4,14 @@ const GenerateBillButton = ({
   label = "Generate Bill",
   disabled = false,
 }) => {
+  const escapeHtml = (value = "") =>
+    String(value)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+
   const formatCurrency = (amount = 0) => {
     return new Intl.NumberFormat("en-IN", {
       style: "currency",
@@ -77,7 +85,7 @@ const GenerateBillButton = ({
         (item, index) => `
           <tr>
             <td>${index + 1}</td>
-            <td>${item.name || "-"}</td>
+            <td>${escapeHtml(item.name || "-")}</td>
             <td>${item.qty || 0}</td>
             <td>${formatCurrency(item.pricePerUnit)}</td>
             <td>
@@ -297,7 +305,7 @@ const GenerateBillButton = ({
 
               <div class="brand">
                 <h1>
-                  ${order.businessName || "Smart Khata Book"}
+                  ${escapeHtml(order.businessName || "Smart Khata Book")}
                 </h1>
 
                 <p>Business Invoice</p>
@@ -307,7 +315,7 @@ const GenerateBillButton = ({
                 <h2>INVOICE</h2>
 
                 <div class="invoice-number">
-                  ${order.orderId || "-"}
+                  ${escapeHtml(order.orderId || "-")}
                 </div>
 
                 <div style="margin-top:6px;font-size:13px;color:#6b7280;">
@@ -322,14 +330,14 @@ const GenerateBillButton = ({
               <div class="detail-box">
                 <span>Business</span>
                 <strong>
-                  ${order.businessName || "-"}
+                  ${escapeHtml(order.businessName || "-")}
                 </strong>
               </div>
 
               <div class="detail-box">
                 <span>Customer / Party</span>
                 <strong>
-                  ${order.customerName || "-"}
+                  ${escapeHtml(order.customerName || "-")}
                 </strong>
               </div>
 
@@ -381,7 +389,7 @@ const GenerateBillButton = ({
                 <span>Order Status</span>
 
                 <strong>
-                  ${getOrderStatus(order.orderStatus)}
+                  ${escapeHtml(getOrderStatus(order.orderStatus))}
                 </strong>
               </div>
 
@@ -389,7 +397,7 @@ const GenerateBillButton = ({
                 <span>Payment Status</span>
 
                 <strong>
-                  ${getPaymentStatus(order.paymentStatus)}
+                  ${escapeHtml(getPaymentStatus(order.paymentStatus))}
                 </strong>
               </div>
 

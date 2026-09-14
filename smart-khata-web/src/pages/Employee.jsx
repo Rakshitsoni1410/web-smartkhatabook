@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 
-import axios from "axios";
+import api from "../api";
 
 import { useNavigate } from "react-router-dom";
 
@@ -64,7 +64,7 @@ export default function Employees() {
   // =========================
   const fetchEmployees = async () => {
     try {
-      const res = await axios.get(API);
+      const res = await api.get(API.replace("https://backend-of-smartkhata-book-vkcv.vercel.app", ""));
 
       setEmployees(res.data.employees || []);
     } catch (err) {
@@ -117,7 +117,7 @@ export default function Employees() {
     if (!deleteTarget) return;
 
     try {
-      await axios.delete(`${API}/delete/${deleteTarget._id}`);
+      await api.delete(`${API.replace("https://backend-of-smartkhata-book-vkcv.vercel.app", "")}/delete/${deleteTarget._id}`);
 
       fetchEmployees();
     } catch (err) {
@@ -141,7 +141,7 @@ export default function Employees() {
     try {
       const newStatus = currentStatus === "Present" ? "Absent" : "Present";
 
-      await axios.post(`${API}/attendance/${id}`, {
+      await api.post(`${API.replace("https://backend-of-smartkhata-book-vkcv.vercel.app", "")}/attendance/${id}`, {
         status: newStatus,
         date: new Date().toISOString(),
       });
@@ -162,7 +162,7 @@ export default function Employees() {
         return;
       }
 
-      await axios.post(`${API}/payment/${selectedEmployee._id}`, paymentData);
+      await api.post(`${API.replace("https://backend-of-smartkhata-book-vkcv.vercel.app", "")}/payment/${selectedEmployee._id}`, paymentData);
 
       fetchEmployees();
 
@@ -199,9 +199,9 @@ export default function Employees() {
       }
 
       if (editId) {
-        await axios.put(`${API}/update/${editId}`, formData);
+        await api.put(`${API.replace("https://backend-of-smartkhata-book-vkcv.vercel.app", "")}/update/${editId}`, formData);
       } else {
-        await axios.post(`${API}/add`, {
+        await api.post(`${API.replace("https://backend-of-smartkhata-book-vkcv.vercel.app", "")}/add`, {
           ...formData,
           payments: [],
           attendance: [],

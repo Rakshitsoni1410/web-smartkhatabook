@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../../api";
 import { FaSpinner, FaShoppingBag, FaChevronDown, FaChevronUp } from "react-icons/fa";
 
-const API = "https://backend-of-smartkhata-book-vkcv.vercel.app/api";
+const API = "/api";
 
 const statusStyle = {
   pending:   "bg-yellow-100 text-yellow-700 border border-yellow-200",
@@ -16,12 +16,8 @@ const CustomerOrders = () => {
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState(null);
   const [filter, setFilter] = useState("all");
-  const token = localStorage.getItem("token");
-
   useEffect(() => {
-    axios.get(`${API}/customer-portal/orders`, {
-      headers: { Authorization: `Bearer ${token}` },
-    }).then((res) => setOrders(res.data.orders || []))
+    api.get(`${API}/customer-portal/orders`).then((res) => setOrders(res.data.orders || []))
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);

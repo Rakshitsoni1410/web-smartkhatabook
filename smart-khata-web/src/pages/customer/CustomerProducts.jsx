@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../../api";
 import {
   FaSearch, FaStore, FaShoppingCart, FaPlus, FaMinus,
   FaTimes, FaSpinner, FaCheckCircle, FaBoxOpen,
 } from "react-icons/fa";
 
-const API = "https://backend-of-smartkhata-book-vkcv.vercel.app/api";
+const API = "/api";
 
 const CustomerProducts = () => {
   const [retailers, setRetailers] = useState([]);
@@ -18,12 +18,8 @@ const CustomerProducts = () => {
   const [orderSuccess, setOrderSuccess] = useState(false);
   const [placing, setPlacing] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
-  const token = localStorage.getItem("token");
-
   useEffect(() => {
-    axios.get(`${API}/customer-portal/my-retailers`, {
-      headers: { Authorization: `Bearer ${token}` },
-    }).then((res) => {
+    api.get(`${API}/customer-portal/my-retailers`).then((res) => {
       const list = res.data.retailers || [];
       setRetailers(list);
       if (list.length > 0) setSelectedRetailer(list[0]);
@@ -34,17 +30,17 @@ const CustomerProducts = () => {
     if (!selectedRetailer) return;
     setProductsLoading(true);
     setCart({});
-    axios.get(`${API}/customer-portal/retailer/${selectedRetailer._id}/products`, {
-      headers: { Authorization: `Bearer ${token}` },
-    }).then((res) => setProducts(res.data.products || []))
+    api.get(`${API}/customer-portal/retailer/${selectedRetailer._id}/products`).then((res) => setProducts(res.data.products || []))
       .catch(console.error)
       .finally(() => setProductsLoading(false));
   }, [selectedRetailer]);
 
   const updateCart = (id, delta) =>
     setCart((prev) => {
+      const product = products.find((item) => item._id === id);
       const next = (prev[id] || 0) + delta;
       if (next <= 0) { const { [id]: _, ...rest } = prev; return rest; }
+      if (product?.quantity != null && next > Number(product.quantity)) return prev;
       return { ...prev, [id]: next };
     });
 
@@ -57,13 +53,13 @@ const CustomerProducts = () => {
   const placeOrder = async () => {
     setPlacing(true);
     try {
-      await axios.post(`${API}/customer-portal/orders`, {
+      await api.post(`${API}/customer-portal/orders`, {
         retailerId: selectedRetailer._id,
         items: cartItems.map(({ product, qty }) => ({
           productId: product._id, name: product.name, price: product.price, quantity: qty,
         })),
         totalAmount: cartTotal,
-      }, { headers: { Authorization: `Bearer ${token}` } });
+      });
       setCart({}); setCartOpen(false); setOrderSuccess(true);
       setTimeout(() => setOrderSuccess(false), 3500);
     } catch (err) { console.error(err); }

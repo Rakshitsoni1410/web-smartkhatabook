@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../../api";
 import "./CustomerDashboard.css";
     
 const CustomerDashboard = () => {
@@ -20,14 +20,9 @@ const CustomerDashboard = () => {
 
   const fetchDashboardData = async () => {
     try {
-      const token = localStorage.getItem("token");
       const [statsRes, ordersRes] = await Promise.all([
-        axios.get("/api/customer/stats", {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        axios.get("/api/customer/orders?limit=5", {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
+        api.get("/api/customer/stats"),
+        api.get("/api/customer/orders?limit=5"),
       ]);
       setStats(statsRes.data);
       setRecentOrders(ordersRes.data);
@@ -60,7 +55,7 @@ const CustomerDashboard = () => {
         </div>
         <button
           className="c-btn-primary"
-          onClick={() => navigate("/customer/marketplace")}
+          onClick={() => navigate("/customer/products")}
         >
           Browse Marketplace
         </button>
@@ -112,7 +107,7 @@ const CustomerDashboard = () => {
         <div className="c-action-grid">
           <div
             className="c-action-card"
-            onClick={() => navigate("/customer/marketplace")}
+            onClick={() => navigate("/customer/products")}
           >
             <span>🏪</span>
             <p>Find Suppliers</p>
@@ -126,14 +121,14 @@ const CustomerDashboard = () => {
           </div>
           <div
             className="c-action-card"
-            onClick={() => navigate("/customer/suppliers/saved")}
+            onClick={() => navigate("/customer/products")}
           >
             <span>⭐</span>
             <p>Saved Suppliers</p>
           </div>
           <div
             className="c-action-card"
-            onClick={() => navigate("/customer/profile")}
+            onClick={() => navigate("/customer/dashboard")}
           >
             <span>👤</span>
             <p>My Profile</p>
@@ -157,7 +152,7 @@ const CustomerDashboard = () => {
             <p>No orders yet.</p>
             <button
               className="c-btn-primary"
-              onClick={() => navigate("/customer/marketplace")}
+              onClick={() => navigate("/customer/products")}
             >
               Start Shopping
             </button>
@@ -179,7 +174,7 @@ const CustomerDashboard = () => {
                 {recentOrders.map((order) => (
                   <tr
                     key={order._id}
-                    onClick={() => navigate(`/customer/orders/${order._id}`)}
+                    onClick={() => navigate("/customer/orders")}
                     style={{ cursor: "pointer" }}
                   >
                     <td>#{order._id?.slice(-6).toUpperCase()}</td>

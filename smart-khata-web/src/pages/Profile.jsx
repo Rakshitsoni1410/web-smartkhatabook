@@ -1,10 +1,11 @@
 import "./Profile.css";
+import { getStoredUser } from "../utils/session";
 import { useNavigate } from "react-router-dom";
 
 // inside component:
 
 export default function Profile() {
-  const user = JSON.parse(localStorage.getItem("user")) || {};
+  const user = getStoredUser();
 const navigate = useNavigate();
   return (
     <div className="profile-page">

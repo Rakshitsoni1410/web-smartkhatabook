@@ -33,7 +33,7 @@ const WHOLESALER_MENU = [
 const RETAILER_MENU = [
   { icon: <FiGrid />, name: "Overview", path: "/dashboard" },
   { icon: <FiBox />, name: "Stock", path: "/stock" },
-  { icon: <FiUsers />, name: "Customers", path: "/customers" },
+  { icon: <FiUsers />, name: "Customers", path: "/customer/products" },
   { icon: <FiUsers />, name: "Employees", path: "/employees" },
   { icon: <FiTruck />, name: "Orders", path: "/orders" },
   { icon: <FiFileText />, name: "Billing", path: "/billing" },

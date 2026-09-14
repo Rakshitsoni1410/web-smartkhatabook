@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../api";
+import { getStoredUser } from "../utils/session";
 import {
   FiArrowLeft,
   FiStar,
@@ -12,7 +13,7 @@ import "./Dashboard.css";
 export default function Reviews() {
   const navigate = useNavigate();
 
-  const user = JSON.parse(localStorage.getItem("user")) || {};
+  const user = getStoredUser();
 
   const [reviews, setReviews] = useState([]);
   const [wholesalers, setWholesalers] = useState([]);
@@ -33,19 +34,9 @@ export default function Reviews() {
   // NEW: month filter -> "All" or "YYYY-MM"
   const [monthFilter, setMonthFilter] = useState("All");
 
-  useEffect(() => {
-    fetchReviews();
-
-    if (user.role === "Retailer") {
-      fetchSuggestions();
-    }
-  }, []);
-
   const fetchReviews = async () => {
     try {
-      const res = await axios.get(
-        `https://backend-of-smartkhata-book-vkcv.vercel.app/api/reviews/${user._id}`,
-      );
+      const res = await api.get(`/api/reviews/${user._id}`);
 
       setReviews(res.data.reviews || []);
     } catch (error) {
@@ -57,9 +48,7 @@ const fetchSuggestions = async () => {
 
   try {
 
-    const res = await axios.get(
-      `https://backend-of-smartkhata-book-vkcv.vercel.app/api/reviews/suggestions/${user._id}`
-    );
+    const res = await api.get(`/api/reviews/suggestions/${user._id}`);
 
     setWholesalers(
       res.data.users || []
@@ -71,9 +60,17 @@ const fetchSuggestions = async () => {
 
   }
 };
+
+  useEffect(() => {
+    fetchReviews();
+
+    if (user.role === "Retailer") {
+      fetchSuggestions();
+    }
+  }, []);
   const submitReview = async () => {
     try {
-      await axios.post("https://backend-of-smartkhata-book-vkcv.vercel.app/api/reviews/add", {
+      await api.post("/api/reviews/add", {
         targetUserId: form.targetUserId,
         comment: form.comment,
         rating: form.rating,
@@ -103,7 +100,7 @@ const fetchSuggestions = async () => {
 
   const sendReply = async (id) => {
     try {
-      await axios.post(`https://backend-of-smartkhata-book-vkcv.vercel.app/api/reviews/reply/${id}`, {
+      await api.post(`/api/reviews/reply/${id}`, {
         text: reply[id],
         role: user.role,
         businessType: user.businessType,

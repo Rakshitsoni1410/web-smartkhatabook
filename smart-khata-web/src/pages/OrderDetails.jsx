@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../api";
+import { getStoredUser } from "../utils/session";
 import FakePaymentModal from "../components/FakePaymentModal";
 import {
   FiArrowLeft,
@@ -17,7 +18,7 @@ export default function OrderDetails() {
   const navigate = useNavigate();
   const { id } = useParams();
 
-  const user = JSON.parse(localStorage.getItem("user")) || {};
+  const user = getStoredUser();
   const role = user.role?.trim().toLowerCase();
 
   const [order, setOrder] = useState(null);
@@ -29,19 +30,13 @@ export default function OrderDetails() {
     amount: 0,
   });
 
-  useEffect(() => {
-    fetchOrder();
-    const timer = setInterval(fetchOrder, 5000);
-    return () => clearInterval(timer);
-  }, []);
-
   const showToast = (msg, type = "success") => {
     setToast({ msg, type });
     setTimeout(() => setToast({ msg: "", type: "success" }), 3000);
   };
   const [advanceInput, setAdvanceInput] = useState("");
 
-  const fetchOrder = async () => {
+  const fetchOrder = useCallback(async () => {
     try {
       const url =
         role === "wholesaler"
@@ -54,7 +49,13 @@ export default function OrderDetails() {
     } catch (error) {
       console.log(error);
     }
-  };
+  }, [id, role, user._id]);
+
+  useEffect(() => {
+    fetchOrder();
+    const timer = setInterval(fetchOrder, 5000);
+    return () => clearInterval(timer);
+  }, [fetchOrder]);
 
   const updateStatus = async (status) => {
     try {

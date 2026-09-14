@@ -2,11 +2,12 @@ import { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import Sidebar from "../components/Sidebar";
 import "./Report.css";
+import { getStoredUser } from "../utils/session";
 
 const API_URL = "https://backend-of-smartkhata-book-vkcv.vercel.app";
 
 export default function Report() {
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const user = getStoredUser();
 
   const [report, setReport] = useState(null);
   const [loading, setLoading] = useState(true);
