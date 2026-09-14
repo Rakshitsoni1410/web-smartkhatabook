@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import axios from "axios";
+import api from "../api";
+import FakePaymentModal from "../components/FakePaymentModal";
 import {
   FiArrowLeft,
   FiCheckCircle,
@@ -22,6 +23,11 @@ export default function OrderDetails() {
   const [order, setOrder] = useState(null);
   const [toast, setToast] = useState({ msg: "", type: "success" });
   const [updating, setUpdating] = useState(false);
+  const [paymentModal, setPaymentModal] = useState({
+    open: false,
+    type: "",
+    amount: 0,
+  });
 
   useEffect(() => {
     fetchOrder();
@@ -34,13 +40,15 @@ export default function OrderDetails() {
     setTimeout(() => setToast({ msg: "", type: "success" }), 3000);
   };
   const [advanceInput, setAdvanceInput] = useState("");
+
   const fetchOrder = async () => {
     try {
       const url =
         role === "wholesaler"
-          ? `https://backend-of-smartkhata-book-vkcv.vercel.app/api/orders/wholesaler/${user._id}`
-          : `https://backend-of-smartkhata-book-vkcv.vercel.app/api/orders/retailer/${user._id}`;
-      const res = await axios.get(url);
+          ? `/api/orders/wholesaler/${user._id}`
+          : `/api/orders/retailer/${user._id}`;
+
+      const res = await api.get(url);
       const found = res.data.find((item) => item._id === id);
       setOrder(found);
     } catch (error) {
@@ -51,9 +59,11 @@ export default function OrderDetails() {
   const updateStatus = async (status) => {
     try {
       setUpdating(true);
-      await axios.patch(`https://backend-of-smartkhata-book-vkcv.vercel.app/api/orders/${id}/status`, {
+
+      await api.patch(`/api/orders/${id}/status`, {
         status,
       });
+
       showToast(`Order marked as ${status}`);
       fetchOrder();
     } catch (error) {
@@ -63,29 +73,73 @@ export default function OrderDetails() {
     }
   };
 
-  const payAdvance = async () => {
-    try {
-      setUpdating(true);
-      await axios.patch(`https://backend-of-smartkhata-book-vkcv.vercel.app/api/orders/${id}/pay-advance`);
-      showToast("Advance payment successful");
-      fetchOrder();
-    } catch (error) {
-      showToast("Failed to process advance payment", "error");
-    } finally {
-      setUpdating(false);
-    }
+  // ────────────────────────────────────────────────────────────────────────
+  // FAKE / DEMO PAYMENT GATEWAY
+  // No real money, card, UPI PIN, CVV, or bank password is collected.
+  // ────────────────────────────────────────────────────────────────────────
+
+  const openPaymentGateway = (type, amount) => {
+    setPaymentModal({
+      open: true,
+      type,
+      amount: Number(amount || 0),
+    });
   };
 
-  const completePayment = async () => {
+  const closePaymentGateway = () => {
+    if (updating) return;
+
+    setPaymentModal({
+      open: false,
+      type: "",
+      amount: 0,
+    });
+  };
+
+  const handleFakePaymentConfirm = async ({
+    paymentType,
+    transactionId,
+    paymentMethod,
+    amount,
+  }) => {
     try {
       setUpdating(true);
-      await axios.patch(
-        `https://backend-of-smartkhata-book-vkcv.vercel.app/api/orders/${id}/complete-payment`,
-      );
-      showToast("Payment completed successfully");
-      fetchOrder();
+
+      if (paymentType === "advance") {
+        await api.patch(`/api/orders/${id}/pay-advance`, {
+          mockPayment: true,
+          transactionId,
+          paymentMethod,
+          amount,
+        });
+
+        showToast(`Advance payment successful • ${transactionId}`);
+      } else if (paymentType === "final") {
+        await api.patch(`/api/orders/${id}/complete-payment`, {
+          mockPayment: true,
+          transactionId,
+          paymentMethod,
+          amount,
+        });
+
+        showToast(`Final payment successful • ${transactionId}`);
+      } else {
+        throw new Error("Unknown payment type");
+      }
+
+      await fetchOrder();
     } catch (error) {
-      showToast("Failed to complete payment", "error");
+      console.error("FAKE PAYMENT ERROR:", error);
+
+      showToast(
+        error.response?.data?.message ||
+          error.message ||
+          "Failed to process demo payment",
+        "error",
+      );
+
+      // Re-throw so the payment modal stays open and shows an error.
+      throw error;
     } finally {
       setUpdating(false);
     }
@@ -95,30 +149,22 @@ export default function OrderDetails() {
     try {
       if (!advanceInput) {
         showToast("Enter advance percentage", "error");
-
         return;
       }
 
       if (Number(advanceInput) < 0 || Number(advanceInput) > 100) {
         showToast("Enter valid percentage", "error");
-
         return;
       }
 
       setUpdating(true);
 
-      await axios.patch(
-        `https://backend-of-smartkhata-book-vkcv.vercel.app/api/orders/${id}/request-advance`,
-
-        {
-          advancePercentage: Number(advanceInput),
-        },
-      );
+      await api.patch(`/api/orders/${id}/request-advance`, {
+        advancePercentage: Number(advanceInput),
+      });
 
       showToast(`Advance request sent (${advanceInput}%)`);
-
       setAdvanceInput("");
-
       fetchOrder();
     } catch (error) {
       showToast("Failed to request advance", "error");
@@ -130,9 +176,9 @@ export default function OrderDetails() {
   const requestFinalPayment = async () => {
     try {
       setUpdating(true);
-      await axios.patch(
-        `https://backend-of-smartkhata-book-vkcv.vercel.app/api/orders/${id}/request-final-payment`,
-      );
+
+      await api.patch(`/api/orders/${id}/request-final-payment`);
+
       showToast("Final payment requested");
       fetchOrder();
     } catch (error) {
@@ -820,7 +866,9 @@ export default function OrderDetails() {
                   </div>
                   <button
                     className="od-action-btn"
-                    onClick={payAdvance}
+                    onClick={() =>
+                      openPaymentGateway("advance", order.advanceAmount)
+                    }
                     disabled={updating}
                     style={{
                       background: "#f59e0b",
@@ -901,7 +949,9 @@ export default function OrderDetails() {
                   </div>
                   <button
                     className="od-action-btn"
-                    onClick={completePayment}
+                    onClick={() =>
+                      openPaymentGateway("final", order.remainingAmount)
+                    }
                     disabled={updating}
                     style={{
                       background: "#22c55e",
@@ -964,6 +1014,15 @@ export default function OrderDetails() {
           </div>
         )}
       </div>
+
+      <FakePaymentModal
+        open={paymentModal.open}
+        amount={paymentModal.amount}
+        paymentType={paymentModal.type}
+        orderId={id}
+        onClose={closePaymentGateway}
+        onConfirm={handleFakePaymentConfirm}
+      />
     </>
   );
 }
