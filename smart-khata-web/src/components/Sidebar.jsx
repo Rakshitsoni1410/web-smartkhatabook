@@ -25,6 +25,7 @@ const WHOLESALER_MENU = [
   { icon: <FiBox />, name: "Stock", path: "/stock" },
   { icon: <FiUsers />, name: "Employees", path: "/employees" },
   { icon: <FiTruck />, name: "Orders", path: "/orders" },
+  { icon: <FiFileText />, name: "Billing", path: "/billing" },
   { icon: <FiBookOpen />, name: "Ledger", path: "/ledger" },
   { icon: <FiMessageSquare />, name: "Reviews", path: "/reviews" },
 ];
@@ -35,7 +36,9 @@ const RETAILER_MENU = [
   { icon: <FiUsers />, name: "Customers", path: "/customers" },
   { icon: <FiUsers />, name: "Employees", path: "/employees" },
   { icon: <FiTruck />, name: "Orders", path: "/orders" },
+  { icon: <FiFileText />, name: "Billing", path: "/billing" },
   { icon: <FiBookOpen />, name: "Ledger", path: "/ledger" },
+  { icon: <FiBarChart2 />, name: "Reports", path: "/reports" },
   { icon: <FiMessageSquare />, name: "Reviews", path: "/reviews" },
 ];
 
@@ -90,10 +93,10 @@ export default function Sidebar() {
   const userName = user.name || user.fullName || "User";
 
   const [collapsed, setCollapsed] = useState(
-    () => localStorage.getItem(COLLAPSED_KEY) === "true",
+    () => localStorage.getItem(COLLAPSED_KEY) === "true"
   );
   const [darkMode, setDarkMode] = useState(
-    () => localStorage.getItem(THEME_KEY) === "dark",
+    () => localStorage.getItem(THEME_KEY) === "dark"
   );
   const [showProfile, setShowProfile] = useState(false);
   const profileRef = useRef(null);
@@ -112,10 +115,7 @@ export default function Sidebar() {
   // global CSS keyed on [data-theme="dark"] picks it up — not just the sidebar.
   useEffect(() => {
     localStorage.setItem(THEME_KEY, darkMode ? "dark" : "light");
-    document.documentElement.setAttribute(
-      "data-theme",
-      darkMode ? "dark" : "light",
-    );
+    document.documentElement.setAttribute("data-theme", darkMode ? "dark" : "light");
   }, [darkMode]);
 
   // Close the profile dropdown on outside click.
@@ -139,15 +139,14 @@ export default function Sidebar() {
     navigate("/");
   };
 
-  const initials =
-    userName
-      .trim()
-      .split(/\s+/)
-      .filter(Boolean)
-      .map((w) => w[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2) || "U";
+  const initials = userName
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2) || "U";
 
   return (
     <aside
@@ -227,9 +226,7 @@ export default function Sidebar() {
             className="sb-item sb-theme-toggle"
             onClick={() => setDarkMode(!darkMode)}
             aria-pressed={darkMode}
-            aria-label={
-              darkMode ? "Switch to light mode" : "Switch to dark mode"
-            }
+            aria-label={darkMode ? "Switch to light mode" : "Switch to dark mode"}
           >
             <span className="sb-item-icon">
               {darkMode ? <FiSun size={16} /> : <FiMoon size={16} />}

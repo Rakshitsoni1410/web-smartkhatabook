@@ -16,6 +16,7 @@ import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import Profile from "./pages/Profile";
 import Ledger from "./pages/Ledger.jsx";
+import Billing from "./pages/Billing.jsx";
 import OnboardingTour from "./components/OnboardingTour";
 import ChatBot from "./components/ChatBot";
 // ✅ NEW — Customer Portal
@@ -137,6 +138,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <Ledger />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/billing"
+          element={
+            <ProtectedRoute>
+              <Billing />
             </ProtectedRoute>
           }
         />

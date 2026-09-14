@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiPhone, FiLock, FiEye, FiEyeOff, FiArrowRight } from "react-icons/fi";
-import axios from "axios";
+import api from "../api";
 import OnboardingTour from "../components/OnboardingTour";
 import "./Login.css";
 
@@ -18,8 +18,8 @@ export default function Login() {
 
   useEffect(() => {
     // warm up server with ping instead of fake login
-    axios
-      .get("https://backend-of-smartkhata-book-vkcv.vercel.app/ping")
+    api
+      .get("/ping")
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
@@ -45,10 +45,13 @@ export default function Login() {
 
     setLoading(true);
     try {
-      const res = await axios.post(
-        "https://backend-of-smartkhata-book-vkcv.vercel.app/api/user/login",
-        { phone: form.phone, password: form.password },
-      );
+      const res = await api.post("/api/user/login", {
+        phone: form.phone,
+        password: form.password,
+      });
+
+      // ← ADDED: save the token so authUser middleware accepts future requests
+      localStorage.setItem("token", res.data.token);
       localStorage.setItem("user", JSON.stringify(res.data.user));
       setToast("Login successful!");
       setTimeout(() => navigate("/dashboard"), 1200);
