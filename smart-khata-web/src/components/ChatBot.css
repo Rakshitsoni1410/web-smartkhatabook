@@ -46,10 +46,17 @@
 .skb-chat-header {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 10px;
   padding: 14px 16px;
   background: linear-gradient(135deg, #1a1a2e, #16213e);
   color: #fff;
+}
+.skb-chat-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
 }
 .skb-chat-avatar {
   width: 34px;
@@ -60,9 +67,118 @@
   align-items: center;
   justify-content: center;
   font-size: 17px;
+  flex-shrink: 0;
 }
 .skb-chat-title { font-size: 13px; font-weight: 700; }
 .skb-chat-subtitle { font-size: 10px; opacity: 0.65; margin-top: 1px; }
+
+/* ── Language switcher — Amazon-style dropdown ────────────────────────── */
+.skb-lang-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.skb-lang-trigger {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 6px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.skb-lang-trigger:hover { background: rgba(255, 255, 255, 0.15); }
+.skb-lang-globe { font-size: 13px; }
+.skb-lang-caret {
+  font-size: 9px;
+  transition: transform 0.15s;
+  opacity: 0.8;
+}
+.skb-lang-caret--up { transform: rotate(180deg); }
+
+.skb-lang-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 220px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+  padding: 8px;
+  z-index: 10000;
+  animation: skbDropdownIn 0.15s ease;
+}
+@keyframes skbDropdownIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.skb-lang-dropdown-title {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #9ca3af;
+  padding: 6px 10px 8px;
+}
+
+.skb-lang-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  border: none;
+  background: transparent;
+  padding: 9px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s;
+}
+.skb-lang-option:hover { background: #f5f5ff; }
+.skb-lang-option--selected { background: #eef0ff; }
+
+.skb-lang-radio {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid #d0d0e0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.skb-lang-option--selected .skb-lang-radio { border-color: #4f46e5; }
+.skb-lang-radio-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #4f46e5;
+}
+
+.skb-lang-option-text {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+.skb-lang-option-native { font-size: 13px; font-weight: 600; color: #1a1a2e; }
+.skb-lang-option-code { font-size: 10px; color: #9ca3af; margin-top: 1px; }
+
+.skb-lang-check {
+  color: #4f46e5;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* ── Mobile: dropdown stays inside the panel's width ─────────────────── */
+@media (max-width: 420px) {
+  .skb-lang-dropdown { width: 200px; }
+}
 
 /* ── Body / messages ───────────────────────────────────────────────────── */
 .skb-chat-body {

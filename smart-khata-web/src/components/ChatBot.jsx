@@ -71,6 +71,8 @@ const LANG_STORAGE_KEY = "skb_chat_lang";
 
 export default function ChatBot() {
   const [open, setOpen] = useState(false);
+  const [langMenuOpen, setLangMenuOpen] = useState(false);
+  const langMenuRef = useRef(null);
   const [lang, setLang] = useState(
     () => localStorage.getItem(LANG_STORAGE_KEY) || DEFAULT_LANGUAGE
   );
@@ -84,6 +86,18 @@ export default function ChatBot() {
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, typing]);
+
+  // Close the language dropdown when clicking anywhere outside it.
+  useEffect(() => {
+    if (!langMenuOpen) return;
+    const handleOutsideClick = (e) => {
+      if (langMenuRef.current && !langMenuRef.current.contains(e.target)) {
+        setLangMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => document.removeEventListener("mousedown", handleOutsideClick);
+  }, [langMenuOpen]);
 
   const send = (text) => {
     const trimmed = text.trim();
@@ -102,6 +116,7 @@ export default function ChatBot() {
   };
 
   const switchLang = (code) => {
+    setLangMenuOpen(false);
     if (code === lang) return;
     setLang(code);
     localStorage.setItem(LANG_STORAGE_KEY, code);
@@ -138,18 +153,42 @@ export default function ChatBot() {
               </div>
             </div>
 
-            {/* language switcher */}
-            <div className="skb-lang-switch">
-              {Object.entries(LANGUAGES).map(([code, meta]) => (
-                <button
-                  key={code}
-                  className={`skb-lang-btn ${lang === code ? "skb-lang-btn--active" : ""}`}
-                  onClick={() => switchLang(code)}
-                  title={meta.name}
-                >
-                  {meta.label}
-                </button>
-              ))}
+            {/* language switcher — click the globe to open a dropdown, like Amazon's language picker */}
+            <div className="skb-lang-wrap" ref={langMenuRef}>
+              <button
+                className="skb-lang-trigger"
+                onClick={() => setLangMenuOpen((o) => !o)}
+                aria-haspopup="listbox"
+                aria-expanded={langMenuOpen}
+              >
+                <span className="skb-lang-globe">🌐</span>
+                <span>{LANGUAGES[lang].label}</span>
+                <span className={`skb-lang-caret ${langMenuOpen ? "skb-lang-caret--up" : ""}`}>▾</span>
+              </button>
+
+              {langMenuOpen && (
+                <div className="skb-lang-dropdown" role="listbox">
+                  <div className="skb-lang-dropdown-title">Choose a language</div>
+                  {Object.entries(LANGUAGES).map(([code, meta]) => (
+                    <button
+                      key={code}
+                      role="option"
+                      aria-selected={lang === code}
+                      className={`skb-lang-option ${lang === code ? "skb-lang-option--selected" : ""}`}
+                      onClick={() => switchLang(code)}
+                    >
+                      <span className="skb-lang-radio">
+                        {lang === code && <span className="skb-lang-radio-dot" />}
+                      </span>
+                      <span className="skb-lang-option-text">
+                        <span className="skb-lang-option-native">{meta.name}</span>
+                        <span className="skb-lang-option-code">{meta.label}</span>
+                      </span>
+                      {lang === code && <span className="skb-lang-check">✓</span>}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
