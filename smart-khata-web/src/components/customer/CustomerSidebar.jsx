@@ -9,10 +9,26 @@ import {
 } from "react-icons/fa";
 
 const navItems = [
-  { to: "/customer/dashboard", icon: <FaTachometerAlt />, label: "Dashboard" },
-  { to: "/customer/products", icon: <FaBoxOpen />, label: "Browse Products" },
-  { to: "/customer/orders", icon: <FaShoppingCart />, label: "My Orders" },
-  { to: "/customer/bills", icon: <FaFileInvoiceDollar />, label: "My Bills" },
+  {
+    to: "/customer/dashboard",
+    icon: <FaTachometerAlt />,
+    label: "Dashboard",
+  },
+  {
+    to: "/customer/products",
+    icon: <FaBoxOpen />,
+    label: "Browse Products",
+  },
+  {
+    to: "/customer/orders",
+    icon: <FaShoppingCart />,
+    label: "My Orders",
+  },
+  {
+    to: "/customer/bills",
+    icon: <FaFileInvoiceDollar />,
+    label: "My Bills",
+  },
 ];
 
 const CustomerSidebar = ({ onClose }) => {
@@ -24,20 +40,29 @@ const CustomerSidebar = ({ onClose }) => {
           <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
             <span className="text-white font-bold text-sm">SK</span>
           </div>
+
           <div>
-            <p className="text-sm font-bold text-gray-800">SmartKhata</p>
-            <p className="text-xs text-indigo-500 font-medium">Customer</p>
+            <p className="text-sm font-bold text-gray-800">
+              SmartKhata
+            </p>
+
+            <p className="text-xs text-indigo-500 font-medium">
+              Customer
+            </p>
           </div>
         </div>
+
         <button
-          className="lg:hidden text-gray-400 hover:text-red-500"
+          type="button"
+          aria-label="Close sidebar"
+          className="lg:hidden text-gray-400 hover:text-red-500 transition-colors"
           onClick={onClose}
         >
           <FaTimes />
         </button>
       </div>
 
-      {/* Nav links */}
+      {/* Navigation */}
       <nav className="flex-1 px-3 py-4 space-y-1">
         {navItems.map(({ to, icon, label }) => (
           <NavLink
@@ -52,8 +77,11 @@ const CustomerSidebar = ({ onClose }) => {
               }`
             }
           >
-            <span className="text-base">{icon}</span>
-            {label}
+            <span className="text-base">
+              {icon}
+            </span>
+
+            <span>{label}</span>
           </NavLink>
         ))}
       </nav>
@@ -61,7 +89,7 @@ const CustomerSidebar = ({ onClose }) => {
       {/* Footer */}
       <div className="px-5 py-4 border-t border-gray-100">
         <p className="text-xs text-gray-400 text-center">
-          SmartKhataBooks © 2025
+          SmartKhataBooks © 2026
         </p>
       </div>
     </div>

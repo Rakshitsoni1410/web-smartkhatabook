@@ -1,71 +1,174 @@
-import React from "react";
-import { NavLink } from "react-router-dom";
+import React, { useState } from "react";
+import { Outlet, useNavigate } from "react-router-dom";
 import {
-  FaTachometerAlt,
-  FaBoxOpen,
-  FaShoppingCart,
-  FaFileInvoiceDollar,
-  FaTimes,
+  FaBars,
+  FaUserCircle,
+  FaSignOutAlt,
 } from "react-icons/fa";
+import CustomerSidebar from "./CustomerSidebar";
 
-const navItems = [
-  { to: "/customer/dashboard", icon: <FaTachometerAlt />, label: "Dashboard" },
-  { to: "/customer/products", icon: <FaBoxOpen />, label: "Browse Products" },
-  { to: "/customer/orders", icon: <FaShoppingCart />, label: "My Orders" },
-  { to: "/customer/bills", icon: <FaFileInvoiceDollar />, label: "My Bills" },
-];
+const CustomerLayout = () => {
+  const navigate = useNavigate();
 
-const CustomerSidebar = ({ onClose }) => {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Read logged-in user safely
+  const getStoredUser = () => {
+    try {
+      const storedUser = localStorage.getItem("user");
+
+      if (!storedUser) {
+        return null;
+      }
+
+      return JSON.parse(storedUser);
+    } catch (error) {
+      console.error("Failed to read customer user:", error);
+      return null;
+    }
+  };
+
+  const user = getStoredUser();
+
+  const customerName =
+    user?.name ||
+    user?.fullName ||
+    "Customer";
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+
+    navigate("/", {
+      replace: true,
+    });
+  };
+
+  const closeSidebar = () => {
+    setSidebarOpen(false);
+  };
+
   return (
-    <div className="flex flex-col h-full">
-      {/* Logo */}
-      <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-sm">SK</span>
-          </div>
-          <div>
-            <p className="text-sm font-bold text-gray-800">SmartKhata</p>
-            <p className="text-xs text-indigo-500 font-medium">Customer</p>
+    <div className="min-h-screen bg-gray-50">
+      {/* =========================================
+          DESKTOP SIDEBAR
+      ========================================= */}
+
+      <aside className="hidden lg:block fixed left-0 top-0 h-screen w-64 bg-white border-r border-gray-100 shadow-sm z-30">
+        <CustomerSidebar />
+      </aside>
+
+      {/* =========================================
+          MOBILE SIDEBAR
+      ========================================= */}
+
+      {sidebarOpen && (
+        <div className="lg:hidden fixed inset-0 z-50">
+          {/* Overlay */}
+          <button
+            type="button"
+            aria-label="Close sidebar"
+            onClick={closeSidebar}
+            className="absolute inset-0 w-full h-full bg-black/40"
+          />
+
+          {/* Sidebar */}
+          <div className="relative w-72 max-w-[85%] h-full bg-white shadow-2xl">
+            <CustomerSidebar onClose={closeSidebar} />
           </div>
         </div>
-        <button
-          className="lg:hidden text-gray-400 hover:text-red-500"
-          onClick={onClose}
-        >
-          <FaTimes />
-        </button>
-      </div>
+      )}
 
-      {/* Nav links */}
-      <nav className="flex-1 px-3 py-4 space-y-1">
-        {navItems.map(({ to, icon, label }) => (
-          <NavLink
-            key={to}
-            to={to}
-            onClick={onClose}
-            className={({ isActive }) =>
-              `flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
-                isActive
-                  ? "bg-indigo-600 text-white shadow-md shadow-indigo-200"
-                  : "text-gray-600 hover:bg-indigo-50 hover:text-indigo-700"
-              }`
-            }
-          >
-            <span className="text-base">{icon}</span>
-            {label}
-          </NavLink>
-        ))}
-      </nav>
+      {/* =========================================
+          MAIN CONTENT
+      ========================================= */}
 
-      {/* Footer */}
-      <div className="px-5 py-4 border-t border-gray-100">
-        <p className="text-xs text-gray-400 text-center">
-          SmartKhataBooks © 2025
-        </p>
+      <div className="lg:ml-64 min-h-screen flex flex-col">
+        {/* =========================================
+            HEADER
+        ========================================= */}
+
+        <header className="sticky top-0 z-20 bg-white border-b border-gray-100 shadow-sm">
+          <div className="h-16 px-4 sm:px-6 flex items-center justify-between">
+            {/* Left */}
+
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                aria-label="Open sidebar"
+                onClick={() => setSidebarOpen(true)}
+                className="lg:hidden w-10 h-10 rounded-xl flex items-center justify-center text-gray-600 hover:bg-indigo-50 hover:text-indigo-600 transition"
+              >
+                <FaBars />
+              </button>
+
+              <div>
+                <p className="text-xs text-gray-400">
+                  Customer Portal
+                </p>
+
+                <h2 className="text-sm sm:text-base font-semibold text-gray-800">
+                  SmartKhata
+                </h2>
+              </div>
+            </div>
+
+            {/* Right */}
+
+            <div className="flex items-center gap-3">
+              {/* User Info */}
+
+              <div className="hidden sm:flex items-center gap-2">
+                <FaUserCircle className="text-2xl text-indigo-500" />
+
+                <div className="text-right">
+                  <p className="text-sm font-semibold text-gray-700">
+                    {customerName}
+                  </p>
+
+                  <p className="text-xs text-gray-400">
+                    Customer
+                  </p>
+                </div>
+              </div>
+
+              {/* Logout */}
+
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium text-red-500 hover:bg-red-50 transition"
+              >
+                <FaSignOutAlt />
+
+                <span className="hidden sm:inline">
+                  Logout
+                </span>
+              </button>
+            </div>
+          </div>
+        </header>
+
+        {/* =========================================
+            PAGE CONTENT
+        ========================================= */}
+
+        <main className="flex-1 p-4 sm:p-6">
+          <Outlet />
+        </main>
+
+        {/* =========================================
+            MOBILE FOOTER
+        ========================================= */}
+
+        <footer className="lg:hidden px-4 py-4 text-center border-t border-gray-100 bg-white">
+          <p className="text-xs text-gray-400">
+            SmartKhataBooks © 2026
+          </p>
+        </footer>
       </div>
     </div>
   );
 };
 
-export default CustomerSidebar;
+export default CustomerLayout;
