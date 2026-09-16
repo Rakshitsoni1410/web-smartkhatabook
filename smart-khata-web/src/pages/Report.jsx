@@ -1,24 +1,31 @@
-import { useEffect, useState, useCallback } from "react";
-import axios from "axios";
+import { useCallback, useEffect, useState } from "react";
+
 import Sidebar from "../components/Sidebar";
+import api from "../api";
 import "./Report.css";
 import { getStoredUser } from "../utils/session";
 
-const API_URL = "https://backend-of-smartkhata-book-vkcv.vercel.app";
-
 export default function Report() {
   const user = getStoredUser();
+
+  const userId = user?._id;
+  const userRole = user?.role;
 
   const [report, setReport] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
 
+  // =====================================================
+  // FETCH REPORT
+  // =====================================================
+
   const fetchReport = useCallback(
     async (manual = false) => {
-      if (!user?._id || !user?.role) {
+      if (!userId || !userRole) {
         setError("User information not found. Please login again.");
         setLoading(false);
+        setRefreshing(false);
         return;
       }
 
@@ -31,17 +38,21 @@ export default function Report() {
 
         setError("");
 
-        const response = await axios.get(
-          `${API_URL}/api/reports/${user.role.toLowerCase()}/${user._id}`,
+        const response = await api.get(
+          `/api/reports/${userRole.toLowerCase()}/${userId}`,
         );
 
-        if (response.data.success) {
+        if (response.data?.success) {
           setReport(response.data.report);
         } else {
-          setError(response.data.message || "Failed to load report.");
+          setReport(null);
+
+          setError(response.data?.message || "Failed to load report.");
         }
       } catch (err) {
         console.error("REPORT FETCH ERROR:", err);
+
+        setReport(null);
 
         setError(
           err.response?.data?.message ||
@@ -52,12 +63,16 @@ export default function Report() {
         setRefreshing(false);
       }
     },
-    [user._id, user.role],
+    [userId, userRole],
   );
 
   useEffect(() => {
     fetchReport();
   }, [fetchReport]);
+
+  // =====================================================
+  // HELPERS
+  // =====================================================
 
   const formatCurrency = (amount = 0) => {
     return new Intl.NumberFormat("en-IN", {
@@ -68,9 +83,17 @@ export default function Report() {
   };
 
   const formatDate = (date) => {
-    if (!date) return "-";
+    if (!date) {
+      return "-";
+    }
 
-    return new Date(date).toLocaleDateString("en-IN", {
+    const parsedDate = new Date(date);
+
+    if (Number.isNaN(parsedDate.getTime())) {
+      return "-";
+    }
+
+    return parsedDate.toLocaleDateString("en-IN", {
       day: "2-digit",
       month: "2-digit",
       year: "numeric",
@@ -87,6 +110,7 @@ export default function Report() {
       delivered: "Delivered",
       completed: "Completed",
       rejected: "Rejected",
+
       unpaid: "Unpaid",
       advanceRequested: "Advance Requested",
       advancePaid: "Advance Paid",
@@ -94,7 +118,7 @@ export default function Report() {
       paid: "Paid",
     };
 
-    return statusMap[status] || status;
+    return statusMap[status] || status || "-";
   };
 
   const getStatusClass = (status) => {
@@ -123,14 +147,25 @@ export default function Report() {
     window.print();
   };
 
+  // =====================================================
+  // SAFE SIDEBAR ROLE
+  // =====================================================
+
+  const sidebarRole = userRole || "";
+
+  // =====================================================
+  // LOADING
+  // =====================================================
+
   if (loading) {
     return (
       <div className="report-layout">
-        <Sidebar role={user.role} />
+        <Sidebar role={sidebarRole} />
 
         <main className="report-main">
           <div className="report-loading">
             <div className="report-spinner"></div>
+
             <p>Preparing your business report...</p>
           </div>
         </main>
@@ -138,10 +173,14 @@ export default function Report() {
     );
   }
 
+  // =====================================================
+  // ERROR
+  // =====================================================
+
   if (error) {
     return (
       <div className="report-layout">
-        <Sidebar role={user.role} />
+        <Sidebar role={sidebarRole} />
 
         <main className="report-main">
           <div className="report-error">
@@ -151,28 +190,51 @@ export default function Report() {
 
             <p>{error}</p>
 
-            <button onClick={() => fetchReport(true)}>Try Again</button>
+            <button
+              type="button"
+              onClick={() => fetchReport(true)}
+              disabled={refreshing}
+            >
+              {refreshing ? "Trying..." : "Try Again"}
+            </button>
           </div>
         </main>
       </div>
     );
   }
 
-  const orders = report?.orders || {};
-  const payments = report?.payments || {};
-  const stock = report?.stock || {};
-  const reviews = report?.reviews || {};
-  const ledger = report?.ledger || {};
-  const recentOrders = report?.recentOrders || [];
+  // =====================================================
+  // REPORT DATA
+  // =====================================================
 
-  const isRetailer = user.role?.toLowerCase() === "retailer";
+  const orders = report?.orders || {};
+
+  const payments = report?.payments || {};
+
+  const stock = report?.stock || {};
+
+  const reviews = report?.reviews || {};
+
+  const ledger = report?.ledger || {};
+
+  const recentOrders = Array.isArray(report?.recentOrders)
+    ? report.recentOrders
+    : [];
+
+  const isRetailer = userRole?.toLowerCase() === "retailer";
+
+  // =====================================================
+  // UI
+  // =====================================================
 
   return (
     <div className="report-layout">
-      <Sidebar role={user.role} />
+      <Sidebar role={sidebarRole} />
 
       <main className="report-main">
-        {/* HEADER */}
+        {/* =========================================
+            HEADER
+        ========================================= */}
 
         <div className="report-header">
           <div>
@@ -185,6 +247,7 @@ export default function Report() {
 
           <div className="report-header-actions">
             <button
+              type="button"
               className="report-refresh-btn"
               onClick={() => fetchReport(true)}
               disabled={refreshing}
@@ -196,14 +259,20 @@ export default function Report() {
               {refreshing ? "Refreshing..." : "Refresh"}
             </button>
 
-            <button className="report-print-btn" onClick={handlePrint}>
+            <button
+              type="button"
+              className="report-print-btn"
+              onClick={handlePrint}
+            >
               <i className="ti ti-printer"></i>
               Print Report
             </button>
           </div>
         </div>
 
-        {/* BUSINESS INFO */}
+        {/* =========================================
+            BUSINESS INFO
+        ========================================= */}
 
         <section className="report-business-card">
           <div className="report-business-left">
@@ -212,22 +281,25 @@ export default function Report() {
             </div>
 
             <div>
-              <h2>{user.shopName || user.name || "My Business"}</h2>
+              <h2>{user?.shopName || user?.name || "My Business"}</h2>
 
               <div className="report-business-meta">
                 <span>
                   <i className="ti ti-user"></i>
-                  {user.name || "User"}
+
+                  {user?.name || "User"}
                 </span>
 
                 <span>
                   <i className="ti ti-briefcase"></i>
-                  {user.role || "-"}
+
+                  {userRole || "-"}
                 </span>
 
-                {user.businessType && (
+                {user?.businessType && (
                   <span>
                     <i className="ti ti-category"></i>
+
                     {user.businessType}
                   </span>
                 )}
@@ -237,13 +309,18 @@ export default function Report() {
 
           <div className="report-date">
             <span>Report Date</span>
+
             <strong>{formatDate(new Date())}</strong>
           </div>
         </section>
 
-        {/* MAIN FINANCIAL CARDS */}
+        {/* =========================================
+            FINANCIAL SUMMARY
+        ========================================= */}
 
         <section className="report-summary-grid">
+          {/* Total value */}
+
           <div className="report-summary-card blue">
             <div className="report-summary-icon">
               <i className="ti ti-wallet"></i>
@@ -260,6 +337,8 @@ export default function Report() {
             </div>
           </div>
 
+          {/* Paid */}
+
           <div className="report-summary-card green">
             <div className="report-summary-icon">
               <i className="ti ti-circle-check"></i>
@@ -274,6 +353,8 @@ export default function Report() {
             </div>
           </div>
 
+          {/* Pending */}
+
           <div className="report-summary-card orange">
             <div className="report-summary-icon">
               <i className="ti ti-clock"></i>
@@ -287,6 +368,8 @@ export default function Report() {
               <p>Pending settlement</p>
             </div>
           </div>
+
+          {/* Stock */}
 
           <div className="report-summary-card purple">
             <div className="report-summary-icon">
@@ -303,12 +386,15 @@ export default function Report() {
           </div>
         </section>
 
-        {/* ORDER SUMMARY */}
+        {/* =========================================
+            ORDER SUMMARY
+        ========================================= */}
 
         <section className="report-section">
           <div className="report-section-header">
             <div>
               <h2>Order Summary</h2>
+
               <p>Current order status overview</p>
             </div>
 
@@ -320,55 +406,66 @@ export default function Report() {
           <div className="report-order-grid">
             <div className="report-mini-card">
               <span>Total Orders</span>
+
               <strong>{orders.total || 0}</strong>
             </div>
 
             <div className="report-mini-card warning">
               <span>Pending</span>
+
               <strong>{orders.pending || 0}</strong>
             </div>
 
             <div className="report-mini-card info">
               <span>Approved</span>
+
               <strong>{orders.approved || 0}</strong>
             </div>
 
             <div className="report-mini-card purple">
               <span>Processing</span>
+
               <strong>{orders.processing || 0}</strong>
             </div>
 
             <div className="report-mini-card blue">
               <span>On The Way</span>
+
               <strong>{orders.onTheWay || 0}</strong>
             </div>
 
             <div className="report-mini-card success">
               <span>Delivered</span>
+
               <strong>{orders.delivered || 0}</strong>
             </div>
 
             <div className="report-mini-card success">
               <span>Completed</span>
+
               <strong>{orders.completed || 0}</strong>
             </div>
 
             <div className="report-mini-card danger">
               <span>Rejected</span>
+
               <strong>{orders.rejected || 0}</strong>
             </div>
           </div>
         </section>
 
-        {/* PAYMENT + INVENTORY */}
+        {/* =========================================
+            PAYMENT + INVENTORY
+        ========================================= */}
 
         <div className="report-two-column">
-          {/* PAYMENT */}
+          {/* Payment */}
 
           <section className="report-section">
             <div className="report-section-header">
               <div>
                 <h2>Payment Summary</h2>
+
                 <p>Payment performance</p>
               </div>
 
@@ -409,6 +506,12 @@ export default function Report() {
               </div>
 
               <div className="report-detail-row">
+                <span>Fully Paid Amount</span>
+
+                <strong>{formatCurrency(payments.fullyPaidAmount)}</strong>
+              </div>
+
+              <div className="report-detail-row">
                 <span>Paid Orders</span>
 
                 <strong>{payments.paidOrders || 0}</strong>
@@ -428,12 +531,13 @@ export default function Report() {
             </div>
           </section>
 
-          {/* INVENTORY */}
+          {/* Inventory */}
 
           <section className="report-section">
             <div className="report-section-header">
               <div>
                 <h2>Inventory Summary</h2>
+
                 <p>Your current stock position</p>
               </div>
 
@@ -445,11 +549,13 @@ export default function Report() {
             <div className="report-detail-list">
               <div className="report-detail-row">
                 <span>Total Products</span>
+
                 <strong>{stock.totalProducts || 0}</strong>
               </div>
 
               <div className="report-detail-row">
                 <span>Total Stock Quantity</span>
+
                 <strong>{stock.totalStockQuantity || 0}</strong>
               </div>
 
@@ -492,9 +598,13 @@ export default function Report() {
           </section>
         </div>
 
-        {/* REVIEWS + LEDGER */}
+        {/* =========================================
+            REVIEWS + LEDGER
+        ========================================= */}
 
         <div className="report-two-column">
+          {/* Reviews */}
+
           <section className="report-section report-small-section">
             <div className="report-stat-icon yellow-icon">
               <i className="ti ti-star"></i>
@@ -512,6 +622,8 @@ export default function Report() {
             </div>
           </section>
 
+          {/* Ledger */}
+
           <section className="report-section report-small-section">
             <div className="report-stat-icon ledger-icon">
               <i className="ti ti-book"></i>
@@ -527,12 +639,15 @@ export default function Report() {
           </section>
         </div>
 
-        {/* RECENT ORDERS */}
+        {/* =========================================
+            RECENT ORDERS
+        ========================================= */}
 
         <section className="report-section report-table-section">
           <div className="report-section-header">
             <div>
               <h2>Recent Orders</h2>
+
               <p>Your latest business activity</p>
             </div>
 
@@ -555,12 +670,19 @@ export default function Report() {
                 <thead>
                   <tr>
                     <th>Invoice</th>
+
                     <th>Date</th>
+
                     <th>{isRetailer ? "Wholesaler" : "Retailer"}</th>
+
                     <th>Product</th>
+
                     <th>Quantity</th>
+
                     <th>Order Status</th>
+
                     <th>Payment</th>
+
                     <th>Amount</th>
                   </tr>
                 </thead>
@@ -578,10 +700,10 @@ export default function Report() {
 
                       <td>{isRetailer ? order.wholesaler : order.retailer}</td>
 
-                      <td>{order.productName}</td>
+                      <td>{order.productName || "-"}</td>
 
                       <td>
-                        {order.quantity} {order.unit}
+                        {order.quantity || 0} {order.unit || ""}
                       </td>
 
                       <td>
@@ -606,6 +728,10 @@ export default function Report() {
             </div>
           )}
         </section>
+
+        {/* =========================================
+            FOOTER
+        ========================================= */}
 
         <div className="report-footer">
           <p>
