@@ -13,7 +13,6 @@ import Reviews from "./pages/Reviews";
 import Employee from "./pages/Employee";
 import EmployeeDetail from "./pages/EmployeeDetail";
 import ForgotPassword from "./pages/ForgotPassword";
-import ResetPassword from "./pages/ResetPassword";
 import Profile from "./pages/Profile";
 import Ledger from "./pages/Ledger.jsx";
 import Billing from "./pages/Billing.jsx";
@@ -70,8 +69,6 @@ export default function App() {
         <Route path="/signup" element={<Signup />} />
 
         <Route path="/forgot-password" element={<ForgotPassword />} />
-
-        <Route path="/reset-password/:token" element={<ResetPassword />} />
 
         {/* PROTECTED */}
 
