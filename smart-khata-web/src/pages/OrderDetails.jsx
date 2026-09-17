@@ -1,8 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
+
 import { useNavigate, useParams } from "react-router-dom";
+
 import api from "../api";
+
 import { getStoredUser } from "../utils/session";
+
 import FakePaymentModal from "../components/FakePaymentModal";
+
 import {
   FiArrowLeft,
   FiCheckCircle,
@@ -10,33 +15,146 @@ import {
   FiXCircle,
   FiPackage,
   FiClock,
-  FiDollarSign,
   FiHash,
+  FiMoon,
+  FiSun,
 } from "react-icons/fi";
+
+// =====================================================
+// RUPEE ICON
+// =====================================================
+
+const RupeeIcon = ({ size = 13, color = "currentColor" }) => {
+  return (
+    <span
+      style={{
+        fontSize: size,
+        color,
+        fontWeight: 800,
+        lineHeight: 1,
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      ₹
+    </span>
+  );
+};
+
+// =====================================================
+// MONEY FORMATTER
+// =====================================================
+
+const formatMoney = (value) => {
+  const number = Number(value || 0);
+
+  if (!Number.isFinite(number)) {
+    return "₹0";
+  }
+
+  return `₹${number.toLocaleString("en-IN", {
+    maximumFractionDigits: 2,
+  })}`;
+};
+
+// =====================================================
+// ORDER DETAILS
+// =====================================================
 
 export default function OrderDetails() {
   const navigate = useNavigate();
+
   const { id } = useParams();
 
   const user = getStoredUser();
-  const role = user.role?.trim().toLowerCase();
+
+  const role = String(user?.role || "")
+    .trim()
+    .toLowerCase();
+
+  // =====================================================
+  // STATE
+  // =====================================================
 
   const [order, setOrder] = useState(null);
-  const [toast, setToast] = useState({ msg: "", type: "success" });
+
+  const [loading, setLoading] = useState(true);
+
   const [updating, setUpdating] = useState(false);
+
+  const [advanceInput, setAdvanceInput] = useState("");
+
+  const [toast, setToast] = useState({
+    msg: "",
+    type: "success",
+  });
+
   const [paymentModal, setPaymentModal] = useState({
     open: false,
     type: "",
     amount: 0,
   });
 
+  // =====================================================
+  // DARK MODE
+  // =====================================================
+
+  const [darkMode, setDarkMode] = useState(() => {
+    try {
+      const saved = localStorage.getItem("smartkhata-theme");
+
+      if (saved === "dark") {
+        return true;
+      }
+
+      if (saved === "light") {
+        return false;
+      }
+
+      return (
+        window.matchMedia?.("(prefers-color-scheme: dark)").matches || false
+      );
+    } catch {
+      return false;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("smartkhata-theme", darkMode ? "dark" : "light");
+    } catch {
+      // ignore storage errors
+    }
+  }, [darkMode]);
+
+  // =====================================================
+  // TOAST
+  // =====================================================
+
   const showToast = (msg, type = "success") => {
-    setToast({ msg, type });
-    setTimeout(() => setToast({ msg: "", type: "success" }), 3000);
+    setToast({
+      msg,
+      type,
+    });
+
+    setTimeout(() => {
+      setToast({
+        msg: "",
+        type: "success",
+      });
+    }, 3000);
   };
-  const [advanceInput, setAdvanceInput] = useState("");
+
+  // =====================================================
+  // FETCH ORDER
+  // =====================================================
 
   const fetchOrder = useCallback(async () => {
+    if (!user?._id) {
+      return;
+    }
+
     try {
       const url =
         role === "wholesaler"
@@ -44,20 +162,44 @@ export default function OrderDetails() {
           : `/api/orders/retailer/${user._id}`;
 
       const res = await api.get(url);
-      const found = res.data.find((item) => item._id === id);
-      setOrder(found);
+
+      const orderList = Array.isArray(res.data)
+        ? res.data
+        : Array.isArray(res.data?.orders)
+          ? res.data.orders
+          : [];
+
+      const found = orderList.find((item) => String(item._id) === String(id));
+
+      setOrder(found || null);
     } catch (error) {
-      console.log(error);
+      console.error("FETCH ORDER ERROR:", error);
+    } finally {
+      setLoading(false);
     }
-  }, [id, role, user._id]);
+  }, [id, role, user?._id]);
+
+  // =====================================================
+  // AUTO REFRESH
+  // =====================================================
 
   useEffect(() => {
     fetchOrder();
+
     const timer = setInterval(fetchOrder, 5000);
+
     return () => clearInterval(timer);
   }, [fetchOrder]);
 
+  // =====================================================
+  // UPDATE STATUS
+  // =====================================================
+
   const updateStatus = async (status) => {
+    if (updating) {
+      return;
+    }
+
     try {
       setUpdating(true);
 
@@ -65,19 +207,26 @@ export default function OrderDetails() {
         status,
       });
 
-      showToast(`Order marked as ${status}`);
-      fetchOrder();
+      showToast(
+        status === "rejected" ? "Order rejected" : `Order marked as ${status}`,
+      );
+
+      await fetchOrder();
     } catch (error) {
-      showToast("Failed to update status", "error");
+      console.error("STATUS UPDATE ERROR:", error);
+
+      showToast(
+        error?.response?.data?.message || "Failed to update order status",
+        "error",
+      );
     } finally {
       setUpdating(false);
     }
   };
 
-  // ────────────────────────────────────────────────────────────────────────
-  // FAKE / DEMO PAYMENT GATEWAY
-  // No real money, card, UPI PIN, CVV, or bank password is collected.
-  // ────────────────────────────────────────────────────────────────────────
+  // =====================================================
+  // OPEN PAYMENT
+  // =====================================================
 
   const openPaymentGateway = (type, amount) => {
     setPaymentModal({
@@ -87,8 +236,14 @@ export default function OrderDetails() {
     });
   };
 
+  // =====================================================
+  // CLOSE PAYMENT
+  // =====================================================
+
   const closePaymentGateway = () => {
-    if (updating) return;
+    if (updating) {
+      return;
+    }
 
     setPaymentModal({
       open: false,
@@ -96,6 +251,10 @@ export default function OrderDetails() {
       amount: 0,
     });
   };
+
+  // =====================================================
+  // FAKE PAYMENT
+  // =====================================================
 
   const handleFakePaymentConfirm = async ({
     paymentType,
@@ -133,46 +292,64 @@ export default function OrderDetails() {
       console.error("FAKE PAYMENT ERROR:", error);
 
       showToast(
-        error.response?.data?.message ||
-          error.message ||
+        error?.response?.data?.message ||
+          error?.message ||
           "Failed to process demo payment",
         "error",
       );
 
-      // Re-throw so the payment modal stays open and shows an error.
       throw error;
     } finally {
       setUpdating(false);
     }
   };
 
+  // =====================================================
+  // REQUEST ADVANCE
+  // =====================================================
+
   const requestAdvancePayment = async () => {
+    const percentage = Number(advanceInput);
+
+    if (advanceInput === "") {
+      showToast("Enter advance percentage", "error");
+
+      return;
+    }
+
+    if (!Number.isFinite(percentage) || percentage < 0 || percentage > 100) {
+      showToast("Enter percentage between 0 and 100", "error");
+
+      return;
+    }
+
     try {
-      if (!advanceInput) {
-        showToast("Enter advance percentage", "error");
-        return;
-      }
-
-      if (Number(advanceInput) < 0 || Number(advanceInput) > 100) {
-        showToast("Enter valid percentage", "error");
-        return;
-      }
-
       setUpdating(true);
 
       await api.patch(`/api/orders/${id}/request-advance`, {
-        advancePercentage: Number(advanceInput),
+        advancePercentage: percentage,
       });
 
-      showToast(`Advance request sent (${advanceInput}%)`);
+      showToast(`Advance request sent (${percentage}%)`);
+
       setAdvanceInput("");
-      fetchOrder();
+
+      await fetchOrder();
     } catch (error) {
-      showToast("Failed to request advance", "error");
+      console.error("ADVANCE REQUEST ERROR:", error);
+
+      showToast(
+        error?.response?.data?.message || "Failed to request advance payment",
+        "error",
+      );
     } finally {
       setUpdating(false);
     }
   };
+
+  // =====================================================
+  // REQUEST FINAL PAYMENT
+  // =====================================================
 
   const requestFinalPayment = async () => {
     try {
@@ -181,155 +358,336 @@ export default function OrderDetails() {
       await api.patch(`/api/orders/${id}/request-final-payment`);
 
       showToast("Final payment requested");
-      fetchOrder();
+
+      await fetchOrder();
     } catch (error) {
-      showToast("Failed to request final payment", "error");
+      console.error("FINAL PAYMENT REQUEST ERROR:", error);
+
+      showToast(
+        error?.response?.data?.message || "Failed to request final payment",
+        "error",
+      );
     } finally {
       setUpdating(false);
     }
   };
 
-  // ─── ALL statuses from backend model ───────────────────────────────────────
+  // =====================================================
+  // STATUS CONFIG
+  // =====================================================
+
   const statusConfig = {
     pending: {
-      color: "#fff",
+      color: "#ffffff",
       bg: "#f59e0b",
       label: "Pending",
-      shadow: "rgba(245,158,11,0.3)",
+      shadow: "rgba(245,158,11,0.30)",
     },
+
     approved: {
-      color: "#fff",
+      color: "#ffffff",
       bg: "#6366f1",
       label: "Approved",
-      shadow: "rgba(99,102,241,0.3)",
+      shadow: "rgba(99,102,241,0.30)",
     },
+
     advancePending: {
-      color: "#fff",
+      color: "#ffffff",
       bg: "#f59e0b",
       label: "Advance Pending",
-      shadow: "rgba(245,158,11,0.3)",
+      shadow: "rgba(245,158,11,0.30)",
     },
+
     processing: {
-      color: "#fff",
+      color: "#ffffff",
       bg: "#8b5cf6",
       label: "Processing",
-      shadow: "rgba(139,92,246,0.3)",
+      shadow: "rgba(139,92,246,0.30)",
     },
+
     onTheWay: {
-      color: "#fff",
+      color: "#ffffff",
       bg: "#0ea5e9",
       label: "On The Way",
-      shadow: "rgba(14,165,233,0.3)",
+      shadow: "rgba(14,165,233,0.30)",
     },
+
     delivered: {
-      color: "#fff",
+      color: "#ffffff",
       bg: "#22c55e",
       label: "Delivered",
-      shadow: "rgba(34,197,94,0.3)",
+      shadow: "rgba(34,197,94,0.30)",
     },
+
     completed: {
-      color: "#fff",
+      color: "#ffffff",
       bg: "#10b981",
       label: "Completed",
-      shadow: "rgba(16,185,129,0.3)",
+      shadow: "rgba(16,185,129,0.30)",
     },
+
     rejected: {
-      color: "#fff",
+      color: "#ffffff",
       bg: "#ef4444",
       label: "Rejected",
-      shadow: "rgba(239,68,68,0.3)",
+      shadow: "rgba(239,68,68,0.30)",
     },
   };
 
-  // ─── Payment status label & color ──────────────────────────────────────────
+  // =====================================================
+  // PAYMENT STATUS
+  // =====================================================
+
   const paymentStatusConfig = {
-    unpaid: { label: "Unpaid", color: "#f59e0b", bg: "#f59e0b18" },
+    unpaid: {
+      label: "Unpaid",
+      color: "#f59e0b",
+      bg: "#f59e0b18",
+    },
+
     advanceRequested: {
       label: "Advance Requested",
       color: "#0ea5e9",
       bg: "#0ea5e918",
     },
-    advancePaid: { label: "Advance Paid", color: "#8b5cf6", bg: "#8b5cf618" },
-    partial: { label: "Partial", color: "#f59e0b", bg: "#f59e0b18" },
-    paid: { label: "Paid", color: "#22c55e", bg: "#22c55e18" },
+
+    advancePaid: {
+      label: "Advance Paid",
+      color: "#8b5cf6",
+      bg: "#8b5cf618",
+    },
+
+    partial: {
+      label: "Partial",
+      color: "#f59e0b",
+      bg: "#f59e0b18",
+    },
+
+    paid: {
+      label: "Paid",
+      color: "#22c55e",
+      bg: "#22c55e18",
+    },
   };
 
   const getStatus = (status) =>
     statusConfig[status] || {
-      color: "#fff",
+      color: "#ffffff",
       bg: "#94a3b8",
       label: status,
-      shadow: "rgba(0,0,0,0.1)",
+      shadow: "rgba(0,0,0,0.10)",
     };
 
-  const getPaymentStatus = (ps) =>
-    paymentStatusConfig[ps] || { label: ps, color: "#94a3b8", bg: "#94a3b818" };
+  const getPaymentStatus = (status) =>
+    paymentStatusConfig[status] || {
+      label: status || "Unknown",
+      color: "#94a3b8",
+      bg: "#94a3b818",
+    };
 
-  if (!order) {
+  // =====================================================
+  // LOADING
+  // =====================================================
+
+  if (loading) {
     return (
-      <div
-        className="od-page"
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
+      <div className={`od-page ${darkMode ? "od-dark" : ""}`}>
         <style>{pageStyles}</style>
-        <div style={{ textAlign: "center" }}>
-          <div
-            style={{
-              width: 64,
-              height: 64,
-              borderRadius: 18,
-              background: "#fff",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              margin: "0 auto 16px",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-            }}
-          >
-            <FiPackage size={26} color="#cbd5e1" />
+
+        <div className="od-loading">
+          <div className="od-loading-icon">
+            <FiPackage size={26} />
           </div>
-          <p
-            style={{
-              color: "#94a3b8",
-              fontFamily: "'Outfit', sans-serif",
-              fontWeight: 500,
-            }}
-          >
-            Loading order...
-          </p>
+
+          <p>Loading order...</p>
         </div>
       </div>
     );
   }
 
+  // =====================================================
+  // NOT FOUND
+  // =====================================================
+
+  if (!order) {
+    return (
+      <div className={`od-page ${darkMode ? "od-dark" : ""}`}>
+        <style>{pageStyles}</style>
+
+        <div className="od-loading">
+          <div className="od-loading-icon">
+            <FiXCircle size={26} />
+          </div>
+
+          <p>Order not found</p>
+
+          <button className="od-simple-btn" onClick={() => navigate("/orders")}>
+            Back to Orders
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // =====================================================
+  // CURRENT STATUS
+  // =====================================================
+
   const s = getStatus(order.orderStatus);
+
   const ps = getPaymentStatus(order.paymentStatus);
 
-  const canApprove = order.orderStatus === "pending";
-  const canReject = order.orderStatus === "pending";
+  // =====================================================
+  // TERMINAL STATUS
+  //
+  // Delivered:
+  // every status button locked.
+  //
+  // Completed:
+  // every status button locked.
+  //
+  // Rejected:
+  // every status button locked.
+  // =====================================================
 
-  const canOnTheWay = order.orderStatus === "processing";
+  const isDelivered =
+    order.orderStatus === "delivered" || order.orderStatus === "completed";
 
-  const canDeliver = order.orderStatus === "onTheWay";
+  const isRejected = order.orderStatus === "rejected";
+
+  const statusLocked = isDelivered || isRejected;
+
+  // =====================================================
+  // STATUS PERMISSIONS
+  // =====================================================
+
+  const canApprove = !statusLocked && order.orderStatus === "pending";
+
+  const canReject = !statusLocked && order.orderStatus === "pending";
+
+  const canOnTheWay = !statusLocked && order.orderStatus === "processing";
+
+  const canDeliver = !statusLocked && order.orderStatus === "onTheWay";
+
+  // =====================================================
+  // PAYMENT PERMISSIONS
+  // =====================================================
 
   const canRequestAdvance =
+    !statusLocked &&
     (order.orderStatus === "approved" || order.orderStatus === "processing") &&
     !order.advanceRequested;
 
-  // Final payment: only after delivery, only once
   const canRequestFinal =
-    order.orderStatus === "delivered" && !order.finalPaymentRequested;
+    order.orderStatus === "delivered" &&
+    !order.finalPaymentRequested &&
+    !order.fullPaymentDone;
+
+  // =====================================================
+  // STATUS BUTTONS
+  // =====================================================
+
+  const statusButtons = [
+    {
+      label: "Approve",
+
+      clickStatus: "approved",
+
+      icon: <FiCheckCircle size={15} />,
+
+      bg: "#6366f1",
+
+      shadow: "rgba(99,102,241,0.35)",
+
+      isActive: ["approved", "advancePending", "processing"].includes(
+        order.orderStatus,
+      ),
+
+      isDone: ["onTheWay", "delivered", "completed", "rejected"].includes(
+        order.orderStatus,
+      ),
+
+      canClick: canApprove,
+    },
+
+    {
+      label: "On The Way",
+
+      clickStatus: "onTheWay",
+
+      icon: <FiTruck size={15} />,
+
+      bg: "#0ea5e9",
+
+      shadow: "rgba(14,165,233,0.35)",
+
+      isActive: order.orderStatus === "onTheWay",
+
+      isDone: ["delivered", "completed", "rejected"].includes(
+        order.orderStatus,
+      ),
+
+      canClick: canOnTheWay,
+    },
+
+    {
+      label: "Delivered",
+
+      clickStatus: "delivered",
+
+      icon: <FiCheckCircle size={15} />,
+
+      bg: "#22c55e",
+
+      shadow: "rgba(34,197,94,0.35)",
+
+      // Delivered remains active
+      // even after payment completes.
+      isActive: ["delivered", "completed"].includes(order.orderStatus),
+
+      isDone: order.orderStatus === "rejected",
+
+      canClick: canDeliver,
+    },
+
+    {
+      label: "Reject",
+
+      clickStatus: "rejected",
+
+      icon: <FiXCircle size={15} />,
+
+      bg: "#ef4444",
+
+      shadow: "rgba(239,68,68,0.35)",
+
+      isActive: order.orderStatus === "rejected",
+
+      // Reject only belongs to
+      // pending stage.
+      //
+      // Once order moves forward,
+      // reject becomes permanently
+      // inactive.
+      isDone: !["pending", "rejected"].includes(order.orderStatus),
+
+      canClick: canReject,
+    },
+  ];
+
+  // =====================================================
+  // UI
+  // =====================================================
 
   return (
     <>
       <style>{pageStyles}</style>
 
-      <div className="od-page">
-        {/* ── TOAST ── */}
+      <div className={`od-page ${darkMode ? "od-dark" : ""}`}>
+        {/* =============================================
+            TOAST
+        ============================================== */}
+
         {toast.msg && (
           <div
             className="od-toast"
@@ -342,92 +700,151 @@ export default function OrderDetails() {
             ) : (
               <FiXCircle size={14} />
             )}
+
             {toast.msg}
           </div>
         )}
 
-        {/* ── TOPBAR ── */}
+        {/* =============================================
+            TOP BAR
+        ============================================== */}
+
         <div className="od-topbar">
           <div className="od-topbar-left">
             <button className="od-back-btn" onClick={() => navigate("/orders")}>
               <FiArrowLeft />
             </button>
+
             <div>
               <div className="od-title">Order Details</div>
+
               <div className="od-subtitle">
                 <FiHash size={10} />
+
                 {id?.slice(-8).toUpperCase()}
               </div>
             </div>
           </div>
 
-          <span
-            className="od-status-badge"
-            style={{
-              background: s.bg,
-              color: s.color,
-              boxShadow: `0 4px 12px ${s.shadow}`,
-            }}
-          >
-            <span className="od-status-dot" />
-            {s.label}
-          </span>
+          <div className="od-topbar-actions">
+            {/* DARK MODE */}
+
+            <button
+              type="button"
+              className="od-theme-btn"
+              onClick={() => setDarkMode((previous) => !previous)}
+              title={darkMode ? "Light Mode" : "Dark Mode"}
+            >
+              {darkMode ? <FiSun size={18} /> : <FiMoon size={18} />}
+            </button>
+
+            {/* ORDER STATUS */}
+
+            <span
+              className="od-status-badge"
+              style={{
+                background: s.bg,
+
+                color: s.color,
+
+                boxShadow: `0 4px 12px ${s.shadow}`,
+              }}
+            >
+              <span className="od-status-dot" />
+
+              {s.label}
+            </span>
+          </div>
         </div>
 
-        {/*         PRODUCT CARD           */}
+        {/* =============================================
+            PRODUCT CARD
+        ============================================== */}
 
         <div className="od-card">
-          <div className="od-card-strip" style={{ background: s.bg }} />
+          <div
+            className="od-card-strip"
+            style={{
+              background: s.bg,
+            }}
+          />
+
           <div className="od-card-body">
             <div className="od-product-header">
               <div
                 className="od-product-icon"
-                style={{ background: s.bg + "18" }}
+                style={{
+                  background: `${s.bg}18`,
+                }}
               >
                 <FiPackage size={22} color={s.bg} />
               </div>
+
               <div>
                 <div className="od-product-name">{order.productName}</div>
+
                 <div className="od-product-label">Product Details</div>
               </div>
             </div>
 
-            <div className="od-info-row">
-              <span className="od-info-label">
-                <FiPackage size={13} color="#94a3b8" /> Quantity
-              </span>
-              <span className="od-info-value">{order.quantity} units</span>
-            </div>
+            {/* QUANTITY */}
 
             <div className="od-info-row">
               <span className="od-info-label">
-                <FiDollarSign size={13} color="#94a3b8" /> Price / Unit
+                <FiPackage size={13} />
+                Quantity
               </span>
-              <span className="od-info-value">₹{order.pricePerUnit}</span>
+
+              <span className="od-info-value">
+                {order.quantity} {order.unit || "units"}
+              </span>
             </div>
+
+            {/* PRICE */}
 
             <div className="od-info-row">
               <span className="od-info-label">
-                <FiDollarSign size={13} color="#94a3b8" /> Total Amount
+                <RupeeIcon />
+                Price / Unit
               </span>
+
+              <span className="od-info-value">
+                {formatMoney(order.pricePerUnit)}
+              </span>
+            </div>
+
+            {/* TOTAL */}
+
+            <div className="od-info-row">
+              <span className="od-info-label">
+                <RupeeIcon />
+                Total Amount
+              </span>
+
               <span className="od-info-value od-total">
-                ₹{order.totalAmount}
+                {formatMoney(order.totalAmount)}
               </span>
             </div>
 
-            <div className="od-info-row" style={{ border: "none" }}>
+            {/* PAYMENT STATUS */}
+
+            <div
+              className="od-info-row"
+              style={{
+                border: "none",
+              }}
+            >
               <span className="od-info-label">
-                <FiClock size={13} color="#94a3b8" /> Payment Status
+                <FiClock size={13} />
+                Payment Status
               </span>
+
               <span
-                className="od-info-value"
+                className="od-payment-badge"
                 style={{
                   color: ps.color,
+
                   background: ps.bg,
-                  padding: "3px 12px",
-                  borderRadius: 20,
-                  fontSize: 12,
-                  fontWeight: 700,
                 }}
               >
                 {ps.label}
@@ -436,79 +853,104 @@ export default function OrderDetails() {
           </div>
         </div>
 
-        {/*       PAYMENT DETAILS          */}
+        {/* =============================================
+            PAYMENT DETAILS
+        ============================================== */}
+
         <div className="od-card">
-          <div className="od-card-strip" style={{ background: "#22c55e" }} />
+          <div
+            className="od-card-strip"
+            style={{
+              background: "#22c55e",
+            }}
+          />
+
           <div className="od-card-body">
             <div className="od-product-header">
               <div
                 className="od-product-icon"
-                style={{ background: "#22c55e18" }}
+                style={{
+                  background: "#22c55e18",
+                }}
               >
-                <FiDollarSign size={22} color="#22c55e" />
+                <RupeeIcon size={22} color="#22c55e" />
               </div>
+
               <div>
                 <div className="od-product-name">Payment Details</div>
+
                 <div className="od-product-label">
                   Wholesaler payment policy
                 </div>
               </div>
             </div>
 
-            {/* Advance Policy */}
+            {/* ADVANCE POLICY */}
+
             <div className="od-info-row">
               <span className="od-info-label">
-                <FiDollarSign size={13} color="#94a3b8" /> Advance Policy
+                <RupeeIcon />
+                Advance Policy
               </span>
+
               <span
                 className="od-info-value"
                 style={{
-                  color: order.advancePercentage > 0 ? "#f59e0b" : "#22c55e",
+                  color:
+                    Number(order.advancePercentage) > 0 ? "#f59e0b" : "#22c55e",
                 }}
               >
-                {order.advancePercentage > 0
+                {Number(order.advancePercentage) > 0
                   ? `${order.advancePercentage}%`
                   : "No Advance"}
               </span>
             </div>
 
-            {/* Advance Amount — only show if policy > 0 */}
-            {order.advancePercentage > 0 && (
+            {/* ADVANCE AMOUNT */}
+
+            {Number(order.advancePercentage) > 0 && (
               <div className="od-info-row">
                 <span className="od-info-label">
-                  <FiDollarSign size={13} color="#94a3b8" /> Advance Amount
+                  <RupeeIcon />
+                  Advance Amount
                 </span>
+
                 <span
                   className="od-info-value"
-                  style={{ color: order.advancePaid ? "#22c55e" : "#f59e0b" }}
+                  style={{
+                    color: order.advancePaid ? "#22c55e" : "#f59e0b",
+                  }}
                 >
-                  ₹{order.advanceAmount || 0}
+                  {formatMoney(order.advanceAmount)}
+
                   {order.advancePaid && (
-                    <span
-                      style={{ marginLeft: 6, fontSize: 11, color: "#22c55e" }}
-                    >
-                      ✓ Paid
-                    </span>
+                    <span className="od-paid-small">✓ Paid</span>
                   )}
                 </span>
               </div>
             )}
 
-            {/* Remaining Amount */}
+            {/* REMAINING */}
+
             <div className="od-info-row">
               <span className="od-info-label">
-                <FiDollarSign size={13} color="#94a3b8" /> Remaining Amount
+                <RupeeIcon />
+                Remaining Amount
               </span>
+
               <span className="od-info-value">
-                ₹{order.remainingAmount || 0}
+                {formatMoney(order.remainingAmount)}
               </span>
             </div>
 
-            {/* Delivery Date */}
+            {/* DELIVERY */}
+
             <div className="od-info-row">
               <span className="od-info-label">
-                <FiTruck size={13} color="#94a3b8" /> Delivery Date
+                <FiTruck size={13} />
+                Delivery Date
               </span>
+
               <span className="od-info-value">
                 {order.deliveryDate
                   ? new Date(order.deliveryDate).toLocaleDateString("en-IN", {
@@ -520,20 +962,25 @@ export default function OrderDetails() {
               </span>
             </div>
 
-            {/* Payment Status */}
-            <div className="od-info-row" style={{ border: "none" }}>
+            {/* PAYMENT STATUS */}
+
+            <div
+              className="od-info-row"
+              style={{
+                border: "none",
+              }}
+            >
               <span className="od-info-label">
-                <FiClock size={13} color="#94a3b8" /> Payment Status
+                <FiClock size={13} />
+                Payment Status
               </span>
+
               <span
-                className="od-info-value"
+                className="od-payment-badge"
                 style={{
                   background: ps.bg,
+
                   color: ps.color,
-                  padding: "4px 14px",
-                  borderRadius: 20,
-                  fontSize: 12,
-                  fontWeight: 700,
                 }}
               >
                 {ps.label}
@@ -542,121 +989,81 @@ export default function OrderDetails() {
           </div>
         </div>
 
-        {/* ═══════════════════════════════════════════════ */}
-        {/*            WHOLESALER ACTIONS                  */}
-        {/* ═══════════════════════════════════════════════ */}
+        {/* =============================================
+            WHOLESALER ACTIONS
+        ============================================== */}
+
         {role === "wholesaler" && (
           <div className="od-actions-card">
             <div className="od-actions-title">Update Order Status</div>
 
-            {/* ── STATUS BUTTONS — always shown, active = current status ── */}
-            <div className="od-actions-grid">
-              {[
-                {
-                  label: "Approve",
-                  clickStatus: "approved",
-                  icon: <FiCheckCircle size={15} />,
-                  bg: "#6366f1",
-                  shadow: "rgba(99,102,241,0.35)",
-                  // active when order is at the "approved" stage (any sub-status)
-                  isActive: [
-                    "approved",
-                    "advancePending",
-                    "processing",
-                  ].includes(order.orderStatus),
-                  // past when we've moved beyond the approved stage
-                  isDone: ["onTheWay", "delivered", "completed"].includes(
-                    order.orderStatus,
-                  ),
-                  canClick: canApprove,
-                },
-                {
-                  label: "On The Way",
-                  clickStatus: "onTheWay",
-                  icon: <FiTruck size={15} />,
-                  bg: "#0ea5e9",
-                  shadow: "rgba(14,165,233,0.35)",
-                  isActive: order.orderStatus === "onTheWay",
-                  isDone: ["delivered", "completed"].includes(
-                    order.orderStatus,
-                  ),
-                  canClick: canOnTheWay,
-                },
-                {
-                  label: "Delivered",
-                  clickStatus: "delivered",
-                  icon: <FiCheckCircle size={15} />,
-                  bg: "#22c55e",
-                  shadow: "rgba(34,197,94,0.35)",
-                  isActive: ["delivered", "completed"].includes(
-                    order.orderStatus,
-                  ),
-                  isDone: false,
-                  canClick: canDeliver,
-                },
-                {
-                  label: "Reject",
-                  clickStatus: "rejected",
-                  icon: <FiXCircle size={15} />,
-                  bg: "#ef4444",
-                  shadow: "rgba(239,68,68,0.35)",
-                  isActive: order.orderStatus === "rejected",
-                  isDone: false,
-                  canClick: canReject,
-                },
-              ].map((btn) => (
-                <button
-                  key={btn.clickStatus}
-                  className="od-action-btn"
-                  disabled={
-                    updating || !btn.canClick || btn.isActive || btn.isDone
-                  }
-                  onClick={() => updateStatus(btn.clickStatus)}
-                  style={{
-                    background: btn.isActive ? btn.bg : "#fff",
-                    color: btn.isActive ? "#fff" : btn.bg,
-                    border: `1.5px solid ${btn.isActive ? btn.bg : btn.bg + "40"}`,
-                    boxShadow: btn.isActive
-                      ? `0 4px 14px ${btn.shadow}`
-                      : "none",
-                    opacity: btn.isDone ? 0.4 : 1,
-                  }}
-                >
-                  {btn.icon}
-                  {btn.label}
-                  {btn.isActive && <span style={{ fontSize: 11 }}>✓</span>}
-                </button>
-              ))}
-            </div>
+            {/* STATUS BUTTONS */}
 
-            {/* ── PAYMENT REQUEST BUTTONS — below status grid ── */}
-            <div
-              style={{
-                marginTop: 12,
-                display: "grid",
-                gridTemplateColumns: "1fr 1fr",
-                gap: 10,
-              }}
-            >
-              {/* REQUEST ADVANCE */}
-              {canRequestAdvance && (
-                <div
-                  style={{
-                    gridColumn: "1 / -1",
-                    background: "#fff7ed",
-                    border: "1px solid #fdba74",
-                    borderRadius: 14,
-                    padding: 16,
-                  }}
-                >
-                  <div
+            <div className="od-actions-grid">
+              {statusButtons.map((btn) => {
+                const disabled =
+                  updating || !btn.canClick || btn.isActive || btn.isDone;
+
+                return (
+                  <button
+                    key={btn.clickStatus}
+                    className="od-action-btn"
+                    disabled={disabled}
+                    onClick={() => updateStatus(btn.clickStatus)}
                     style={{
-                      fontSize: 14,
-                      fontWeight: 700,
-                      color: "#9a3412",
-                      marginBottom: 12,
+                      background: btn.isActive ? btn.bg : "var(--od-card)",
+
+                      color: btn.isActive ? "#ffffff" : btn.bg,
+
+                      border: `1.5px solid ${
+                        btn.isActive ? btn.bg : `${btn.bg}55`
+                      }`,
+
+                      boxShadow: btn.isActive
+                        ? `0 4px 14px ${btn.shadow}`
+                        : "none",
+
+                      opacity: disabled && !btn.isActive ? 0.35 : 1,
                     }}
                   >
+                    {btn.icon}
+
+                    {btn.label}
+
+                    {btn.isActive && <span className="od-check">✓</span>}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* =========================================
+                TERMINAL STATUS INFO
+            ========================================== */}
+
+            {isDelivered && (
+              <div className="od-terminal-message od-success-message">
+                <FiCheckCircle size={16} />
+                Order delivered. Status can no longer be changed.
+              </div>
+            )}
+
+            {isRejected && (
+              <div className="od-terminal-message od-error-message">
+                <FiXCircle size={16} />
+                Order rejected. Status can no longer be changed.
+              </div>
+            )}
+
+            {/* =========================================
+                PAYMENT REQUESTS
+            ========================================== */}
+
+            <div className="od-payment-actions">
+              {/* REQUEST ADVANCE */}
+
+              {canRequestAdvance && (
+                <div className="od-request-box od-warning-box">
+                  <div className="od-request-title">
                     Request Advance Payment
                   </div>
 
@@ -667,63 +1074,42 @@ export default function OrderDetails() {
                     min="0"
                     max="100"
                     onChange={(e) => {
-                      let value = Number(e.target.value);
+                      const raw = e.target.value;
 
-                      // LESS THAN 0
+                      if (raw === "") {
+                        setAdvanceInput("");
+
+                        return;
+                      }
+
+                      let value = Number(raw);
+
                       if (value < 0) {
                         value = 0;
                       }
 
-                      // GREATER THAN 100
                       if (value > 100) {
                         value = 100;
                       }
 
                       setAdvanceInput(value);
                     }}
-                    style={{
-                      width: "100%",
-                      padding: "12px 14px",
-                      borderRadius: 12,
-                      border: "1px solid #cbd5e1",
-                      outline: "none",
-                      marginBottom: 14,
-                      fontSize: 14,
-                      fontFamily: "Outfit",
-                    }}
                   />
 
-                  <div
-                    style={{
-                      display: "flex",
-                      gap: 10,
-                    }}
-                  >
+                  <div className="od-request-buttons">
                     <button
-                      className="od-action-btn"
+                      className="od-action-btn od-orange-btn"
                       onClick={requestAdvancePayment}
                       disabled={updating}
-                      style={{
-                        background: "#f59e0b",
-                        color: "#fff",
-                        border: "none",
-                        flex: 1,
-                        boxShadow: "0 4px 14px rgba(245,158,11,0.35)",
-                      }}
                     >
-                      <FiDollarSign size={15} />
+                      <RupeeIcon size={15} />
                       Send Request
                     </button>
 
                     <button
-                      className="od-action-btn"
+                      className="od-action-btn od-clear-btn"
                       onClick={() => setAdvanceInput("")}
-                      style={{
-                        background: "#e2e8f0",
-                        color: "#334155",
-                        border: "none",
-                        flex: 1,
-                      }}
+                      disabled={updating}
                     >
                       Clear
                     </button>
@@ -731,290 +1117,181 @@ export default function OrderDetails() {
                 </div>
               )}
 
-              {/* ADVANCE ALREADY REQUESTED — show as done chip */}
+              {/* ADVANCE STATUS */}
+
               {order.advanceRequested && (
                 <div
-                  style={{
-                    gridColumn: "1 / -1",
-                    background: order.advancePaid ? "#22c55e18" : "#f59e0b18",
-                    border: `1px solid ${order.advancePaid ? "#22c55e40" : "#f59e0b40"}`,
-                    borderRadius: 12,
-                    padding: "10px 14px",
-                    fontSize: 13,
-                    fontWeight: 700,
-                    color: order.advancePaid ? "#22c55e" : "#f59e0b",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 8,
-                  }}
+                  className={
+                    order.advancePaid
+                      ? "od-status-message od-green-message"
+                      : "od-status-message od-orange-message"
+                  }
                 >
-                  <FiDollarSign size={14} />
+                  <RupeeIcon size={14} />
+
                   {order.advancePaid
-                    ? `✓ Advance received — ₹${order.advanceAmount}`
-                    : `Advance requested — waiting for retailer (₹${order.advanceAmount})`}
+                    ? `✓ Advance received — ${formatMoney(order.advanceAmount)}`
+                    : `Advance requested — waiting for retailer (${formatMoney(
+                        order.advanceAmount,
+                      )})`}
                 </div>
               )}
 
-              {/* REQUEST FINAL PAYMENT */}
+              {/* REQUEST FINAL */}
+
               {canRequestFinal && (
                 <button
-                  className="od-action-btn"
+                  className="od-action-btn od-final-btn"
                   onClick={requestFinalPayment}
                   disabled={updating}
-                  style={{
-                    background: "#22c55e",
-                    color: "#fff",
-                    border: "none",
-                    boxShadow: "0 4px 14px rgba(34,197,94,0.35)",
-                    gridColumn: "1 / -1",
-                  }}
                 >
                   <FiCheckCircle size={15} />
-                  Request Final Payment (₹{order.remainingAmount})
+                  Request Final Payment ({formatMoney(order.remainingAmount)})
                 </button>
               )}
 
-              {/* FINAL ALREADY REQUESTED */}
+              {/* FINAL REQUESTED */}
+
               {order.finalPaymentRequested && !order.fullPaymentDone && (
-                <div
-                  style={{
-                    gridColumn: "1 / -1",
-                    background: "#22c55e18",
-                    border: "1px solid #22c55e40",
-                    borderRadius: 12,
-                    padding: "10px 14px",
-                    fontSize: 13,
-                    fontWeight: 700,
-                    color: "#22c55e",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 8,
-                  }}
-                >
+                <div className="od-status-message od-green-message">
                   <FiClock size={14} />
-                  Final payment requested — waiting for retailer (₹
-                  {order.remainingAmount})
+                  Final payment requested — waiting for retailer (
+                  {formatMoney(order.remainingAmount)})
                 </div>
               )}
 
-              {/* FULLY PAID */}
+              {/* FULL PAYMENT */}
+
               {order.fullPaymentDone && (
-                <div
-                  style={{
-                    gridColumn: "1 / -1",
-                    background: "#22c55e18",
-                    border: "1px solid #22c55e40",
-                    borderRadius: 12,
-                    padding: "10px 14px",
-                    fontSize: 13,
-                    fontWeight: 700,
-                    color: "#22c55e",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 8,
-                  }}
-                >
-                  <FiCheckCircle size={14} />✓ Full payment received — ₹
-                  {order.totalAmount}
+                <div className="od-status-message od-green-message">
+                  <FiCheckCircle size={14} />✓ Full payment received —{" "}
+                  {formatMoney(order.totalAmount)}
                 </div>
               )}
             </div>
           </div>
         )}
 
-        {/* ═══════════════════════════════════════════════ */}
-        {/*            RETAILER PAYMENT ACTIONS            */}
-        {/* ═══════════════════════════════════════════════ */}
+        {/* =============================================
+            RETAILER PAYMENT ACTIONS
+        ============================================== */}
+
         {role === "retailer" && (
           <div className="od-actions-card">
             <div className="od-actions-title">Payment Actions</div>
-            <div className="od-actions-grid">
-              {/* ── PAY ADVANCE ──
-                  Wholesaler requested advance and retailer hasn't paid yet */}
+
+            <div className="od-payment-actions">
+              {/* ADVANCE PAYMENT */}
+
               {order.advanceRequested && !order.advancePaid && (
-                <div
-                  style={{
-                    gridColumn: "1 / -1",
-                    background: "#f59e0b15",
-                    border: "1px solid #f59e0b40",
-                    borderRadius: 14,
-                    padding: 16,
-                  }}
-                >
-                  <div
-                    style={{
-                      fontSize: 14,
-                      fontWeight: 700,
-                      color: "#0f172a",
-                      marginBottom: 6,
-                    }}
-                  >
+                <div className="od-request-box od-warning-box">
+                  <div className="od-request-title">
                     ⚠️ Advance Payment Requested
                   </div>
-                  <div
-                    style={{
-                      fontSize: 13,
-                      color: "#64748b",
-                      marginBottom: 14,
-                      lineHeight: 1.6,
-                    }}
-                  >
+
+                  <div className="od-request-description">
                     Your wholesaler requires a <b>{order.advancePercentage}%</b>{" "}
                     advance before dispatching.
                     <br />
                     Amount due:{" "}
-                    <b style={{ color: "#f59e0b" }}>₹{order.advanceAmount}</b>
+                    <strong className="od-orange-text">
+                      {formatMoney(order.advanceAmount)}
+                    </strong>
                   </div>
+
                   <button
-                    className="od-action-btn"
+                    className="od-action-btn od-orange-btn od-full-btn"
                     onClick={() =>
                       openPaymentGateway("advance", order.advanceAmount)
                     }
                     disabled={updating}
-                    style={{
-                      background: "#f59e0b",
-                      color: "#fff",
-                      border: "none",
-                      width: "100%",
-                    }}
                   >
-                    <FiDollarSign size={15} />
-                    Pay Advance ₹{order.advanceAmount}
+                    <RupeeIcon size={15} />
+                    Pay Advance {formatMoney(order.advanceAmount)}
                   </button>
                 </div>
               )}
 
-              {/* ── ADVANCE PAID CONFIRMATION ── */}
+              {/* ADVANCE PAID */}
+
               {order.advancePaid && !order.finalPaymentRequested && (
-                <div
-                  style={{
-                    gridColumn: "1 / -1",
-                    background: "#8b5cf618",
-                    border: "1px solid #8b5cf640",
-                    borderRadius: 14,
-                    padding: 16,
-                    textAlign: "center",
-                  }}
-                >
-                  <div
-                    style={{
-                      fontSize: 13,
-                      fontWeight: 700,
-                      color: "#8b5cf6",
-                      marginBottom: 4,
-                    }}
-                  >
-                    ✓ Advance Paid — ₹{order.advanceAmount}
+                <div className="od-center-message od-purple-message">
+                  <div className="od-center-title">
+                    ✓ Advance Paid — {formatMoney(order.advanceAmount)}
                   </div>
-                  <div style={{ fontSize: 12, color: "#64748b" }}>
+
+                  <div className="od-center-subtitle">
                     Waiting for delivery & final payment request
                   </div>
                 </div>
               )}
 
-              {/* ── PAY FINAL ──
-                  Wholesaler requested final payment after delivery */}
+              {/* FINAL PAYMENT */}
+
               {order.finalPaymentRequested && !order.fullPaymentDone && (
-                <div
-                  style={{
-                    gridColumn: "1 / -1",
-                    background: "#22c55e15",
-                    border: "1px solid #22c55e40",
-                    borderRadius: 14,
-                    padding: 16,
-                  }}
-                >
-                  <div
-                    style={{
-                      fontSize: 14,
-                      fontWeight: 700,
-                      color: "#0f172a",
-                      marginBottom: 6,
-                    }}
-                  >
+                <div className="od-request-box od-success-box">
+                  <div className="od-request-title">
                     ✅ Final Payment Requested
                   </div>
-                  <div
-                    style={{
-                      fontSize: 13,
-                      color: "#64748b",
-                      marginBottom: 14,
-                      lineHeight: 1.6,
-                    }}
-                  >
-                    Your order has been delivered. Remaining amount:
-                    <b style={{ color: "#22c55e" }}>
-                      {" "}
-                      ₹{order.remainingAmount}
-                    </b>
+
+                  <div className="od-request-description">
+                    Your order has been delivered.
+                    <br />
+                    Remaining amount:{" "}
+                    <strong className="od-green-text">
+                      {formatMoney(order.remainingAmount)}
+                    </strong>
                   </div>
+
                   <button
-                    className="od-action-btn"
+                    className="od-action-btn od-final-btn od-full-btn"
                     onClick={() =>
                       openPaymentGateway("final", order.remainingAmount)
                     }
                     disabled={updating}
-                    style={{
-                      background: "#22c55e",
-                      color: "#fff",
-                      border: "none",
-                      width: "100%",
-                    }}
                   >
-                    <FiCheckCircle size={15} />
-                    Complete Payment ₹{order.remainingAmount}
+                    <RupeeIcon size={15} />
+                    Complete Payment {formatMoney(order.remainingAmount)}
                   </button>
                 </div>
               )}
 
-              {/* ── ORDER FULLY PAID ── */}
+              {/* FULLY PAID */}
+
               {order.fullPaymentDone && (
-                <div
-                  style={{
-                    gridColumn: "1 / -1",
-                    background: "#22c55e18",
-                    border: "1px solid #22c55e40",
-                    borderRadius: 14,
-                    padding: 16,
-                    textAlign: "center",
-                    color: "#22c55e",
-                    fontWeight: 700,
-                    fontSize: 14,
-                  }}
-                >
-                  <FiCheckCircle size={18} style={{ marginBottom: 6 }} />
-                  <div>Order fully paid — ₹{order.totalAmount}</div>
+                <div className="od-center-message od-green-message">
+                  <FiCheckCircle size={18} />
+
+                  <div className="od-center-title">
+                    Order fully paid — {formatMoney(order.totalAmount)}
+                  </div>
                 </div>
               )}
 
-              {/* ── WAITING (no action needed from retailer yet) ── */}
+              {/* WAITING */}
+
               {!order.advanceRequested &&
                 !order.finalPaymentRequested &&
                 !order.fullPaymentDone &&
                 order.paymentStatus !== "paid" && (
-                  <div
-                    style={{
-                      gridColumn: "1 / -1",
-                      padding: "16px",
-                      borderRadius: "14px",
-                      background: "#e2e8f0",
-                      color: "#475569",
-                      fontWeight: "600",
-                      textAlign: "center",
-                      fontSize: 13,
-                    }}
-                  >
+                  <div className="od-waiting-message">
                     {order.orderStatus === "pending"
                       ? "⏳ Waiting for wholesaler to approve your order"
                       : order.orderStatus === "rejected"
                         ? "❌ This order was rejected"
-                        : "⏳ Waiting for wholesaler payment request"}
+                        : order.orderStatus === "delivered"
+                          ? "⏳ Waiting for final payment request"
+                          : "⏳ Waiting for wholesaler payment request"}
                   </div>
                 )}
             </div>
           </div>
         )}
       </div>
+
+      {/* =============================================
+          PAYMENT MODAL
+      ============================================== */}
 
       <FakePaymentModal
         open={paymentModal.open}
@@ -1028,229 +1305,1024 @@ export default function OrderDetails() {
   );
 }
 
+// =====================================================
+// STYLES
+// =====================================================
+
 const pageStyles = `
   @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap');
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  * {
+    box-sizing: border-box;
+  }
 
   .od-page {
+    --od-bg: #eef2f7;
+    --od-card: #ffffff;
+    --od-card-soft: #f8fafc;
+    --od-text: #0f172a;
+    --od-secondary: #475569;
+    --od-muted: #94a3b8;
+    --od-border: #f1f5f9;
+    --od-row-border: #f1f5f9;
+    --od-hover: #f1f5f9;
+    --od-input: #ffffff;
+    --od-input-border: #cbd5e1;
+    --od-shadow: rgba(15, 23, 42, 0.06);
+
     min-height: 100vh;
-    background: #eef2f7;
-    font-family: 'Outfit', sans-serif;
-    padding: 28px 32px;
+    background: var(--od-bg);
+    color: var(--od-text);
+
+    font-family:
+      'Outfit',
+      sans-serif;
+
+    padding:
+      28px
+      32px;
+
+    transition:
+      background 0.25s ease,
+      color 0.25s ease;
   }
 
-  /* Toast */
+  /* =====================================
+     DARK MODE
+  ====================================== */
+
+  .od-page.od-dark {
+    --od-bg: #0b1120;
+    --od-card: #111827;
+    --od-card-soft: #172033;
+    --od-text: #f8fafc;
+    --od-secondary: #cbd5e1;
+    --od-muted: #94a3b8;
+    --od-border: #253044;
+    --od-row-border: #1e293b;
+    --od-hover: #1e293b;
+    --od-input: #172033;
+    --od-input-border: #334155;
+    --od-shadow: rgba(0, 0, 0, 0.3);
+  }
+
+  /* =====================================
+     TOAST
+  ====================================== */
+
   .od-toast {
     position: fixed;
-    top: 20px; right: 20px;
-    color: white;
-    padding: 11px 18px;
+
+    top: 20px;
+    right: 20px;
+
+    z-index: 9999;
+
+    color: #ffffff;
+
+    padding:
+      11px
+      18px;
+
     border-radius: 12px;
-    z-index: 999;
+
     font-size: 13px;
-    font-weight: 600;
+    font-weight: 700;
+
     display: flex;
     align-items: center;
+
     gap: 8px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-    animation: slideIn 0.2s ease;
-    font-family: 'Outfit', sans-serif;
-  }
-  @keyframes slideIn {
-    from { opacity: 0; transform: translateX(20px); }
-    to   { opacity: 1; transform: translateX(0); }
+
+    box-shadow:
+      0 8px 25px
+      rgba(0,0,0,0.18);
+
+    animation:
+      odSlideIn
+      0.2s ease;
   }
 
-  /* Topbar */
+  @keyframes odSlideIn {
+    from {
+      opacity: 0;
+      transform:
+        translateX(20px);
+    }
+
+    to {
+      opacity: 1;
+      transform:
+        translateX(0);
+    }
+  }
+
+  /* =====================================
+     LOADING
+  ====================================== */
+
+  .od-loading {
+    min-height:
+      calc(100vh - 56px);
+
+    display: flex;
+    flex-direction: column;
+
+    justify-content: center;
+    align-items: center;
+
+    gap: 14px;
+
+    color:
+      var(--od-muted);
+
+    font-weight: 600;
+  }
+
+  .od-loading-icon {
+    width: 64px;
+    height: 64px;
+
+    border-radius: 18px;
+
+    background:
+      var(--od-card);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    box-shadow:
+      0 3px 12px
+      var(--od-shadow);
+  }
+
+  .od-simple-btn {
+    border: none;
+
+    border-radius: 10px;
+
+    background: #6366f1;
+    color: #ffffff;
+
+    padding:
+      10px
+      18px;
+
+    cursor: pointer;
+
+    font-family: inherit;
+    font-weight: 700;
+  }
+
+  /* =====================================
+     TOPBAR
+  ====================================== */
+
   .od-topbar {
     display: flex;
     align-items: center;
     justify-content: space-between;
+
+    gap: 16px;
+
     margin-bottom: 24px;
   }
+
   .od-topbar-left {
     display: flex;
     align-items: center;
+
     gap: 16px;
   }
-  .od-back-btn {
-    width: 40px; height: 40px;
-    border-radius: 12px;
-    border: none;
-    background: #fff;
-    color: #64748b;
-    cursor: pointer;
+
+  .od-topbar-actions {
     display: flex;
     align-items: center;
-    justify-content: center;
-    font-size: 16px;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-    transition: all 0.15s;
-  }
-  .od-back-btn:hover {
-    background: #f1f5f9;
-    color: #0f172a;
-    transform: translateX(-2px);
-  }
-  .od-title {
-    font-size: 26px;
-    font-weight: 800;
-    color: #0f172a;
-    letter-spacing: -0.5px;
-  }
-  .od-subtitle {
-    font-size: 12px;
-    color: #94a3b8;
-    font-weight: 500;
-    margin-top: 3px;
-    display: flex;
-    align-items: center;
-    gap: 3px;
-  }
 
-  /* Status badge */
-  .od-status-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    padding: 7px 16px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.2px;
-  }
-  .od-status-dot {
-    width: 7px; height: 7px;
-    border-radius: 50%;
-    background: rgba(255,255,255,0.7);
-  }
-
-  /* Card */
-  .od-card {
-    background: #fff;
-    border-radius: 18px;
-    overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-    border: 1.5px solid #f1f5f9;
-    margin-bottom: 16px;
-    animation: fadeUp 0.25s ease both;
-  }
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(12px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-
-  .od-card-strip {
-    height: 5px;
-    width: 100%;
-  }
-  .od-card-body {
-    padding: 22px 22px 18px;
-  }
-
-  /* Product header */
-  .od-product-header {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    margin-bottom: 20px;
-    padding-bottom: 18px;
-    border-bottom: 1px solid #f1f5f9;
-  }
-  .od-product-icon {
-    width: 50px; height: 50px;
-    border-radius: 14px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-  }
-  .od-product-name {
-    font-size: 18px;
-    font-weight: 800;
-    color: #0f172a;
-    letter-spacing: -0.3px;
-  }
-  .od-product-label {
-    font-size: 12px;
-    color: #94a3b8;
-    font-weight: 400;
-    margin-top: 3px;
-  }
-
-  /* Info rows */
-  .od-info-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 13px 0;
-    border-bottom: 1px solid #f8fafc;
-  }
-  .od-info-label {
-    font-size: 13px;
-    color: #94a3b8;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-weight: 500;
-  }
-  .od-info-value {
-    font-size: 14px;
-    font-weight: 700;
-    color: #0f172a;
-  }
-  .od-total {
-    font-size: 18px;
-    font-weight: 800;
-    color: #22c55e;
-  }
-
-  /* Actions card */
-  .od-actions-card {
-    background: #fff;
-    border-radius: 18px;
-    padding: 22px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-    border: 1.5px solid #f1f5f9;
-    margin-bottom: 16px;
-    animation: fadeUp 0.3s ease both;
-  }
-  .od-actions-title {
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    color: #94a3b8;
-    margin-bottom: 14px;
-  }
-  .od-actions-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
     gap: 10px;
   }
 
-  /* Action buttons */
-  .od-action-btn {
+  .od-back-btn,
+  .od-theme-btn {
+    width: 42px;
+    height: 42px;
+
+    border-radius: 12px;
+
+    border:
+      1px solid
+      var(--od-border);
+
+    background:
+      var(--od-card);
+
+    color:
+      var(--od-secondary);
+
+    cursor: pointer;
+
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    padding: 13px;
-    border-radius: 12px;
-    font-size: 13px;
+
+    font-size: 17px;
+
+    box-shadow:
+      0 2px 6px
+      var(--od-shadow);
+
+    transition:
+      all
+      0.18s ease;
+  }
+
+  .od-back-btn:hover,
+  .od-theme-btn:hover {
+    background:
+      var(--od-hover);
+
+    color:
+      var(--od-text);
+
+    transform:
+      translateY(-1px);
+  }
+
+  .od-back-btn:hover {
+    transform:
+      translateX(-2px);
+  }
+
+  .od-title {
+    font-size: 26px;
+
+    font-weight: 800;
+
+    color:
+      var(--od-text);
+
+    letter-spacing:
+      -0.5px;
+  }
+
+  .od-subtitle {
+    font-size: 12px;
+
+    color:
+      var(--od-muted);
+
+    font-weight: 500;
+
+    margin-top: 3px;
+
+    display: flex;
+    align-items: center;
+
+    gap: 3px;
+  }
+
+  /* =====================================
+     STATUS BADGE
+  ====================================== */
+
+  .od-status-badge {
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 7px;
+
+    padding:
+      7px
+      16px;
+
+    border-radius: 20px;
+
+    font-size: 12px;
+
     font-weight: 700;
+
+    letter-spacing:
+      0.2px;
+  }
+
+  .od-status-dot {
+    width: 7px;
+    height: 7px;
+
+    border-radius: 50%;
+
+    background:
+      rgba(
+        255,
+        255,
+        255,
+        0.75
+      );
+  }
+
+  /* =====================================
+     CARDS
+  ====================================== */
+
+  .od-card {
+    background:
+      var(--od-card);
+
+    border-radius: 18px;
+
+    overflow: hidden;
+
+    box-shadow:
+      0 3px 12px
+      var(--od-shadow);
+
+    border:
+      1.5px solid
+      var(--od-border);
+
+    margin-bottom: 16px;
+
+    animation:
+      odFadeUp
+      0.25s ease both;
+  }
+
+  @keyframes odFadeUp {
+    from {
+      opacity: 0;
+
+      transform:
+        translateY(12px);
+    }
+
+    to {
+      opacity: 1;
+
+      transform:
+        translateY(0);
+    }
+  }
+
+  .od-card-strip {
+    width: 100%;
+
+    height: 5px;
+  }
+
+  .od-card-body {
+    padding:
+      22px
+      22px
+      18px;
+  }
+
+  /* =====================================
+     PRODUCT HEADER
+  ====================================== */
+
+  .od-product-header {
+    display: flex;
+
+    align-items: center;
+
+    gap: 14px;
+
+    margin-bottom: 20px;
+
+    padding-bottom: 18px;
+
+    border-bottom:
+      1px solid
+      var(--od-border);
+  }
+
+  .od-product-icon {
+    width: 50px;
+    height: 50px;
+
+    border-radius: 14px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    flex-shrink: 0;
+  }
+
+  .od-product-name {
+    font-size: 18px;
+
+    font-weight: 800;
+
+    color:
+      var(--od-text);
+
+    letter-spacing:
+      -0.3px;
+  }
+
+  .od-product-label {
+    font-size: 12px;
+
+    color:
+      var(--od-muted);
+
+    margin-top: 3px;
+  }
+
+  /* =====================================
+     INFO
+  ====================================== */
+
+  .od-info-row {
+    display: flex;
+
+    align-items: center;
+
+    justify-content:
+      space-between;
+
+    gap: 20px;
+
+    padding:
+      13px
+      0;
+
+    border-bottom:
+      1px solid
+      var(--od-row-border);
+  }
+
+  .od-info-label {
+    font-size: 13px;
+
+    color:
+      var(--od-muted);
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 8px;
+
+    font-weight: 500;
+  }
+
+  .od-info-value {
+    font-size: 14px;
+
+    font-weight: 700;
+
+    color:
+      var(--od-text);
+
+    text-align: right;
+  }
+
+  .od-total {
+    font-size: 18px;
+
+    font-weight: 800;
+
+    color: #22c55e;
+  }
+
+  .od-payment-badge {
+    padding:
+      4px
+      14px;
+
+    border-radius: 20px;
+
+    font-size: 12px;
+
+    font-weight: 700;
+  }
+
+  .od-paid-small {
+    margin-left: 6px;
+
+    font-size: 11px;
+
+    color: #22c55e;
+  }
+
+  /* =====================================
+     ACTION CARD
+  ====================================== */
+
+  .od-actions-card {
+    background:
+      var(--od-card);
+
+    border-radius: 18px;
+
+    padding: 22px;
+
+    box-shadow:
+      0 3px 12px
+      var(--od-shadow);
+
+    border:
+      1.5px solid
+      var(--od-border);
+
+    margin-bottom: 16px;
+
+    animation:
+      odFadeUp
+      0.3s ease both;
+  }
+
+  .od-actions-title {
+    font-size: 11px;
+
+    font-weight: 700;
+
+    letter-spacing: 1px;
+
+    text-transform:
+      uppercase;
+
+    color:
+      var(--od-muted);
+
+    margin-bottom: 14px;
+  }
+
+  .od-actions-grid {
+    display: grid;
+
+    grid-template-columns:
+      1fr 1fr;
+
+    gap: 10px;
+  }
+
+  /* =====================================
+     BUTTON
+  ====================================== */
+
+  .od-action-btn {
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 8px;
+
+    padding: 13px;
+
+    border-radius: 12px;
+
+    font-size: 13px;
+
+    font-weight: 700;
+
     cursor: pointer;
-    transition: all 0.18s;
-    font-family: 'Outfit', sans-serif;
+
+    transition:
+      all
+      0.18s ease;
+
+    font-family:
+      'Outfit',
+      sans-serif;
   }
+
   .od-action-btn:hover:not(:disabled) {
-    transform: translateY(-2px);
-    filter: brightness(1.08);
-    box-shadow: 0 6px 18px rgba(0,0,0,0.12) !important;
+    transform:
+      translateY(-2px);
+
+    filter:
+      brightness(1.05);
+
+    box-shadow:
+      0 6px 18px
+      rgba(
+        0,
+        0,
+        0,
+        0.12
+      ) !important;
   }
+
   .od-action-btn:disabled {
-    cursor: not-allowed;
-    opacity: 0.65;
+    cursor:
+      not-allowed;
+
     transform: none;
+  }
+
+  .od-check {
+    font-size: 11px;
+  }
+
+  /* =====================================
+     PAYMENT ACTIONS
+  ====================================== */
+
+  .od-payment-actions {
+    margin-top: 12px;
+
+    display: grid;
+
+    grid-template-columns:
+      1fr 1fr;
+
+    gap: 10px;
+  }
+
+  .od-request-box {
+    grid-column:
+      1 / -1;
+
+    padding: 16px;
+
+    border-radius: 14px;
+  }
+
+  .od-warning-box {
+    background:
+      rgba(
+        245,
+        158,
+        11,
+        0.08
+      );
+
+    border:
+      1px solid
+      rgba(
+        245,
+        158,
+        11,
+        0.35
+      );
+  }
+
+  .od-success-box {
+    background:
+      rgba(
+        34,
+        197,
+        94,
+        0.08
+      );
+
+    border:
+      1px solid
+      rgba(
+        34,
+        197,
+        94,
+        0.30
+      );
+  }
+
+  .od-request-title {
+    font-size: 14px;
+
+    font-weight: 700;
+
+    color:
+      var(--od-text);
+
+    margin-bottom: 10px;
+  }
+
+  .od-request-description {
+    font-size: 13px;
+
+    color:
+      var(--od-secondary);
+
+    margin-bottom: 14px;
+
+    line-height: 1.6;
+  }
+
+  .od-request-box input {
+    width: 100%;
+
+    padding:
+      12px
+      14px;
+
+    border-radius: 12px;
+
+    background:
+      var(--od-input);
+
+    color:
+      var(--od-text);
+
+    border:
+      1px solid
+      var(--od-input-border);
+
+    outline: none;
+
+    margin-bottom: 14px;
+
+    font-size: 14px;
+
+    font-family:
+      'Outfit',
+      sans-serif;
+  }
+
+  .od-request-box input::placeholder {
+    color:
+      var(--od-muted);
+  }
+
+  .od-request-buttons {
+    display: flex;
+
+    gap: 10px;
+  }
+
+  .od-orange-btn {
+    background: #f59e0b;
+
+    color: #ffffff;
+
+    border: none;
+
+    flex: 1;
+  }
+
+  .od-clear-btn {
+    background:
+      var(--od-hover);
+
+    color:
+      var(--od-secondary);
+
+    border:
+      1px solid
+      var(--od-border);
+
+    flex: 1;
+  }
+
+  .od-final-btn {
+    grid-column:
+      1 / -1;
+
+    background: #22c55e;
+
+    color: #ffffff;
+
+    border: none;
+
+    box-shadow:
+      0 4px 14px
+      rgba(
+        34,
+        197,
+        94,
+        0.30
+      );
+  }
+
+  .od-full-btn {
+    width: 100%;
+  }
+
+  /* =====================================
+     STATUS MESSAGES
+  ====================================== */
+
+  .od-status-message,
+  .od-terminal-message {
+    grid-column:
+      1 / -1;
+
+    border-radius: 12px;
+
+    padding:
+      11px
+      14px;
+
+    font-size: 13px;
+
+    font-weight: 700;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 8px;
+  }
+
+  .od-terminal-message {
+    margin-top: 12px;
+  }
+
+  .od-green-message,
+  .od-success-message {
+    background:
+      rgba(
+        34,
+        197,
+        94,
+        0.09
+      );
+
+    border:
+      1px solid
+      rgba(
+        34,
+        197,
+        94,
+        0.28
+      );
+
+    color: #22c55e;
+  }
+
+  .od-orange-message {
+    background:
+      rgba(
+        245,
+        158,
+        11,
+        0.09
+      );
+
+    border:
+      1px solid
+      rgba(
+        245,
+        158,
+        11,
+        0.28
+      );
+
+    color: #f59e0b;
+  }
+
+  .od-error-message {
+    background:
+      rgba(
+        239,
+        68,
+        68,
+        0.08
+      );
+
+    border:
+      1px solid
+      rgba(
+        239,
+        68,
+        68,
+        0.25
+      );
+
+    color: #ef4444;
+  }
+
+  /* =====================================
+     RETAILER MESSAGE
+  ====================================== */
+
+  .od-center-message {
+    grid-column:
+      1 / -1;
+
+    border-radius: 14px;
+
+    padding: 16px;
+
+    text-align: center;
+  }
+
+  .od-purple-message {
+    background:
+      rgba(
+        139,
+        92,
+        246,
+        0.09
+      );
+
+    border:
+      1px solid
+      rgba(
+        139,
+        92,
+        246,
+        0.25
+      );
+
+    color: #8b5cf6;
+  }
+
+  .od-center-title {
+    font-size: 13px;
+
+    font-weight: 700;
+  }
+
+  .od-center-subtitle {
+    margin-top: 4px;
+
+    font-size: 12px;
+
+    color:
+      var(--od-muted);
+  }
+
+  .od-waiting-message {
+    grid-column:
+      1 / -1;
+
+    padding: 16px;
+
+    border-radius: 14px;
+
+    background:
+      var(--od-hover);
+
+    color:
+      var(--od-secondary);
+
+    font-weight: 600;
+
+    text-align: center;
+
+    font-size: 13px;
+  }
+
+  .od-orange-text {
+    color: #f59e0b;
+  }
+
+  .od-green-text {
+    color: #22c55e;
+  }
+
+  /* =====================================
+     DARK MODE BUTTON HELP
+  ====================================== */
+
+  .od-dark
+  .od-action-btn:disabled {
+    filter:
+      saturate(0.35);
+  }
+
+  /* =====================================
+     MOBILE
+  ====================================== */
+
+  @media (
+    max-width: 700px
+  ) {
+    .od-page {
+      padding:
+        18px
+        14px;
+    }
+
+    .od-title {
+      font-size: 21px;
+    }
+
+    .od-topbar {
+      align-items:
+        flex-start;
+    }
+
+    .od-status-badge {
+      padding:
+        7px
+        10px;
+
+      font-size: 11px;
+    }
+
+    .od-actions-grid {
+      grid-template-columns:
+        1fr;
+    }
+
+    .od-payment-actions {
+      grid-template-columns:
+        1fr;
+    }
+
+    .od-card-body,
+    .od-actions-card {
+      padding: 17px;
+    }
   }
 `;
