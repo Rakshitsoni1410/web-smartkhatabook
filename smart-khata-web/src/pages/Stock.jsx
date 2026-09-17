@@ -18,7 +18,7 @@ export default function Stock() {
   const navigate = useNavigate();
 
   const user = getStoredUser();
-
+  const [orderingId, setOrderingId] = useState(null);
   const [products, setProducts] = useState([]);
   const [wholesalers, setWholesalers] = useState({});
   const [suggestions, setSuggestions] = useState([]);
@@ -58,7 +58,9 @@ export default function Stock() {
 
   const fetchWholesalers = async (category) => {
     try {
-      const res = await api.get(`/api/user/wholesalers/${encodeURIComponent(category)}`);
+      const res = await api.get(
+        `/api/user/wholesalers/${encodeURIComponent(category)}`,
+      );
       setWholesalers((prev) => ({
         ...prev,
         [category]: res.data.users || [],
@@ -136,10 +138,7 @@ export default function Stock() {
 
   const handleUpdate = async () => {
     try {
-      await api.put(
-        `/api/product/update/${selected._id}`,
-        form,
-      );
+      await api.put(`/api/product/update/${selected._id}`, form);
       setEditOpen(false);
       fetchProducts();
     } catch (error) {
@@ -157,27 +156,70 @@ export default function Stock() {
   };
 
   const handleOrderNow = async (item) => {
+    if (!item?._id || !item?.name) {
+      showToast("Invalid product", "error");
+      return;
+    }
+
+    if (orderingId) {
+      return;
+    }
+
     try {
+      setOrderingId(item._id);
+
+      const orderUnit = item.inWeight
+        ? item.weightUnit || "kg"
+        : item.weightUnit || "piece";
+
       const res = await api.post("/api/orders/create", {
-        retailerId: user._id,
-        productName: item.name,
+        // Do NOT send retailerId.
+        // Backend gets retailer from authenticated token.
+        productName: item.name.trim(),
+
         quantity: 1,
-        unit: "piece",
+
+        unit: orderUnit,
       });
-      showToast(
-        "AI selected best wholesaler and order placed successfully",
-        "success",
-      );
-      console.log(res.data);
+
+      console.log("ORDER CREATED:", res.data);
+
+      const selectedShop =
+        res.data?.selectedWholesaler?.shopName ||
+        res.data?.selectedWholesaler?.name;
+
+      const selectedPrice = res.data?.selection?.selectedPrice;
+
+      let message = "Order placed successfully";
+
+      if (selectedShop) {
+        message += ` • ${selectedShop}`;
+      }
+
+      if (selectedPrice !== undefined) {
+        message += ` • ₹${selectedPrice}`;
+      }
+
+      showToast(message, "success");
+
+      // Refresh retailer stock/order related UI if needed.
+      await fetchProducts();
     } catch (error) {
-      console.log(error);
-      showToast(
-        error?.response?.data?.message || "Failed to place order",
-        "error",
-      );
+      const backendData = error?.response?.data;
+
+      console.error("CREATE ORDER FAILED:", {
+        status: error?.response?.status,
+
+        data: backendData,
+
+        message: error?.message,
+      });
+
+      showToast(backendData?.message || "Failed to place order", "error");
+    } finally {
+      setOrderingId(null);
     }
   };
-
   const filtered = products.filter((item) =>
     item.name.toLowerCase().includes(search.toLowerCase()),
   );
@@ -303,8 +345,9 @@ export default function Stock() {
                   <button
                     className="order-btn"
                     onClick={() => handleOrderNow(item)}
+                    disabled={orderingId === item._id}
                   >
-                    Order Now
+                    {orderingId === item._id ? "Ordering..." : "Order Now"}
                   </button>
                 </div>
               </div>
