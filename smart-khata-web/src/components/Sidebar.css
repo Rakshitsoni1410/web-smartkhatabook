@@ -413,3 +413,94 @@
 .sb-tooltip-wrap:hover .sb-tooltip {
   opacity: 1;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   MOBILE OFF-CANVAS DRAWER
+   Everything below is scoped inside the 768px media query (plus the two
+   trigger/backdrop base rules that hide them on desktop) — so none of
+   this touches desktop layout at all.
+═══════════════════════════════════════════════════════════════════════ */
+
+.sb-mobile-trigger {
+  display: none;
+}
+.sb-mobile-backdrop {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  /* ── Hamburger trigger ── */
+  .sb-mobile-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    top: 14px;
+    left: 14px;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    border: 1px solid #e8e8f0;
+    background: #ffffff;
+    color: #1a1a2e;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    z-index: 1002;
+    cursor: pointer;
+  }
+
+  /* ── Backdrop ── */
+  .sb-mobile-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.45);
+    z-index: 999;
+    animation: sbBackdropIn 0.2s ease;
+  }
+  @keyframes sbBackdropIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  /* ── The drawer itself ──
+     Hidden off-canvas by default; slides in when .sb-mobile-open is added.
+     position: sticky from the desktop base rule is overridden to fixed
+     here so it detaches from document flow and overlays the page. */
+  .sb-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 260px;
+    max-width: 82vw;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+    z-index: 1000;
+  }
+  .sb-sidebar.sb-mobile-open {
+    transform: translateX(0);
+  }
+
+  /* Force the drawer to its full expanded width on mobile even if the
+     user had previously collapsed it on desktop — a collapsed icon-only
+     rail doesn't make sense as something people tap through on mobile. */
+  .sb-sidebar.sb-collapsed {
+    width: 260px;
+    max-width: 82vw;
+  }
+  .sb-sidebar.sb-collapsed .sb-brand-text,
+  .sb-sidebar.sb-collapsed .sb-item-label,
+  .sb-sidebar.sb-collapsed .sb-section-label,
+  .sb-sidebar.sb-collapsed .sb-profile-text {
+    display: flex;
+  }
+  .sb-sidebar.sb-collapsed .sb-section-label {
+    display: block;
+  }
+
+  /* The desktop collapse/expand toggle is meaningless on mobile — the
+     drawer already fully hides/shows via the hamburger + backdrop. */
+  .sb-toggle {
+    display: none;
+  }
+}

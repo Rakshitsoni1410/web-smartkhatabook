@@ -1,27 +1,57 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import {
-  FiUser,
-  FiPhone,
-  FiMail,
-  FiLock,
-  FiMapPin,
-  FiBriefcase,
-  FiHome,
-  FiShoppingBag,
-  FiPackage,
-  FiArrowRight,
-  FiCheck,
-  FiX,
+  useEffect,
+  useState,
+} from "react";
+
+import {
+  useNavigate,
+} from "react-router-dom";
+
+import {
   FiAlertCircle,
+  FiArrowLeft,
+  FiArrowRight,
+  FiBriefcase,
+  FiCheck,
+  FiEye,
+  FiEyeOff,
+  FiHome,
+  FiLock,
+  FiMail,
+  FiMapPin,
+  FiMoon,
+  FiPackage,
+  FiPhone,
+  FiShoppingBag,
+  FiSun,
+  FiUser,
+  FiX,
 } from "react-icons/fi";
-import axios from "axios";
+
+import api from "../api";
+
 import "./Signup.css";
 
+// =====================================================
+// CONSTANTS
+// =====================================================
+
 const ROLES = [
-  { value: "Customer", icon: <FiUser />, label: "Customer" },
-  { value: "Retailer", icon: <FiShoppingBag />, label: "Retailer" },
-  { value: "Wholesaler", icon: <FiPackage />, label: "Wholesaler" },
+  {
+    value: "Customer",
+    icon: <FiUser />,
+    label: "Customer",
+  },
+  {
+    value: "Retailer",
+    icon: <FiShoppingBag />,
+    label: "Retailer",
+  },
+  {
+    value: "Wholesaler",
+    icon: <FiPackage />,
+    label: "Wholesaler",
+  },
 ];
 
 const BUSINESS_TYPES = [
@@ -47,48 +77,140 @@ const BUSINESS_TYPES = [
   "Other",
 ];
 
-/* ── Toast ─────────────────────────────────────────────── */
-function Toast({ toasts, removeToast }) {
+// =====================================================
+// TOAST
+// =====================================================
+
+function SignupToast({
+  toasts,
+  removeToast,
+}) {
   return (
-    <div className="toast-container">
-      {toasts.map((t) => (
-        <div key={t.id} className={`toast toast-${t.type}`}>
-          <span className="toast-icon">
-            {t.type === "success" ? (
-              <FiCheck size={15} />
-            ) : (
-              <FiAlertCircle size={15} />
-            )}
-          </span>
-          <span className="toast-msg">{t.message}</span>
-          <button className="toast-close" onClick={() => removeToast(t.id)}>
-            <FiX size={13} />
-          </button>
-        </div>
-      ))}
+    <div className="signup-toast-container">
+      {toasts.map(
+        (toast) => (
+          <div
+            key={toast.id}
+            className={`signup-toast ${
+              toast.type ===
+              "success"
+                ? "signup-toast-success"
+                : "signup-toast-error"
+            }`}
+            role="status"
+          >
+            <span className="signup-toast-icon">
+              {toast.type ===
+              "success" ? (
+                <FiCheck />
+              ) : (
+                <FiAlertCircle />
+              )}
+            </span>
+
+            <span className="signup-toast-message">
+              {toast.message}
+            </span>
+
+            <button
+              type="button"
+              className="signup-toast-close"
+              onClick={() =>
+                removeToast(
+                  toast.id
+                )
+              }
+              aria-label="Close notification"
+            >
+              <FiX />
+            </button>
+          </div>
+        )
+      )}
     </div>
   );
 }
 
-function useToast() {
-  const [toasts, setToasts] = useState([]);
-  const removeToast = (id) =>
-    setToasts((prev) => prev.filter((t) => t.id !== id));
-  const addToast = (message, type = "success", duration = 3500) => {
-    const id = Date.now();
-    setToasts((prev) => [...prev, { id, message, type }]);
-    setTimeout(() => removeToast(id), duration);
+// =====================================================
+// TOAST HOOK
+// =====================================================
+
+function useSignupToast() {
+  const [
+    toasts,
+    setToasts,
+  ] = useState([]);
+
+  const removeToast = (
+    id
+  ) => {
+    setToasts(
+      (previous) =>
+        previous.filter(
+          (toast) =>
+            toast.id !== id
+        )
+    );
   };
-  return { toasts, addToast, removeToast };
+
+  const addToast = (
+    message,
+    type = "success",
+    duration = 3500
+  ) => {
+    const id =
+      `${Date.now()}-${Math.random()}`;
+
+    setToasts(
+      (previous) => [
+        ...previous,
+        {
+          id,
+          message,
+          type,
+        },
+      ]
+    );
+
+    setTimeout(() => {
+      removeToast(id);
+    }, duration);
+  };
+
+  return {
+    toasts,
+    addToast,
+    removeToast,
+  };
 }
 
-/* ── Main ───────────────────────────────────────────────── */
-export default function Signup() {
-  const navigate = useNavigate();
-  const [step, setStep] = useState(1);
-  const { toasts, addToast, removeToast } = useToast();
+// =====================================================
+// SIGNUP
+// =====================================================
 
-  const [form, setForm] = useState({
+export default function Signup() {
+  const navigate =
+    useNavigate();
+
+  const [
+    step,
+    setStep,
+  ] = useState(1);
+
+  const {
+    toasts,
+    addToast,
+    removeToast,
+  } = useSignupToast();
+
+  // =====================================================
+  // FORM
+  // =====================================================
+
+  const [
+    form,
+    setForm,
+  ] = useState({
     name: "",
     phone: "",
     email: "",
@@ -99,93 +221,412 @@ export default function Signup() {
     password: "",
     confirm: "",
   });
-  const [errors, setErrors] = useState({});
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-    setErrors({ ...errors, [e.target.name]: "" });
-  };
+  const [
+    errors,
+    setErrors,
+  ] = useState({});
 
-  const selectRole = (role) => {
-    setForm({ ...form, role });
-    setErrors({ ...errors, role: "" });
-  };
+  const [
+    submitting,
+    setSubmitting,
+  ] = useState(false);
 
-  const validateStep1 = () => {
-    const e = {};
-    if (!form.name.trim()) e.name = "Name required";
-    if (!form.phone.trim()) e.phone = "Phone required";
-    else if (form.phone.length < 10) e.phone = "Enter valid 10-digit number";
-    if (!form.email.trim()) e.email = "Email required";
-    if (!form.role) e.role = "Please select a role";
-    return e;
-  };
+  const [
+    showPassword,
+    setShowPassword,
+  ] = useState(false);
 
-  const validateStep2 = () => {
-    const e = {};
-    if (form.role !== "Customer") {
-      if (!form.shopName.trim()) e.shopName = "Shop name required";
-      if (!form.businessType) e.businessType = "Business type required";
+  const [
+    showConfirm,
+    setShowConfirm,
+  ] = useState(false);
+
+  // =====================================================
+  // DARK MODE
+  // =====================================================
+
+  const [
+    darkMode,
+    setDarkMode,
+  ] = useState(() => {
+    try {
+      const saved =
+        localStorage.getItem(
+          "smartkhata-theme"
+        );
+
+      if (
+        saved === "dark"
+      ) {
+        return true;
+      }
+
+      if (
+        saved === "light"
+      ) {
+        return false;
+      }
+
+      return (
+        window.matchMedia?.(
+          "(prefers-color-scheme: dark)"
+        )?.matches || false
+      );
+    } catch {
+      return false;
     }
-    if (!form.address.trim()) e.address = "Address required";
-    if (!form.password) e.password = "Password required";
-    if (form.password !== form.confirm) e.confirm = "Passwords do not match";
-    return e;
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        "smartkhata-theme",
+        darkMode
+          ? "dark"
+          : "light"
+      );
+    } catch {
+      // Ignore storage errors
+    }
+  }, [darkMode]);
+
+  // =====================================================
+  // INPUT CHANGE
+  // =====================================================
+
+  const handleChange = (
+    event
+  ) => {
+    const {
+      name,
+      value,
+    } = event.target;
+
+    let nextValue = value;
+
+    if (
+      name === "phone"
+    ) {
+      nextValue = value
+        .replace(
+          /\D/g,
+          ""
+        )
+        .slice(0, 10);
+    }
+
+    setForm(
+      (previous) => ({
+        ...previous,
+        [name]:
+          nextValue,
+      })
+    );
+
+    setErrors(
+      (previous) => ({
+        ...previous,
+        [name]: "",
+      })
+    );
   };
+
+  // =====================================================
+  // ROLE
+  // =====================================================
+
+  const selectRole = (
+    role
+  ) => {
+    setForm(
+      (previous) => ({
+        ...previous,
+        role,
+      })
+    );
+
+    setErrors(
+      (previous) => ({
+        ...previous,
+        role: "",
+      })
+    );
+  };
+
+  // =====================================================
+  // STEP 1 VALIDATION
+  // =====================================================
+
+  const validateStep1 =
+    () => {
+      const nextErrors =
+        {};
+
+      if (
+        !form.name.trim()
+      ) {
+        nextErrors.name =
+          "Name is required";
+      }
+
+      if (
+        !form.phone.trim()
+      ) {
+        nextErrors.phone =
+          "Phone is required";
+      } else if (
+        !/^\d{10}$/.test(
+          form.phone
+        )
+      ) {
+        nextErrors.phone =
+          "Enter a valid 10-digit number";
+      }
+
+      if (
+        !form.email.trim()
+      ) {
+        nextErrors.email =
+          "Email is required";
+      } else if (
+        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
+          form.email.trim()
+        )
+      ) {
+        nextErrors.email =
+          "Enter a valid email";
+      }
+
+      if (!form.role) {
+        nextErrors.role =
+          "Please select a role";
+      }
+
+      return nextErrors;
+    };
+
+  // =====================================================
+  // STEP 2 VALIDATION
+  // =====================================================
+
+  const validateStep2 =
+    () => {
+      const nextErrors =
+        {};
+
+      if (
+        form.role !==
+        "Customer"
+      ) {
+        if (
+          !form.shopName.trim()
+        ) {
+          nextErrors.shopName =
+            "Shop name is required";
+        }
+
+        if (
+          !form.businessType
+        ) {
+          nextErrors.businessType =
+            "Business type is required";
+        }
+      }
+
+      if (
+        !form.address.trim()
+      ) {
+        nextErrors.address =
+          "Address is required";
+      }
+
+      if (!form.password) {
+        nextErrors.password =
+          "Password is required";
+      } else if (
+        form.password.length <
+        6
+      ) {
+        nextErrors.password =
+          "Password must be at least 6 characters";
+      }
+
+      if (
+        !form.confirm
+      ) {
+        nextErrors.confirm =
+          "Confirm your password";
+      } else if (
+        form.password !==
+        form.confirm
+      ) {
+        nextErrors.confirm =
+          "Passwords do not match";
+      }
+
+      return nextErrors;
+    };
+
+  // =====================================================
+  // NEXT STEP
+  // =====================================================
 
   const goNext = () => {
-    const errs = validateStep1();
-    if (Object.keys(errs).length > 0) {
-      setErrors(errs);
+    const nextErrors =
+      validateStep1();
+
+    if (
+      Object.keys(
+        nextErrors
+      ).length > 0
+    ) {
+      setErrors(
+        nextErrors
+      );
+
       return;
     }
+
+    setErrors({});
+
     setStep(2);
+
+    window.scrollTo?.({
+      top: 0,
+      behavior: "smooth",
+    });
   };
 
-  const handleSignup = async () => {
-    const errs = validateStep2();
-    if (Object.keys(errs).length > 0) {
-      setErrors(errs);
-      return;
-    }
+  // =====================================================
+  // SIGNUP
+  // =====================================================
 
-    try {
-      const response = await axios.post(
-        "https://backend-of-smartkhata-book-vkcv.vercel.app/api/user/register",
-        {
-          name: form.name,
-          phone: form.phone,
-          email: form.email,
-          role: form.role,
-          shopName: form.shopName || "N/A",
-          businessType: form.businessType || "N/A",
-          address: form.address,
-          password: form.password,
-        },
-        { headers: { "Content-Type": "application/json" } },
-      );
-      if (response.data.success) {
-        addToast("Account created successfully! 🎉", "success");
-      } else {
-        addToast(response.data.message || "Signup failed", "error");
+  const handleSignup =
+    async () => {
+      if (submitting) {
+        return;
       }
-    } catch (err) {
-      addToast(
-        err.response?.data?.message || "Signup failed. Try again.",
-        "error",
-      );
-    }
-  };
+
+      const nextErrors =
+        validateStep2();
+
+      if (
+        Object.keys(
+          nextErrors
+        ).length > 0
+      ) {
+        setErrors(
+          nextErrors
+        );
+
+        return;
+      }
+
+      try {
+        setSubmitting(true);
+
+        const response =
+          await api.post(
+            "/api/user/register",
+            {
+              name:
+                form.name.trim(),
+
+              phone:
+                form.phone.trim(),
+
+              email:
+                form.email
+                  .trim()
+                  .toLowerCase(),
+
+              role:
+                form.role,
+
+              shopName:
+                form.shopName
+                  .trim() ||
+                "N/A",
+
+              businessType:
+                form.businessType ||
+                "N/A",
+
+              address:
+                form.address.trim(),
+
+              password:
+                form.password,
+            }
+          );
+
+        if (
+          response.data
+            ?.success
+        ) {
+          addToast(
+            "Account created successfully! 🎉",
+            "success"
+          );
+
+          setTimeout(() => {
+            navigate("/");
+          }, 1300);
+        } else {
+          addToast(
+            response.data
+              ?.message ||
+              "Signup failed",
+            "error"
+          );
+        }
+      } catch (error) {
+        console.error(
+          "SIGNUP ERROR:",
+          error
+        );
+
+        addToast(
+          error?.response?.data
+            ?.message ||
+            "Signup failed. Try again.",
+          "error"
+        );
+      } finally {
+        setSubmitting(false);
+      }
+    };
+
+  // =====================================================
+  // UI
+  // =====================================================
 
   return (
-    <div className="signup-page">
-      <Toast toasts={toasts} removeToast={removeToast} />
+    <div
+      className={`signup-page ${
+        darkMode
+          ? "signup-dark"
+          : ""
+      }`}
+    >
+      <SignupToast
+        toasts={toasts}
+        removeToast={
+          removeToast
+        }
+      />
 
-      {/* ── Left panel ── */}
-      <div className="signup-left">
-        <div className="left-inner">
-          <div className="brand">
-            <div className="brand-icon">
+      {/* =====================================
+          LEFT PANEL
+      ====================================== */}
+
+      <aside className="signup-left">
+        <div className="signup-left-inner">
+          {/* BRAND */}
+
+          <div className="signup-brand">
+            <div className="signup-brand-icon">
               <svg
                 width="22"
                 height="22"
@@ -195,253 +636,716 @@ export default function Signup() {
                 viewBox="0 0 24 24"
               >
                 <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+
                 <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
               </svg>
             </div>
-            <span className="brand-name">Smart Khatabook</span>
+
+            <span className="signup-brand-name">
+              Smart Khatabook
+            </span>
           </div>
 
-          <div className="left-hero">
-            <h1>Manage your business with clarity</h1>
-            <p>One platform for billing, ledgers, inventory, and reports.</p>
+          {/* HERO */}
+
+          <div className="signup-left-hero">
+            <span className="signup-left-label">
+              SMART BUSINESS
+            </span>
+
+            <h1>
+              Manage your
+              business with
+              clarity.
+            </h1>
+
+            <p>
+              One platform for
+              billing, ledgers,
+              inventory and
+              reports.
+            </p>
           </div>
 
-          <ul className="feature-list">
+          {/* FEATURES */}
+
+          <ul className="signup-feature-list">
             {[
               "Billing & Invoicing",
               "Customer Ledger",
               "Stock Tracking",
               "Business Reports",
-            ].map((f) => (
-              <li key={f}>
-                <span className="feature-dot">
-                  <FiCheck size={11} />
-                </span>
-                {f}
-              </li>
-            ))}
+            ].map(
+              (feature) => (
+                <li
+                  key={
+                    feature
+                  }
+                >
+                  <span className="signup-feature-dot">
+                    <FiCheck />
+                  </span>
+
+                  {feature}
+                </li>
+              )
+            )}
           </ul>
 
-          <div className="left-footer">
-            <p>
-              Trusted by <strong>10,000+ businesses</strong> across India
-            </p>
+          <div className="signup-left-footer">
+            <strong>
+              Smart Khatabook
+            </strong>
+
+            <span>
+              Manage everything
+              from one place.
+            </span>
           </div>
         </div>
 
-        <div className="left-decor" aria-hidden="true">
-          <div className="decor-circle c1" />
-          <div className="decor-circle c2" />
-        </div>
-      </div>
+        <div
+          className="signup-left-decor"
+          aria-hidden="true"
+        >
+          <span className="signup-decor-circle signup-decor-one" />
 
-      {/* ── Right panel ── */}
-      <div className="signup-right">
+          <span className="signup-decor-circle signup-decor-two" />
+        </div>
+      </aside>
+
+      {/* =====================================
+          RIGHT PANEL
+      ====================================== */}
+
+      <main className="signup-right">
         <div className="signup-card">
-          <div className="card-header">
-            <div className="step-pills">
-              <div className={`step-pill ${step >= 1 ? "active" : ""}`}>
-                <span>1</span> Account
-              </div>
-              <div className="step-line" />
-              <div className={`step-pill ${step >= 2 ? "active" : ""}`}>
-                <span>2</span> Details
-              </div>
+          {/* TOP CONTROLS */}
+
+          <div className="signup-card-top">
+            <button
+              type="button"
+              className="signup-back-login"
+              onClick={() =>
+                navigate("/")
+              }
+            >
+              <FiArrowLeft />
+
+              <span>
+                Login
+              </span>
+            </button>
+
+            <button
+              type="button"
+              className="signup-theme-btn"
+              onClick={() =>
+                setDarkMode(
+                  (
+                    previous
+                  ) =>
+                    !previous
+                )
+              }
+              title={
+                darkMode
+                  ? "Light mode"
+                  : "Dark mode"
+              }
+              aria-label={
+                darkMode
+                  ? "Switch to light mode"
+                  : "Switch to dark mode"
+              }
+            >
+              {darkMode ? (
+                <FiSun />
+              ) : (
+                <FiMoon />
+              )}
+            </button>
+          </div>
+
+          {/* MOBILE BRAND */}
+
+          <div className="signup-mobile-brand">
+            <div className="signup-mobile-brand-icon">
+              <FiShoppingBag />
             </div>
-            <h2>{step === 1 ? "Create account" : "Business & security"}</h2>
+
+            <span>
+              Smart Khatabook
+            </span>
+          </div>
+
+          {/* =====================================
+              STEPS
+          ====================================== */}
+
+          <div className="signup-step-area">
+            <div
+              className={`signup-step ${
+                step >= 1
+                  ? "signup-step-active"
+                  : ""
+              }`}
+            >
+              <span>
+                1
+              </span>
+
+              <strong>
+                Account
+              </strong>
+            </div>
+
+            <div
+              className={`signup-step-line ${
+                step >= 2
+                  ? "signup-step-line-active"
+                  : ""
+              }`}
+            />
+
+            <div
+              className={`signup-step ${
+                step >= 2
+                  ? "signup-step-active"
+                  : ""
+              }`}
+            >
+              <span>
+                2
+              </span>
+
+              <strong>
+                Details
+              </strong>
+            </div>
+          </div>
+
+          {/* HEADER */}
+
+          <div className="signup-card-header">
+            <span className="signup-card-label">
+              STEP {step} OF 2
+            </span>
+
+            <h2>
+              {step === 1
+                ? "Create your account"
+                : "Business & security"}
+            </h2>
+
             <p>
               {step === 1
-                ? "Start with your basic information"
-                : "Almost there — a few more details"}
+                ? "Start with your basic information."
+                : "Almost there — complete your profile and secure your account."}
             </p>
           </div>
 
-          {step === 1 && (
-            <div className="form-body">
-              <div className="section-label">Account type</div>
-              <div className="role-grid">
-                {ROLES.map(({ value, icon, label }) => (
-                  <button
-                    key={value}
-                    type="button"
-                    className={`role-btn ${form.role === value ? "selected" : ""}`}
-                    onClick={() => selectRole(value)}
-                  >
-                    <span className="role-icon">{icon}</span>
-                    <span>{label}</span>
-                    {form.role === value && (
-                      <span className="role-check">
-                        <FiCheck size={10} />
-                      </span>
-                    )}
-                  </button>
-                ))}
-              </div>
-              {errors.role && <p className="field-error">{errors.role}</p>}
+          {/* =====================================
+              STEP 1
+          ====================================== */}
 
-              <div className="section-label" style={{ marginTop: "1.25rem" }}>
-                Personal details
+          {step === 1 && (
+            <div className="signup-form">
+              <div className="signup-section-label">
+                Account Type
               </div>
-              <div className="field-grid">
-                <Field
-                  icon={<FiUser />}
+
+              <div className="signup-role-grid">
+                {ROLES.map(
+                  ({
+                    value,
+                    icon,
+                    label,
+                  }) => (
+                    <button
+                      key={
+                        value
+                      }
+                      type="button"
+                      className={`signup-role-btn ${
+                        form.role ===
+                        value
+                          ? "signup-role-selected"
+                          : ""
+                      }`}
+                      onClick={() =>
+                        selectRole(
+                          value
+                        )
+                      }
+                    >
+                      <span className="signup-role-icon">
+                        {icon}
+                      </span>
+
+                      <span className="signup-role-name">
+                        {
+                          label
+                        }
+                      </span>
+
+                      {form.role ===
+                        value && (
+                        <span className="signup-role-check">
+                          <FiCheck />
+                        </span>
+                      )}
+                    </button>
+                  )
+                )}
+              </div>
+
+              {errors.role && (
+                <p className="signup-field-error">
+                  {
+                    errors.role
+                  }
+                </p>
+              )}
+
+              <div className="signup-section-label signup-section-space">
+                Personal Details
+              </div>
+
+              <div className="signup-field-grid">
+                <SignupField
+                  icon={
+                    <FiUser />
+                  }
                   label="Full name"
                   name="name"
                   placeholder="Your full name"
-                  value={form.name}
-                  onChange={handleChange}
-                  error={errors.name}
+                  value={
+                    form.name
+                  }
+                  onChange={
+                    handleChange
+                  }
+                  error={
+                    errors.name
+                  }
+                  autoComplete="name"
                 />
-                <Field
-                  icon={<FiPhone />}
+
+                <SignupField
+                  icon={
+                    <FiPhone />
+                  }
                   label="Phone"
                   name="phone"
+                  type="tel"
+                  inputMode="numeric"
                   placeholder="10-digit number"
-                  value={form.phone}
-                  onChange={handleChange}
-                  error={errors.phone}
-                  maxLength="10"
+                  value={
+                    form.phone
+                  }
+                  onChange={
+                    handleChange
+                  }
+                  error={
+                    errors.phone
+                  }
+                  maxLength={10}
+                  autoComplete="tel"
                 />
               </div>
-              <Field
-                icon={<FiMail />}
+
+              <SignupField
+                icon={
+                  <FiMail />
+                }
                 label="Email address"
                 name="email"
                 type="email"
                 placeholder="you@example.com"
-                value={form.email}
-                onChange={handleChange}
-                error={errors.email}
+                value={
+                  form.email
+                }
+                onChange={
+                  handleChange
+                }
+                error={
+                  errors.email
+                }
+                autoComplete="email"
               />
 
-              <button className="btn-primary" onClick={goNext}>
-                Continue <FiArrowRight size={15} />
+              <button
+                type="button"
+                className="signup-primary-btn"
+                onClick={
+                  goNext
+                }
+              >
+                Continue
+
+                <FiArrowRight />
               </button>
             </div>
           )}
 
+          {/* =====================================
+              STEP 2
+          ====================================== */}
+
           {step === 2 && (
-            <div className="form-body">
-              {form.role !== "Customer" && (
+            <div className="signup-form">
+              {form.role !==
+                "Customer" && (
                 <>
-                  <div className="section-label">Business details</div>
-                  <div className="field-grid">
-                    <Field
-                      icon={<FiHome />}
+                  <div className="signup-section-label">
+                    Business Details
+                  </div>
+
+                  <div className="signup-field-grid">
+                    <SignupField
+                      icon={
+                        <FiHome />
+                      }
                       label="Shop name"
                       name="shopName"
                       placeholder="Your shop name"
-                      value={form.shopName}
-                      onChange={handleChange}
-                      error={errors.shopName}
+                      value={
+                        form.shopName
+                      }
+                      onChange={
+                        handleChange
+                      }
+                      error={
+                        errors.shopName
+                      }
                     />
-                    <SelectField
-                      icon={<FiBriefcase />}
+
+                    <SignupSelectField
+                      icon={
+                        <FiBriefcase />
+                      }
                       label="Business type"
                       name="businessType"
-                      value={form.businessType}
-                      onChange={handleChange}
-                      error={errors.businessType}
-                      options={BUSINESS_TYPES}
+                      value={
+                        form.businessType
+                      }
+                      onChange={
+                        handleChange
+                      }
+                      error={
+                        errors.businessType
+                      }
+                      options={
+                        BUSINESS_TYPES
+                      }
                     />
                   </div>
                 </>
               )}
 
               <div
-                className="section-label"
-                style={{ marginTop: form.role !== "Customer" ? "1.25rem" : 0 }}
+                className={`signup-section-label ${
+                  form.role !==
+                  "Customer"
+                    ? "signup-section-space"
+                    : ""
+                }`}
               >
                 Location
               </div>
-              <Field
-                icon={<FiMapPin />}
+
+              <SignupField
+                icon={
+                  <FiMapPin />
+                }
                 label="Address"
                 name="address"
                 placeholder="Shop or home address"
-                value={form.address}
-                onChange={handleChange}
-                error={errors.address}
+                value={
+                  form.address
+                }
+                onChange={
+                  handleChange
+                }
+                error={
+                  errors.address
+                }
+                autoComplete="street-address"
               />
 
-              <div className="section-label" style={{ marginTop: "1.25rem" }}>
+              <div className="signup-section-label signup-section-space">
                 Security
               </div>
-              <div className="field-grid">
-                <Field
-                  icon={<FiLock />}
+
+              <div className="signup-field-grid">
+                <SignupField
+                  icon={
+                    <FiLock />
+                  }
                   label="Password"
                   name="password"
-                  type="password"
-                  placeholder="Create password"
-                  value={form.password}
-                  onChange={handleChange}
-                  error={errors.password}
+                  type={
+                    showPassword
+                      ? "text"
+                      : "password"
+                  }
+                  placeholder="Minimum 6 characters"
+                  value={
+                    form.password
+                  }
+                  onChange={
+                    handleChange
+                  }
+                  error={
+                    errors.password
+                  }
+                  autoComplete="new-password"
+                  endAction={
+                    <button
+                      type="button"
+                      className="signup-eye-btn"
+                      onClick={() =>
+                        setShowPassword(
+                          (
+                            previous
+                          ) =>
+                            !previous
+                        )
+                      }
+                      aria-label={
+                        showPassword
+                          ? "Hide password"
+                          : "Show password"
+                      }
+                    >
+                      {showPassword ? (
+                        <FiEyeOff />
+                      ) : (
+                        <FiEye />
+                      )}
+                    </button>
+                  }
                 />
-                <Field
-                  icon={<FiLock />}
+
+                <SignupField
+                  icon={
+                    <FiLock />
+                  }
                   label="Confirm password"
                   name="confirm"
-                  type="password"
+                  type={
+                    showConfirm
+                      ? "text"
+                      : "password"
+                  }
                   placeholder="Repeat password"
-                  value={form.confirm}
-                  onChange={handleChange}
-                  error={errors.confirm}
+                  value={
+                    form.confirm
+                  }
+                  onChange={
+                    handleChange
+                  }
+                  error={
+                    errors.confirm
+                  }
+                  autoComplete="new-password"
+                  endAction={
+                    <button
+                      type="button"
+                      className="signup-eye-btn"
+                      onClick={() =>
+                        setShowConfirm(
+                          (
+                            previous
+                          ) =>
+                            !previous
+                        )
+                      }
+                      aria-label={
+                        showConfirm
+                          ? "Hide password"
+                          : "Show password"
+                      }
+                    >
+                      {showConfirm ? (
+                        <FiEyeOff />
+                      ) : (
+                        <FiEye />
+                      )}
+                    </button>
+                  }
                 />
               </div>
 
-              <div className="btn-row">
-                <button className="btn-ghost" onClick={() => setStep(1)}>
-                  ← Back
+              <div className="signup-button-row">
+                <button
+                  type="button"
+                  className="signup-ghost-btn"
+                  onClick={() =>
+                    setStep(1)
+                  }
+                  disabled={
+                    submitting
+                  }
+                >
+                  <FiArrowLeft />
+
+                  Back
                 </button>
-                <button className="btn-primary" onClick={handleSignup}>
-                  Create account <FiCheck size={15} />
+
+                <button
+                  type="button"
+                  className="signup-primary-btn"
+                  onClick={
+                    handleSignup
+                  }
+                  disabled={
+                    submitting
+                  }
+                >
+                  {submitting ? (
+                    <>
+                      <span className="signup-spinner" />
+
+                      Creating...
+                    </>
+                  ) : (
+                    <>
+                      Create Account
+
+                      <FiCheck />
+                    </>
+                  )}
                 </button>
               </div>
             </div>
           )}
 
-          <p className="login-hint">
-            Already have an account?{" "}
-            <span onClick={() => navigate("/")} className="login-link">
-              Sign in
+          {/* LOGIN */}
+
+          <div className="signup-login-hint">
+            <span>
+              Already have an
+              account?
             </span>
-          </p>
+
+            <button
+              type="button"
+              onClick={() =>
+                navigate("/")
+              }
+            >
+              Sign in
+            </button>
+          </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }
 
-function Field({ icon, label, error, ...props }) {
+// =====================================================
+// FIELD
+// =====================================================
+
+function SignupField({
+  icon,
+  label,
+  error,
+  endAction,
+  ...props
+}) {
   return (
-    <div className="field-wrap">
-      <label className="field-label">{label}</label>
-      <div className={`field-box ${error ? "has-error" : ""}`}>
-        <span className="field-icon">{icon}</span>
-        <input {...props} />
+    <div className="signup-field-wrap">
+      <label className="signup-field-label">
+        {label}
+      </label>
+
+      <div
+        className={`signup-field-box ${
+          error
+            ? "signup-field-box-error"
+            : ""
+        }`}
+      >
+        <span className="signup-field-icon">
+          {icon}
+        </span>
+
+        <input
+          {...props}
+        />
+
+        {endAction}
       </div>
-      {error && <p className="field-error">{error}</p>}
+
+      {error && (
+        <p className="signup-field-error">
+          {error}
+        </p>
+      )}
     </div>
   );
 }
 
-function SelectField({ icon, label, options, error, ...props }) {
+// =====================================================
+// SELECT
+// =====================================================
+
+function SignupSelectField({
+  icon,
+  label,
+  options,
+  error,
+  ...props
+}) {
   return (
-    <div className="field-wrap">
-      <label className="field-label">{label}</label>
-      <div className={`field-box ${error ? "has-error" : ""}`}>
-        <span className="field-icon">{icon}</span>
-        <select {...props}>
-          <option value="">Select type</option>
-          {options.map((o) => (
-            <option key={o} value={o}>
-              {o}
-            </option>
-          ))}
+    <div className="signup-field-wrap">
+      <label className="signup-field-label">
+        {label}
+      </label>
+
+      <div
+        className={`signup-field-box ${
+          error
+            ? "signup-field-box-error"
+            : ""
+        }`}
+      >
+        <span className="signup-field-icon">
+          {icon}
+        </span>
+
+        <select
+          {...props}
+        >
+          <option value="">
+            Select type
+          </option>
+
+          {options.map(
+            (option) => (
+              <option
+                key={
+                  option
+                }
+                value={
+                  option
+                }
+              >
+                {option}
+              </option>
+            )
+          )}
         </select>
       </div>
-      {error && <p className="field-error">{error}</p>}
+
+      {error && (
+        <p className="signup-field-error">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

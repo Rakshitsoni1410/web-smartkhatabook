@@ -101,10 +101,20 @@ export default function Sidebar() {
   const [showProfile, setShowProfile] = useState(false);
   const profileRef = useRef(null);
 
+  // Mobile off-canvas drawer state — hidden by default on small screens,
+  // opened via the hamburger trigger this component renders itself.
+  const [mobileOpen, setMobileOpen] = useState(false);
+
   const navigate = useNavigate();
   const location = useLocation();
 
   const menu = role === "Wholesaler" ? WHOLESALER_MENU : RETAILER_MENU;
+
+  // Auto-close the mobile drawer whenever the route changes (e.g. after
+  // tapping a nav item), so it never stays open covering the new page.
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [location.pathname]);
 
   // Persist collapsed state.
   useEffect(() => {
@@ -149,171 +159,193 @@ export default function Sidebar() {
     .slice(0, 2) || "U";
 
   return (
-    <aside
-      className={`sb-sidebar ${collapsed ? "sb-collapsed" : ""} ${darkMode ? "sb-dark" : "sb-light"}`}
-    >
-      {/* ── HEADER ── */}
-      <div className="sb-header">
-        <div className="sb-brand">
-          <div className="sb-brand-icon">
-            <svg
-              width="18"
-              height="18"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.2"
-              viewBox="0 0 24 24"
-            >
-              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-            </svg>
-          </div>
-          {!collapsed && (
-            <div className="sb-brand-text">
-              <span className="sb-brand-name">Smart Khatabook</span>
-              <span className="sb-role-badge">{role}</span>
+    <>
+      {/* Mobile-only hamburger trigger — invisible on desktop via CSS.
+          Rendered by Sidebar itself so every page gets this automatically,
+          no per-page wiring needed. */}
+      <button
+        className="sb-mobile-trigger"
+        onClick={() => setMobileOpen(true)}
+        aria-label="Open menu"
+      >
+        <FiMenu size={20} />
+      </button>
+
+      {/* Backdrop — tapping it closes the drawer, same as tapping a nav item. */}
+      {mobileOpen && (
+        <div
+          className="sb-mobile-backdrop"
+          onClick={() => setMobileOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
+      <aside
+        className={`sb-sidebar ${collapsed ? "sb-collapsed" : ""} ${darkMode ? "sb-dark" : "sb-light"} ${mobileOpen ? "sb-mobile-open" : ""}`}
+      >
+        {/* ── HEADER ── */}
+        <div className="sb-header">
+          <div className="sb-brand">
+            <div className="sb-brand-icon">
+              <svg
+                width="18"
+                height="18"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.2"
+                viewBox="0 0 24 24"
+              >
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+              </svg>
             </div>
-          )}
+            {!collapsed && (
+              <div className="sb-brand-text">
+                <span className="sb-brand-name">Smart Khatabook</span>
+                <span className="sb-role-badge">{role}</span>
+              </div>
+            )}
+          </div>
+          <button
+            className="sb-toggle"
+            onClick={() => setCollapsed(!collapsed)}
+            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            {collapsed ? <FiMenu size={16} /> : <FiChevronLeft size={16} />}
+          </button>
         </div>
-        <button
-          className="sb-toggle"
-          onClick={() => setCollapsed(!collapsed)}
-          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-        >
-          {collapsed ? <FiMenu size={16} /> : <FiChevronLeft size={16} />}
-        </button>
-      </div>
 
-      <div className="sb-divider" />
-
-      {/* ── MENU ── */}
-      <div className="sb-scroll">
-        {!collapsed && <p className="sb-section-label">Main Menu</p>}
-        <nav className="sb-nav">
-          {menu.map((item, i) => {
-            const active = location.pathname === item.path;
-            return (
-              <Tooltip key={i} label={item.name} visible={collapsed}>
-                <Clickable
-                  className={`sb-item ${active ? "sb-item-active" : ""}`}
-                  onClick={() => navigate(item.path)}
-                  title={collapsed ? item.name : undefined}
-                  aria-current={active ? "page" : undefined}
-                  aria-label={item.name}
-                >
-                  {active && <span className="sb-active-bar" />}
-                  <span className="sb-item-icon">{item.icon}</span>
-                  {!collapsed && (
-                    <span className="sb-item-label">{item.name}</span>
-                  )}
-                </Clickable>
-              </Tooltip>
-            );
-          })}
-        </nav>
-      </div>
-
-      {/* ── BOTTOM ── */}
-      <div className="sb-bottom">
         <div className="sb-divider" />
 
-        {/* Dark mode */}
-        <Tooltip
-          label={darkMode ? "Light mode" : "Dark mode"}
-          visible={collapsed}
-        >
-          <Clickable
-            className="sb-item sb-theme-toggle"
-            onClick={() => setDarkMode(!darkMode)}
-            aria-pressed={darkMode}
-            aria-label={darkMode ? "Switch to light mode" : "Switch to dark mode"}
+        {/* ── MENU ── */}
+        <div className="sb-scroll">
+          {!collapsed && <p className="sb-section-label">Main Menu</p>}
+          <nav className="sb-nav">
+            {menu.map((item, i) => {
+              const active = location.pathname === item.path;
+              return (
+                <Tooltip key={i} label={item.name} visible={collapsed}>
+                  <Clickable
+                    className={`sb-item ${active ? "sb-item-active" : ""}`}
+                    onClick={() => navigate(item.path)}
+                    title={collapsed ? item.name : undefined}
+                    aria-current={active ? "page" : undefined}
+                    aria-label={item.name}
+                  >
+                    {active && <span className="sb-active-bar" />}
+                    <span className="sb-item-icon">{item.icon}</span>
+                    {!collapsed && (
+                      <span className="sb-item-label">{item.name}</span>
+                    )}
+                  </Clickable>
+                </Tooltip>
+              );
+            })}
+          </nav>
+        </div>
+
+        {/* ── BOTTOM ── */}
+        <div className="sb-bottom">
+          <div className="sb-divider" />
+
+          {/* Dark mode */}
+          <Tooltip
+            label={darkMode ? "Light mode" : "Dark mode"}
+            visible={collapsed}
           >
-            <span className="sb-item-icon">
-              {darkMode ? <FiSun size={16} /> : <FiMoon size={16} />}
-            </span>
-            {!collapsed && (
-              <span className="sb-item-label">
-                {darkMode ? "Light mode" : "Dark mode"}
-              </span>
-            )}
-          </Clickable>
-        </Tooltip>
-
-        {/* Profile */}
-        <div className="sb-profile-wrap" ref={profileRef}>
-          {showProfile && !collapsed && (
-            <div className="sb-dropdown" role="menu">
-              <Clickable
-                className="sb-dropdown-item"
-                role="menuitem"
-                onClick={() => {
-                  setShowProfile(false);
-                  navigate("/profile");
-                }}
-              >
-                <FiUser size={13} /> View profile
-              </Clickable>
-              <Clickable
-                className="sb-dropdown-item"
-                role="menuitem"
-                onClick={() => {
-                  setShowProfile(false);
-                  navigate("/settings");
-                }}
-              >
-                <FiSettings size={13} /> Settings
-              </Clickable>
-              <div className="sb-dropdown-divider" />
-              <Clickable
-                className="sb-dropdown-item sb-dropdown-logout"
-                role="menuitem"
-                onClick={handleLogout}
-              >
-                <FiLogOut size={13} /> Logout
-              </Clickable>
-            </div>
-          )}
-
-          <Tooltip label={userName} visible={collapsed}>
             <Clickable
-              className={`sb-profile ${showProfile ? "sb-profile-open" : ""}`}
-              onClick={() => setShowProfile(!showProfile)}
-              aria-haspopup="menu"
-              aria-expanded={showProfile}
-              aria-label={`${userName}, account menu`}
+              className="sb-item sb-theme-toggle"
+              onClick={() => setDarkMode(!darkMode)}
+              aria-pressed={darkMode}
+              aria-label={darkMode ? "Switch to light mode" : "Switch to dark mode"}
             >
-              <div className="sb-avatar">{initials}</div>
+              <span className="sb-item-icon">
+                {darkMode ? <FiSun size={16} /> : <FiMoon size={16} />}
+              </span>
               {!collapsed && (
-                <>
-                  <div className="sb-profile-text">
-                    <span className="sb-profile-name">{userName}</span>
-                    <span className="sb-profile-role">{role}</span>
-                  </div>
-                  <FiChevronDown
-                    size={13}
-                    className={`sb-chevron ${showProfile ? "sb-chevron-up" : ""}`}
-                  />
-                </>
+                <span className="sb-item-label">
+                  {darkMode ? "Light mode" : "Dark mode"}
+                </span>
               )}
             </Clickable>
           </Tooltip>
-        </div>
 
-        {/* Collapsed logout shortcut */}
-        {collapsed && (
-          <Tooltip label="Logout" visible={true}>
-            <Clickable
-              className="sb-item sb-logout-icon"
-              onClick={handleLogout}
-              aria-label="Logout"
-            >
-              <span className="sb-item-icon">
-                <FiLogOut size={16} />
-              </span>
-            </Clickable>
-          </Tooltip>
-        )}
-      </div>
-    </aside>
+          {/* Profile */}
+          <div className="sb-profile-wrap" ref={profileRef}>
+            {showProfile && !collapsed && (
+              <div className="sb-dropdown" role="menu">
+                <Clickable
+                  className="sb-dropdown-item"
+                  role="menuitem"
+                  onClick={() => {
+                    setShowProfile(false);
+                    navigate("/profile");
+                  }}
+                >
+                  <FiUser size={13} /> View profile
+                </Clickable>
+                <Clickable
+                  className="sb-dropdown-item"
+                  role="menuitem"
+                  onClick={() => {
+                    setShowProfile(false);
+                    navigate("/settings");
+                  }}
+                >
+                  <FiSettings size={13} /> Settings
+                </Clickable>
+                <div className="sb-dropdown-divider" />
+                <Clickable
+                  className="sb-dropdown-item sb-dropdown-logout"
+                  role="menuitem"
+                  onClick={handleLogout}
+                >
+                  <FiLogOut size={13} /> Logout
+                </Clickable>
+              </div>
+            )}
+
+            <Tooltip label={userName} visible={collapsed}>
+              <Clickable
+                className={`sb-profile ${showProfile ? "sb-profile-open" : ""}`}
+                onClick={() => setShowProfile(!showProfile)}
+                aria-haspopup="menu"
+                aria-expanded={showProfile}
+                aria-label={`${userName}, account menu`}
+              >
+                <div className="sb-avatar">{initials}</div>
+                {!collapsed && (
+                  <>
+                    <div className="sb-profile-text">
+                      <span className="sb-profile-name">{userName}</span>
+                      <span className="sb-profile-role">{role}</span>
+                    </div>
+                    <FiChevronDown
+                      size={13}
+                      className={`sb-chevron ${showProfile ? "sb-chevron-up" : ""}`}
+                    />
+                  </>
+                )}
+              </Clickable>
+            </Tooltip>
+          </div>
+
+          {/* Collapsed logout shortcut */}
+          {collapsed && (
+            <Tooltip label="Logout" visible={true}>
+              <Clickable
+                className="sb-item sb-logout-icon"
+                onClick={handleLogout}
+                aria-label="Logout"
+              >
+                <span className="sb-item-icon">
+                  <FiLogOut size={16} />
+                </span>
+              </Clickable>
+            </Tooltip>
+          )}
+        </div>
+      </aside>
+    </>
   );
 }

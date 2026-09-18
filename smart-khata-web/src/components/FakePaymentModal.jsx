@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+
 import {
   FiAlertCircle,
   FiCheckCircle,
@@ -10,6 +11,10 @@ import {
   FiX,
 } from "react-icons/fi";
 
+// =====================================================
+// PAYMENT METHODS
+// =====================================================
+
 const PAYMENT_METHODS = [
   {
     id: "upi",
@@ -17,12 +22,14 @@ const PAYMENT_METHODS = [
     subtitle: "Demo UPI payment",
     icon: <FiSmartphone size={20} />,
   },
+
   {
     id: "card",
     label: "Card",
     subtitle: "Demo card payment",
     icon: <FiCreditCard size={20} />,
   },
+
   {
     id: "netbanking",
     label: "Net Banking",
@@ -31,17 +38,37 @@ const PAYMENT_METHODS = [
   },
 ];
 
-const formatMoney = (value) =>
-  Number(value || 0).toLocaleString("en-IN", {
+// =====================================================
+// MONEY FORMATTER
+// =====================================================
+
+const formatMoney = (value) => {
+  const number = Number(value || 0);
+
+  if (!Number.isFinite(number)) {
+    return "0";
+  }
+
+  return number.toLocaleString("en-IN", {
     maximumFractionDigits: 2,
   });
+};
+
+// =====================================================
+// DEMO TRANSACTION ID
+// =====================================================
 
 const createTransactionId = () => {
   const time = Date.now().toString(36).toUpperCase();
+
   const random = Math.random().toString(36).slice(2, 7).toUpperCase();
 
   return `SKPAY-${time}-${random}`;
 };
+
+// =====================================================
+// COMPONENT
+// =====================================================
 
 export default function FakePaymentModal({
   open,
@@ -52,12 +79,21 @@ export default function FakePaymentModal({
   onConfirm,
 }) {
   const [method, setMethod] = useState("upi");
+
   const [step, setStep] = useState("choose");
+
   const [transactionId, setTransactionId] = useState("");
+
   const [error, setError] = useState("");
 
+  // =====================================================
+  // RESET WHEN OPENED
+  // =====================================================
+
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      return;
+    }
 
     setMethod("upi");
     setStep("choose");
@@ -65,9 +101,53 @@ export default function FakePaymentModal({
     setError("");
   }, [open, amount, paymentType]);
 
+  // =====================================================
+  // LOCK PAGE SCROLL WHEN OPEN
+  // =====================================================
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [open]);
+
+  // =====================================================
+  // ESCAPE KEY
+  // =====================================================
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape" && step !== "processing") {
+        onClose?.();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [open, step, onClose]);
+
   if (!open) {
     return null;
   }
+
+  // =====================================================
+  // PAYMENT TITLE
+  // =====================================================
 
   const paymentTitle =
     paymentType === "advance"
@@ -76,13 +156,20 @@ export default function FakePaymentModal({
         ? "Final Payment"
         : "Payment";
 
+  // =====================================================
+  // HANDLE PAYMENT
+  // =====================================================
+
   const handlePayment = async () => {
-    if (step === "processing") return;
+    if (step === "processing") {
+      return;
+    }
 
     setError("");
+
     setStep("processing");
 
-    // Small delay only to simulate a payment gateway processing screen.
+    // Demo processing delay
     await new Promise((resolve) => setTimeout(resolve, 1200));
 
     const newTransactionId = createTransactionId();
@@ -90,14 +177,20 @@ export default function FakePaymentModal({
     try {
       await onConfirm?.({
         paymentType,
+
         paymentMethod: method,
+
         transactionId: newTransactionId,
+
         amount: Number(amount || 0),
       });
 
       setTransactionId(newTransactionId);
+
       setStep("success");
     } catch (paymentError) {
+      console.error("DEMO PAYMENT ERROR:", paymentError);
+
       setStep("choose");
 
       setError(
@@ -108,11 +201,25 @@ export default function FakePaymentModal({
     }
   };
 
+  // =====================================================
+  // OVERLAY CLICK
+  // =====================================================
+
   const handleOverlayClick = () => {
     if (step !== "processing") {
       onClose?.();
     }
   };
+
+  // =====================================================
+  // CURRENT PAYMENT METHOD
+  // =====================================================
+
+  const selectedMethod = PAYMENT_METHODS.find((item) => item.id === method);
+
+  // =====================================================
+  // UI
+  // =====================================================
 
   return (
     <>
@@ -126,6 +233,10 @@ export default function FakePaymentModal({
           aria-label="Smart Khata demo payment gateway"
           onClick={(event) => event.stopPropagation()}
         >
+          {/* =====================================
+              CLOSE
+          ====================================== */}
+
           {step !== "processing" && (
             <button
               type="button"
@@ -136,6 +247,10 @@ export default function FakePaymentModal({
               <FiX size={18} />
             </button>
           )}
+
+          {/* =====================================
+              SUCCESS
+          ====================================== */}
 
           {step === "success" ? (
             <div className="skpay-success">
@@ -154,24 +269,25 @@ export default function FakePaymentModal({
               <div className="skpay-success-details">
                 <div>
                   <span>Transaction ID</span>
+
                   <strong>{transactionId}</strong>
                 </div>
 
                 <div>
                   <span>Payment Type</span>
+
                   <strong>{paymentTitle}</strong>
                 </div>
 
                 <div>
                   <span>Method</span>
-                  <strong>
-                    {PAYMENT_METHODS.find((item) => item.id === method)
-                      ?.label || method}
-                  </strong>
+
+                  <strong>{selectedMethod?.label || method}</strong>
                 </div>
 
                 <div>
                   <span>Order</span>
+
                   <strong>#{orderId?.slice(-8).toUpperCase()}</strong>
                 </div>
               </div>
@@ -182,6 +298,10 @@ export default function FakePaymentModal({
               </button>
             </div>
           ) : step === "processing" ? (
+            /* =====================================
+               PROCESSING
+            ====================================== */
+
             <div className="skpay-processing">
               <div className="skpay-spinner" />
 
@@ -199,40 +319,66 @@ export default function FakePaymentModal({
             </div>
           ) : (
             <>
+              {/* =====================================
+                  BRAND
+              ====================================== */}
+
               <div className="skpay-brand">
                 <div className="skpay-brand-icon">
                   <FiSend size={21} />
                 </div>
 
-                <div>
+                <div className="skpay-brand-copy">
                   <div className="skpay-brand-name">Smart Khata Pay</div>
+
                   <div className="skpay-brand-subtitle">
                     Demo Payment Gateway
                   </div>
                 </div>
               </div>
 
+              {/* =====================================
+                  WARNING
+              ====================================== */}
+
               <div className="skpay-demo-banner">
                 <FiAlertCircle size={16} />
+
                 <span>
                   TEST MODE — No real money will be charged. Do not enter real
                   banking credentials.
                 </span>
               </div>
 
+              {/* =====================================
+                  SUMMARY
+              ====================================== */}
+
               <div className="skpay-summary">
                 <div>
                   <span>{paymentTitle}</span>
-                  <strong>₹{formatMoney(amount)}</strong>
+
+                  <strong className="skpay-money">
+                    ₹{formatMoney(amount)}
+                  </strong>
                 </div>
 
                 <div>
                   <span>Order ID</span>
+
                   <strong>#{orderId?.slice(-8).toUpperCase()}</strong>
                 </div>
               </div>
 
+              {/* =====================================
+                  METHOD HEADING
+              ====================================== */}
+
               <div className="skpay-heading">Choose payment method</div>
+
+              {/* =====================================
+                  METHODS
+              ====================================== */}
 
               <div className="skpay-methods">
                 {PAYMENT_METHODS.map((item) => (
@@ -248,6 +394,7 @@ export default function FakePaymentModal({
 
                     <span className="skpay-method-copy">
                       <strong>{item.label}</strong>
+
                       <small>{item.subtitle}</small>
                     </span>
 
@@ -260,10 +407,15 @@ export default function FakePaymentModal({
                 ))}
               </div>
 
+              {/* =====================================
+                  DEMO DETAILS
+              ====================================== */}
+
               <div className="skpay-demo-details">
                 {method === "upi" && (
                   <>
                     <span>Demo UPI ID</span>
+
                     <strong>demo@smartkhata</strong>
                   </>
                 )}
@@ -271,6 +423,7 @@ export default function FakePaymentModal({
                 {method === "card" && (
                   <>
                     <span>Demo Card</span>
+
                     <strong>4242 4242 4242 4242</strong>
                   </>
                 )}
@@ -278,12 +431,21 @@ export default function FakePaymentModal({
                 {method === "netbanking" && (
                   <>
                     <span>Demo Bank</span>
+
                     <strong>Smart Khata Demo Bank</strong>
                   </>
                 )}
               </div>
 
+              {/* =====================================
+                  ERROR
+              ====================================== */}
+
               {error && <div className="skpay-error">{error}</div>}
+
+              {/* =====================================
+                  PAYMENT BUTTON
+              ====================================== */}
 
               <button
                 type="button"
@@ -293,6 +455,10 @@ export default function FakePaymentModal({
                 <FiLock size={15} />
                 Pay ₹{formatMoney(amount)}
               </button>
+
+              {/* =====================================
+                  FOOTER
+              ====================================== */}
 
               <div className="skpay-footer">
                 <FiLock size={12} />
@@ -306,384 +472,1136 @@ export default function FakePaymentModal({
   );
 }
 
+// =====================================================
+// RESPONSIVE STYLES
+// =====================================================
+
 const paymentStyles = `
+  .skpay-overlay,
+  .skpay-overlay * {
+    box-sizing: border-box;
+  }
+
   .skpay-overlay {
     position: fixed;
     inset: 0;
+
     z-index: 10000;
-    background: rgba(15, 23, 42, 0.62);
-    backdrop-filter: blur(5px);
+
+    background:
+      rgba(
+        15,
+        23,
+        42,
+        0.66
+      );
+
+    backdrop-filter:
+      blur(5px);
+
+    -webkit-backdrop-filter:
+      blur(5px);
+
     display: flex;
+
     align-items: center;
     justify-content: center;
-    padding: 18px;
-    font-family: 'Outfit', 'Segoe UI', sans-serif;
+
+    padding:
+      max(
+        18px,
+        env(safe-area-inset-top)
+      )
+      max(
+        18px,
+        env(safe-area-inset-right)
+      )
+      max(
+        18px,
+        env(safe-area-inset-bottom)
+      )
+      max(
+        18px,
+        env(safe-area-inset-left)
+      );
+
+    overflow: hidden;
+
+    font-family:
+      'Outfit',
+      'Segoe UI',
+      sans-serif;
   }
 
+  /* =====================================
+     MODAL
+  ====================================== */
+
   .skpay-modal {
-    width: 100%;
-    max-width: 430px;
-    max-height: calc(100vh - 36px);
-    overflow-y: auto;
     position: relative;
-    background: #fff;
-    border-radius: 22px;
-    padding: 24px;
-    box-shadow: 0 28px 70px rgba(15, 23, 42, 0.3);
-    animation: skpayOpen 0.2s ease;
+
+    width: min(
+      100%,
+      430px
+    );
+
+    max-height:
+      calc(
+        100dvh - 36px
+      );
+
+    overflow-x: hidden;
+    overflow-y: auto;
+
+    overscroll-behavior:
+      contain;
+
+    background:
+      #ffffff;
+
+    border-radius:
+      22px;
+
+    padding:
+      24px;
+
+    box-shadow:
+      0
+      28px
+      70px
+      rgba(
+        15,
+        23,
+        42,
+        0.30
+      );
+
+    animation:
+      skpayOpen
+      0.2s ease;
+
+    scrollbar-width:
+      thin;
+  }
+
+  .skpay-modal::-webkit-scrollbar {
+    width: 5px;
+  }
+
+  .skpay-modal::-webkit-scrollbar-thumb {
+    background:
+      #cbd5e1;
+
+    border-radius:
+      20px;
   }
 
   @keyframes skpayOpen {
     from {
       opacity: 0;
-      transform: translateY(12px) scale(0.98);
+
+      transform:
+        translateY(12px)
+        scale(0.98);
     }
+
     to {
       opacity: 1;
-      transform: translateY(0) scale(1);
+
+      transform:
+        translateY(0)
+        scale(1);
     }
   }
+
+  /* =====================================
+     CLOSE
+  ====================================== */
 
   .skpay-close {
     position: absolute;
+
     top: 16px;
     right: 16px;
-    width: 34px;
-    height: 34px;
+
+    width: 36px;
+    height: 36px;
+
     border: 0;
-    border-radius: 10px;
-    background: #f1f5f9;
-    color: #64748b;
+
+    border-radius:
+      10px;
+
+    background:
+      #f1f5f9;
+
+    color:
+      #64748b;
+
     cursor: pointer;
+
     display: flex;
     align-items: center;
     justify-content: center;
+
+    transition:
+      all
+      0.18s ease;
   }
 
   .skpay-close:hover {
-    background: #e2e8f0;
-    color: #0f172a;
+    background:
+      #e2e8f0;
+
+    color:
+      #0f172a;
   }
+
+  /* =====================================
+     BRAND
+  ====================================== */
 
   .skpay-brand {
     display: flex;
+
     align-items: center;
+
     gap: 12px;
-    padding-right: 42px;
-    margin-bottom: 18px;
+
+    padding-right:
+      46px;
+
+    margin-bottom:
+      18px;
+
+    min-width: 0;
   }
 
   .skpay-brand-icon {
     width: 46px;
     height: 46px;
+
     flex-shrink: 0;
-    border-radius: 14px;
-    background: #4f46e5;
-    color: #fff;
+
+    border-radius:
+      14px;
+
+    background:
+      #4f46e5;
+
+    color:
+      #ffffff;
+
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 7px 18px rgba(79, 70, 229, 0.25);
+
+    box-shadow:
+      0
+      7px
+      18px
+      rgba(
+        79,
+        70,
+        229,
+        0.25
+      );
+  }
+
+  .skpay-brand-copy {
+    min-width: 0;
   }
 
   .skpay-brand-name {
-    font-size: 18px;
+    color:
+      #0f172a;
+
+    font-size:
+      clamp(
+        16px,
+        4vw,
+        18px
+      );
+
     font-weight: 800;
-    color: #0f172a;
+
+    overflow-wrap:
+      anywhere;
   }
 
   .skpay-brand-subtitle {
     margin-top: 2px;
+
+    color:
+      #94a3b8;
+
     font-size: 11px;
+
     font-weight: 600;
-    color: #94a3b8;
   }
+
+  /* =====================================
+     DEMO WARNING
+  ====================================== */
 
   .skpay-demo-banner {
     display: flex;
-    align-items: flex-start;
+
+    align-items:
+      flex-start;
+
     gap: 8px;
-    padding: 10px 12px;
-    margin-bottom: 16px;
-    border: 1px solid #fde68a;
-    border-radius: 11px;
-    background: #fffbeb;
-    color: #92400e;
+
+    padding:
+      10px
+      12px;
+
+    margin-bottom:
+      16px;
+
+    border:
+      1px solid
+      #fde68a;
+
+    border-radius:
+      11px;
+
+    background:
+      #fffbeb;
+
+    color:
+      #92400e;
+
     font-size: 11px;
+
     font-weight: 600;
+
     line-height: 1.5;
   }
 
   .skpay-demo-banner svg {
     flex-shrink: 0;
+
     margin-top: 1px;
   }
 
+  /* =====================================
+     SUMMARY
+  ====================================== */
+
   .skpay-summary {
     padding: 14px;
+
     margin-bottom: 20px;
-    border: 1px solid #e2e8f0;
-    border-radius: 14px;
-    background: #f8fafc;
+
+    border:
+      1px solid
+      #e2e8f0;
+
+    border-radius:
+      14px;
+
+    background:
+      #f8fafc;
   }
 
   .skpay-summary > div,
   .skpay-success-details > div {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
+
+    align-items:
+      center;
+
+    justify-content:
+      space-between;
+
     gap: 14px;
+
     padding: 6px 0;
+
+    min-width: 0;
   }
 
   .skpay-summary span,
   .skpay-success-details span {
-    color: #64748b;
+    color:
+      #64748b;
+
     font-size: 12px;
+
     font-weight: 500;
+
+    flex-shrink: 0;
   }
 
   .skpay-summary strong,
   .skpay-success-details strong {
-    color: #0f172a;
+    color:
+      #0f172a;
+
     font-size: 12px;
+
     font-weight: 800;
+
     text-align: right;
-    word-break: break-word;
+
+    overflow-wrap:
+      anywhere;
+
+    word-break:
+      break-word;
+
+    min-width: 0;
   }
 
-  .skpay-summary > div:first-child strong {
-    color: #16a34a;
-    font-size: 18px;
+  .skpay-summary
+  .skpay-money {
+    color:
+      #16a34a;
+
+    font-size:
+      clamp(
+        16px,
+        4.5vw,
+        18px
+      );
   }
+
+  /* =====================================
+     HEADING
+  ====================================== */
 
   .skpay-heading {
-    margin-bottom: 10px;
-    color: #334155;
+    margin-bottom:
+      10px;
+
+    color:
+      #334155;
+
     font-size: 12px;
+
     font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.7px;
+
+    text-transform:
+      uppercase;
+
+    letter-spacing:
+      0.7px;
   }
+
+  /* =====================================
+     METHODS
+  ====================================== */
 
   .skpay-methods {
     display: grid;
+
     gap: 8px;
   }
 
   .skpay-method {
     width: 100%;
-    border: 1.5px solid #e2e8f0;
-    border-radius: 13px;
-    background: #fff;
+
+    min-width: 0;
+
+    border:
+      1.5px solid
+      #e2e8f0;
+
+    border-radius:
+      13px;
+
+    background:
+      #ffffff;
+
     padding: 12px;
+
     cursor: pointer;
+
     display: flex;
-    align-items: center;
+
+    align-items:
+      center;
+
     gap: 11px;
+
     text-align: left;
-    transition: all 0.18s ease;
+
+    transition:
+      all
+      0.18s ease;
   }
 
   .skpay-method:hover {
-    border-color: #c7d2fe;
-    background: #f8faff;
+    border-color:
+      #c7d2fe;
+
+    background:
+      #f8faff;
   }
 
   .skpay-method-active {
-    border-color: #6366f1;
-    background: #eef2ff;
+    border-color:
+      #6366f1;
+
+    background:
+      #eef2ff;
   }
 
   .skpay-method-icon {
     width: 38px;
     height: 38px;
-    border-radius: 11px;
-    background: #f1f5f9;
-    color: #4f46e5;
+
+    flex:
+      0 0 38px;
+
+    border-radius:
+      11px;
+
+    background:
+      #f1f5f9;
+
+    color:
+      #4f46e5;
+
     display: flex;
-    align-items: center;
-    justify-content: center;
+
+    align-items:
+      center;
+
+    justify-content:
+      center;
   }
 
-  .skpay-method-active .skpay-method-icon {
-    background: #4f46e5;
-    color: #fff;
+  .skpay-method-active
+  .skpay-method-icon {
+    background:
+      #4f46e5;
+
+    color:
+      #ffffff;
   }
 
   .skpay-method-copy {
+    min-width: 0;
+
     flex: 1;
+
     display: flex;
-    flex-direction: column;
+
+    flex-direction:
+      column;
+
     gap: 2px;
   }
 
   .skpay-method-copy strong {
-    color: #0f172a;
+    color:
+      #0f172a;
+
     font-size: 13px;
+
+    overflow-wrap:
+      anywhere;
   }
 
   .skpay-method-copy small {
-    color: #94a3b8;
+    color:
+      #94a3b8;
+
     font-size: 11px;
+
+    overflow-wrap:
+      anywhere;
   }
 
   .skpay-radio {
     width: 17px;
     height: 17px;
-    border: 2px solid #cbd5e1;
-    border-radius: 50%;
+
+    flex:
+      0 0 17px;
+
+    border:
+      2px solid
+      #cbd5e1;
+
+    border-radius:
+      50%;
   }
 
   .skpay-radio-active {
-    border: 5px solid #4f46e5;
+    border:
+      5px solid
+      #4f46e5;
   }
 
+  /* =====================================
+     DEMO DETAILS
+  ====================================== */
+
   .skpay-demo-details {
-    margin: 14px 0;
-    padding: 11px 12px;
-    border-radius: 11px;
-    background: #f8fafc;
+    margin:
+      14px
+      0;
+
+    padding:
+      11px
+      12px;
+
+    border-radius:
+      11px;
+
+    background:
+      #f8fafc;
+
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+
+    justify-content:
+      space-between;
+
+    align-items:
+      center;
+
     gap: 10px;
+
+    min-width: 0;
   }
 
   .skpay-demo-details span {
-    color: #94a3b8;
+    color:
+      #94a3b8;
+
     font-size: 11px;
+
     font-weight: 600;
+
+    flex-shrink: 0;
   }
 
   .skpay-demo-details strong {
-    color: #475569;
+    color:
+      #475569;
+
     font-size: 12px;
+
     text-align: right;
+
+    overflow-wrap:
+      anywhere;
+
+    word-break:
+      break-word;
+
+    min-width: 0;
   }
 
+  /* =====================================
+     ERROR
+  ====================================== */
+
   .skpay-error {
-    margin-bottom: 12px;
-    padding: 10px 12px;
-    border: 1px solid #fecaca;
-    border-radius: 10px;
-    background: #fef2f2;
-    color: #dc2626;
+    margin-bottom:
+      12px;
+
+    padding:
+      10px
+      12px;
+
+    border:
+      1px solid
+      #fecaca;
+
+    border-radius:
+      10px;
+
+    background:
+      #fef2f2;
+
+    color:
+      #dc2626;
+
     font-size: 12px;
+
     font-weight: 600;
+
+    line-height: 1.5;
+
+    overflow-wrap:
+      anywhere;
   }
+
+  /* =====================================
+     PRIMARY BUTTON
+  ====================================== */
 
   .skpay-primary {
     width: 100%;
+
     min-height: 46px;
+
     border: 0;
-    border-radius: 12px;
-    background: #4f46e5;
-    color: #fff;
+
+    border-radius:
+      12px;
+
+    background:
+      #4f46e5;
+
+    color:
+      #ffffff;
+
     cursor: pointer;
+
     display: flex;
-    align-items: center;
-    justify-content: center;
+
+    align-items:
+      center;
+
+    justify-content:
+      center;
+
     gap: 8px;
+
+    padding:
+      12px
+      16px;
+
     font-size: 14px;
+
     font-weight: 800;
-    transition: all 0.18s ease;
+
+    font-family:
+      inherit;
+
+    transition:
+      all
+      0.18s ease;
   }
 
   .skpay-primary:hover {
-    background: #4338ca;
-    transform: translateY(-1px);
-    box-shadow: 0 7px 18px rgba(79, 70, 229, 0.22);
+    background:
+      #4338ca;
+
+    transform:
+      translateY(-1px);
+
+    box-shadow:
+      0
+      7px
+      18px
+      rgba(
+        79,
+        70,
+        229,
+        0.22
+      );
   }
 
-  .skpay-footer {
-    margin-top: 11px;
-    color: #94a3b8;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 5px;
-    font-size: 10px;
-    font-weight: 600;
+  .skpay-primary:active {
+    transform:
+      translateY(0);
   }
+
+  /* =====================================
+     FOOTER
+  ====================================== */
+
+  .skpay-footer {
+    margin-top:
+      11px;
+
+    color:
+      #94a3b8;
+
+    display: flex;
+
+    align-items:
+      center;
+
+    justify-content:
+      center;
+
+    gap: 5px;
+
+    font-size: 10px;
+
+    font-weight: 600;
+
+    text-align: center;
+
+    line-height: 1.4;
+  }
+
+  /* =====================================
+     SUCCESS / PROCESSING
+  ====================================== */
 
   .skpay-processing,
   .skpay-success {
-    min-height: 390px;
+    min-height:
+      min(
+        390px,
+        calc(
+          100dvh -
+          100px
+        )
+      );
+
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
+
+    flex-direction:
+      column;
+
+    align-items:
+      center;
+
+    justify-content:
+      center;
+
+    text-align:
+      center;
   }
 
   .skpay-spinner {
     width: 54px;
     height: 54px;
-    margin-bottom: 20px;
-    border: 5px solid #e0e7ff;
-    border-top-color: #4f46e5;
-    border-radius: 50%;
-    animation: skpaySpin 0.8s linear infinite;
+
+    margin-bottom:
+      20px;
+
+    border:
+      5px solid
+      #e0e7ff;
+
+    border-top-color:
+      #4f46e5;
+
+    border-radius:
+      50%;
+
+    animation:
+      skpaySpin
+      0.8s
+      linear
+      infinite;
   }
 
   @keyframes skpaySpin {
     to {
-      transform: rotate(360deg);
+      transform:
+        rotate(360deg);
     }
   }
 
   .skpay-processing-title,
   .skpay-success-title {
-    color: #0f172a;
-    font-size: 20px;
+    color:
+      #0f172a;
+
+    font-size:
+      clamp(
+        18px,
+        5vw,
+        20px
+      );
+
     font-weight: 800;
   }
 
   .skpay-processing-subtitle,
   .skpay-success-subtitle {
     margin-top: 6px;
-    color: #94a3b8;
+
+    color:
+      #94a3b8;
+
     font-size: 12px;
+
+    line-height: 1.5;
   }
 
   .skpay-processing-amount,
   .skpay-success-amount {
-    margin: 22px 0;
-    color: #16a34a;
-    font-size: 30px;
+    margin:
+      22px
+      0;
+
+    color:
+      #16a34a;
+
+    font-size:
+      clamp(
+        24px,
+        8vw,
+        30px
+      );
+
     font-weight: 800;
+
+    overflow-wrap:
+      anywhere;
   }
 
   .skpay-success-icon {
     width: 72px;
     height: 72px;
-    margin-bottom: 18px;
-    border-radius: 50%;
-    background: #dcfce7;
-    color: #16a34a;
+
+    margin-bottom:
+      18px;
+
+    border-radius:
+      50%;
+
+    background:
+      #dcfce7;
+
+    color:
+      #16a34a;
+
     display: flex;
-    align-items: center;
-    justify-content: center;
+
+    align-items:
+      center;
+
+    justify-content:
+      center;
   }
 
   .skpay-success-details {
     width: 100%;
+
     padding: 13px;
-    margin-bottom: 18px;
-    border: 1px solid #e2e8f0;
-    border-radius: 13px;
-    background: #f8fafc;
+
+    margin-bottom:
+      18px;
+
+    border:
+      1px solid
+      #e2e8f0;
+
+    border-radius:
+      13px;
+
+    background:
+      #f8fafc;
   }
 
-  @media (max-width: 500px) {
+  /* =====================================
+     TABLET / PHONE
+  ====================================== */
+
+  @media (
+    max-width: 600px
+  ) {
     .skpay-overlay {
-      padding: 10px;
+      align-items:
+        flex-end;
+
+      padding:
+        0;
     }
 
     .skpay-modal {
-      padding: 20px 16px;
-      border-radius: 18px;
+      width: 100%;
+
+      max-width: none;
+
+      max-height:
+        min(
+          92dvh,
+          760px
+        );
+
+      border-radius:
+        22px
+        22px
+        0
+        0;
+
+      padding:
+        22px
+        18px
+        max(
+          20px,
+          env(
+            safe-area-inset-bottom
+          )
+        );
+
+      animation:
+        skpayMobileOpen
+        0.22s ease;
+    }
+
+    @keyframes skpayMobileOpen {
+      from {
+        opacity: 0;
+
+        transform:
+          translateY(30px);
+      }
+
+      to {
+        opacity: 1;
+
+        transform:
+          translateY(0);
+      }
+    }
+
+    .skpay-close {
+      top: 14px;
+
+      right: 14px;
+    }
+
+    .skpay-brand {
+      margin-bottom:
+        15px;
+    }
+
+    .skpay-summary {
+      margin-bottom:
+        17px;
+    }
+
+    .skpay-processing,
+    .skpay-success {
+      min-height:
+        340px;
+    }
+  }
+
+  /* =====================================
+     SMALL MOBILE
+  ====================================== */
+
+  @media (
+    max-width: 380px
+  ) {
+    .skpay-modal {
+      padding:
+        18px
+        14px
+        max(
+          18px,
+          env(
+            safe-area-inset-bottom
+          )
+        );
+    }
+
+    .skpay-brand-icon {
+      width: 42px;
+      height: 42px;
+
+      border-radius:
+        12px;
+    }
+
+    .skpay-method {
+      padding:
+        10px;
+    }
+
+    .skpay-method-icon {
+      width: 34px;
+      height: 34px;
+
+      flex-basis:
+        34px;
+    }
+
+    .skpay-summary > div,
+    .skpay-success-details > div,
+    .skpay-demo-details {
+      align-items:
+        flex-start;
+
+      flex-direction:
+        column;
+
+      gap: 4px;
+    }
+
+    .skpay-summary strong,
+    .skpay-success-details strong,
+    .skpay-demo-details strong {
+      text-align:
+        left;
+    }
+
+    .skpay-demo-details span {
+      flex-shrink: 1;
+    }
+
+    .skpay-primary {
+      font-size:
+        13px;
+    }
+  }
+
+  /* =====================================
+     SHORT / LANDSCAPE SCREENS
+  ====================================== */
+
+  @media (
+    max-height: 620px
+  ) {
+    .skpay-overlay {
+      align-items:
+        flex-start;
+
+      overflow-y:
+        auto;
+    }
+
+    .skpay-modal {
+      max-height:
+        none;
+
+      margin:
+        10px
+        auto;
+    }
+
+    .skpay-processing,
+    .skpay-success {
+      min-height:
+        300px;
+    }
+
+    .skpay-success-icon {
+      width: 60px;
+      height: 60px;
+
+      margin-bottom:
+        12px;
+    }
+
+    .skpay-processing-amount,
+    .skpay-success-amount {
+      margin:
+        14px
+        0;
+    }
+  }
+
+  /* =====================================
+     REDUCED MOTION
+  ====================================== */
+
+  @media (
+    prefers-reduced-motion:
+      reduce
+  ) {
+    .skpay-modal,
+    .skpay-primary,
+    .skpay-method,
+    .skpay-close {
+      animation: none;
+      transition: none;
     }
   }
 `;

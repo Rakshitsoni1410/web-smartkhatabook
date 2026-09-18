@@ -1,9 +1,18 @@
-import { useEffect, useState, useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
+
 import { useNavigate } from "react-router-dom";
+
 import api from "../api";
+
 import { getStoredUser } from "../utils/session";
+
 import Sidebar from "../components/Sidebar";
+
 import "./Dashboard.css";
+
+// =====================================================
+// QUOTES
+// =====================================================
 
 const QUOTES = {
   morning: [
@@ -11,11 +20,13 @@ const QUOTES = {
     "Your business grows when you show up every morning.",
     "Small steps every day build great businesses.",
   ],
+
   afternoon: [
     "Keep pushing — the best deals happen after noon.",
     "Consistency in the afternoon builds tomorrow's success.",
     "Stay focused, the day is still yours.",
   ],
+
   evening: [
     "Review today, plan tomorrow, win every day.",
     "Every evening is a chance to reflect and reset.",
@@ -23,338 +34,770 @@ const QUOTES = {
   ],
 };
 
-const getPeriod = (hour) => (hour < 12 ? "morning" : hour < 17 ? "afternoon" : "evening");
+const getPeriod = (hour) => {
+  if (hour < 12) {
+    return "morning";
+  }
+
+  if (hour < 17) {
+    return "afternoon";
+  }
+
+  return "evening";
+};
+
+const pickQuote = (period) => {
+  const pool = QUOTES[period] || QUOTES.morning;
+
+  return pool[Math.floor(Math.random() * pool.length)];
+};
+
+const formatCount = (value) => {
+  const number = Number(value || 0);
+
+  if (!Number.isFinite(number)) {
+    return "0";
+  }
+
+  return number.toLocaleString("en-IN");
+};
+
+// =====================================================
+// DASHBOARD
+// =====================================================
 
 export default function Dashboard() {
-  const user = getStoredUser();
   const navigate = useNavigate();
 
-  const [stats, setStats] = useState({ stock: 0, employees: 0, orders: 0, reviews: 0 });
+  const user = getStoredUser() || {};
+
+  // =====================================================
+  // STATE
+  // =====================================================
+
+  const [stats, setStats] = useState({
+    stock: 0,
+    employees: 0,
+    orders: 0,
+    reviews: 0,
+  });
+
   const [loading, setLoading] = useState(true);
+
   const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState(null);
-  const [period, setPeriod] = useState(getPeriod(new Date().getHours()));
-  const [quote, setQuote] = useState(
-    QUOTES[getPeriod(new Date().getHours())][
-      Math.floor(Math.random() * QUOTES[getPeriod(new Date().getHours())].length)
-    ]
-  );
-  const [time, setTime] = useState(new Date());
+
+  const [error, setError] = useState("");
+
+  const [time, setTime] = useState(() => new Date());
+
+  const initialPeriod = getPeriod(new Date().getHours());
+
+  const [quotePeriod, setQuotePeriod] = useState(initialPeriod);
+
+  const [quote, setQuote] = useState(() => pickQuote(initialPeriod));
+
+  // =====================================================
+  // DARK MODE
+  // =====================================================
+
+  const [darkMode, setDarkMode] = useState(() => {
+    try {
+      const saved = localStorage.getItem("smartkhata-theme");
+
+      if (saved === "dark") {
+        return true;
+      }
+
+      if (saved === "light") {
+        return false;
+      }
+
+      return Boolean(
+        window.matchMedia?.("(prefers-color-scheme: dark)")?.matches,
+      );
+    } catch {
+      return false;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("smartkhata-theme", darkMode ? "dark" : "light");
+    } catch {
+      // Ignore storage errors.
+    }
+  }, [darkMode]);
+
+  // =====================================================
+  // FETCH DASHBOARD
+  // =====================================================
 
   const fetchDashboard = useCallback(
-    async (isManualRefresh = false) => {
-      if (!user.role || !user._id) {
+    async (manual = false) => {
+      if (!user?.role || !user?._id) {
         setError("Missing user session. Please log in again.");
+
         setLoading(false);
+
+        setRefreshing(false);
+
         return;
       }
 
       try {
-        if (isManualRefresh) setRefreshing(true);
-        setError(null);
+        if (manual) {
+          setRefreshing(true);
+        } else {
+          setLoading(true);
+        }
 
-        const res = await api.get(
-          `/api/dashboard/${user.role}?userId=${encodeURIComponent(user._id)}`
+        setError("");
+
+        const response = await api.get(
+          `/api/dashboard/${user.role}?userId=${encodeURIComponent(user._id)}`,
         );
-        setStats(res.data);
+
+        const data = response?.data || {};
+
+        setStats({
+          stock: Number(data.stock || 0),
+
+          employees: Number(data.employees || 0),
+
+          orders: Number(data.orders || 0),
+
+          reviews: Number(data.reviews || 0),
+        });
       } catch (err) {
-        console.log(err);
-        setError("Couldn't load your dashboard data. Check your connection and try again.");
+        console.error("DASHBOARD ERROR:", err);
+
+        setError(
+          err?.response?.data?.message ||
+            "Couldn't load your dashboard data. Check your connection and try again.",
+        );
       } finally {
         setLoading(false);
+
         setRefreshing(false);
       }
     },
-    [user.role, user._id]
+    [user?._id, user?.role],
   );
+
+  // =====================================================
+  // INITIAL LOAD + CLOCK
+  // =====================================================
 
   useEffect(() => {
     fetchDashboard();
-    const timer = setInterval(() => setTime(new Date()), 60000);
+
+    const timer = setInterval(() => {
+      setTime(new Date());
+    }, 60000);
+
     return () => clearInterval(timer);
   }, [fetchDashboard]);
 
-  // Re-pick a quote whenever the time-of-day period changes (morning -> afternoon -> evening)
+  // =====================================================
+  // UPDATE QUOTE WHEN DAY PERIOD CHANGES
+  // =====================================================
+
   useEffect(() => {
     const currentPeriod = getPeriod(time.getHours());
-    if (currentPeriod !== period) {
-      setPeriod(currentPeriod);
-      const pool = QUOTES[currentPeriod];
-      setQuote(pool[Math.floor(Math.random() * pool.length)]);
+
+    if (currentPeriod !== quotePeriod) {
+      setQuotePeriod(currentPeriod);
+
+      setQuote(pickQuote(currentPeriod));
     }
-  }, [time, period]);
+  }, [time, quotePeriod]);
+
+  // =====================================================
+  // GREETING
+  // =====================================================
 
   const getGreeting = () => {
-    const h = time.getHours();
-    if (h < 12) return { text: "Good Morning", icon: "ti-sun" };
-    if (h < 17) return { text: "Good Afternoon", icon: "ti-sun-high" };
-    return { text: "Good Evening", icon: "ti-moon" };
+    const hour = time.getHours();
+
+    if (hour < 12) {
+      return {
+        text: "Good Morning",
+
+        icon: "ti-sun",
+      };
+    }
+
+    if (hour < 17) {
+      return {
+        text: "Good Afternoon",
+
+        icon: "ti-sun-high",
+      };
+    }
+
+    return {
+      text: "Good Evening",
+
+      icon: "ti-moon",
+    };
   };
 
   const greeting = getGreeting();
 
+  // =====================================================
+  // INITIALS
+  // =====================================================
+
+  const initials =
+    String(user?.name || "User")
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean)
+      .map((part) => part.charAt(0))
+      .join("")
+      .toUpperCase()
+      .slice(0, 2) || "U";
+
+  // =====================================================
+  // CARDS
+  // =====================================================
+
   const cards = [
     {
       title: "Stock Items",
+
       value: stats.stock,
+
       icon: "ti-package",
-      color: "#2563EB",
-      bg: "#EFF6FF",
-      accent: "#BFDBFE",
-      desc: "Total products in inventory",
+
+      color: "#2563eb",
+
+      rgb: "37, 99, 235",
+
+      description: "Products available in your inventory",
+
+      badge: "Inventory",
+
       route: "/stock",
-      trend: "+4 this week",
     },
+
     {
       title: "Employees",
+
       value: stats.employees,
+
       icon: "ti-users",
-      color: "#7C3AED",
-      bg: "#F5F3FF",
-      accent: "#DDD6FE",
-      desc: "Active team members",
+
+      color: "#7c3aed",
+
+      rgb: "124, 58, 237",
+
+      description: "Manage your business team",
+
+      badge: "Team",
+
       route: "/employees",
-      trend: "All active",
     },
+
     {
       title: "Orders",
+
       value: stats.orders,
+
       icon: "ti-truck",
+
       color: "#059669",
-      bg: "#ECFDF5",
-      accent: "#A7F3D0",
-      desc: "Orders placed & processed",
+
+      rgb: "5, 150, 105",
+
+      description: "Orders placed and processed",
+
+      badge: "Orders",
+
       route: "/orders",
-      trend: "+12 today",
     },
+
     {
       title: "Reviews",
+
       value: stats.reviews,
+
       icon: "ti-star",
-      color: "#D97706",
-      bg: "#FFFBEB",
-      accent: "#FDE68A",
-      desc: "Customer feedback received",
+
+      color: "#d97706",
+
+      rgb: "217, 119, 6",
+
+      description: "Customer feedback received",
+
+      badge: "Feedback",
+
       route: "/reviews",
-      trend: "4.8 avg rating",
     },
   ];
 
+  // =====================================================
+  // QUICK ACTIONS
+  // =====================================================
+
   const quickActions = [
-    { label: "Add Stock", icon: "ti-package", route: "/stock" },
-    { label: "New Order", icon: "ti-truck", route: "/orders" },
-    { label: "Add Employee", icon: "ti-user-plus", route: "/employees" },
-    { label: "View Reviews", icon: "ti-star", route: "/reviews" },
+    {
+      label: "Manage Stock",
+
+      description: "Products & inventory",
+
+      icon: "ti-package",
+
+      route: "/stock",
+    },
+
+    {
+      label: "View Orders",
+
+      description: "Track order activity",
+
+      icon: "ti-truck",
+
+      route: "/orders",
+    },
+
+    {
+      label: "Employees",
+
+      description: "Manage your team",
+
+      icon: "ti-user-plus",
+
+      route: "/employees",
+    },
+
+    {
+      label: "Reviews",
+
+      description: "Customer feedback",
+
+      icon: "ti-star",
+
+      route: "/reviews",
+    },
   ];
+
+  // =====================================================
+  // FOCUS ITEMS
+  // =====================================================
 
   const focusItems = [
-    { text: "Check low-stock items", color: "#2563EB" },
-    { text: "Review pending orders", color: "#059669" },
-    { text: "Track employee performance", color: "#7C3AED" },
-    { text: "Respond to new reviews", color: "#D97706" },
+    {
+      text: "Check low-stock items",
+
+      description: "Keep important products available",
+
+      color: "#2563eb",
+    },
+
+    {
+      text: "Review pending orders",
+
+      description: "Stay on top of order activity",
+
+      color: "#059669",
+    },
+
+    {
+      text: "Track employee performance",
+
+      description: "Monitor your business team",
+
+      color: "#7c3aed",
+    },
+
+    {
+      text: "Respond to new reviews",
+
+      description: "Keep customer communication active",
+
+      color: "#d97706",
+    },
   ];
 
-  const initials = (user.name || "U")
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
+  // =====================================================
+  // UI
+  // =====================================================
 
   return (
-    <div className="dashboard-layout">
-      <Sidebar role={user.role} />
+    <div className={`dashboard-layout ${darkMode ? "dashboard-dark" : ""}`}>
+      <Sidebar role={user?.role || ""} darkMode={darkMode} />
 
-      <div className="dashboard-main">
-        {/* ── Topbar ── */}
-        <header className="topbar">
-          <div className="topbar-left">
-            <div className="tb-brand">SmartKhatabook</div>
-            <div className="tb-page">Dashboard</div>
-            <p className="tb-time">
-              {time.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
-              &nbsp;·&nbsp;
+      <main className="dashboard-main">
+        {/* =====================================
+            TOP BAR
+        ====================================== */}
+
+        <header className="dash-topbar">
+          <div className="dash-topbar-left">
+            <span className="dash-brand">Smart Khatabook</span>
+
+            <div className="dash-title-row">
+              <h1>Dashboard</h1>
+
+              <span className="dash-live-badge">
+                <span />
+                Live
+              </span>
+            </div>
+
+            <p className="dash-time">
+              {time.toLocaleTimeString("en-IN", {
+                hour: "2-digit",
+
+                minute: "2-digit",
+              })}
+
+              <span>•</span>
+
               {time.toLocaleDateString("en-IN", {
                 weekday: "long",
+
                 day: "numeric",
+
                 month: "long",
+
                 year: "numeric",
               })}
             </p>
           </div>
 
-          <div className="topbar-right">
-            <button className="notif-btn" aria-label="Notifications">
-              <span className="notif-dot" />
+          <div className="dash-topbar-right">
+            {/* THEME */}
+
+            <button
+              type="button"
+              className="dash-icon-btn"
+              onClick={() => setDarkMode((previous) => !previous)}
+              aria-label={
+                darkMode ? "Switch to light mode" : "Switch to dark mode"
+              }
+              title={darkMode ? "Light mode" : "Dark mode"}
+            >
+              <i
+                className={`ti ${darkMode ? "ti-sun" : "ti-moon"}`}
+                aria-hidden="true"
+              />
+            </button>
+
+            {/* NOTIFICATIONS */}
+
+            <button
+              type="button"
+              className="dash-icon-btn dash-notification-btn"
+              aria-label="Notifications"
+            >
+              <span className="dash-notification-dot" />
+
               <i className="ti ti-bell" aria-hidden="true" />
             </button>
 
-            {/* Clickable profile → /profile */}
+            {/* PROFILE */}
+
             <button
-              className="profile-pill"
+              type="button"
+              className="dash-profile-pill"
               onClick={() => navigate("/profile")}
               title="View profile"
             >
-              <div className="tb-avatar">{initials}</div>
-              <div className="profile-text">
-                <span className="profile-name">{user.name || "User"}</span>
-                <span className="profile-role">{user.role || "—"}</span>
+              <div className="dash-avatar">{initials}</div>
+
+              <div className="dash-profile-text">
+                <strong>{user?.name || "User"}</strong>
+
+                <span>{user?.role || "User"}</span>
               </div>
-              <i className="ti ti-chevron-right profile-chevron" aria-hidden="true" />
+
+              <i
+                className="ti ti-chevron-right dash-profile-arrow"
+                aria-hidden="true"
+              />
             </button>
           </div>
         </header>
 
-        {/* ── Hero ── */}
-        <section className="hero-card">
-          <div className="hero-blobs" aria-hidden="true">
-            <div className="blob b1" />
-            <div className="blob b2" />
-            <div className="blob b3" />
-          </div>
+        {/* =====================================
+            HERO
+        ====================================== */}
 
-          <div className="hero-left">
-            <div className="hero-greet-row">
-              <i className={`ti ${greeting.icon} hero-greet-icon`} aria-hidden="true" />
+        <section className="dash-hero">
+          <div
+            className="dash-hero-decoration dash-hero-circle-one"
+            aria-hidden="true"
+          />
+
+          <div
+            className="dash-hero-decoration dash-hero-circle-two"
+            aria-hidden="true"
+          />
+
+          <div
+            className="dash-hero-decoration dash-hero-circle-three"
+            aria-hidden="true"
+          />
+
+          <div className="dash-hero-left">
+            <div className="dash-greeting">
+              <div className="dash-greeting-icon">
+                <i className={`ti ${greeting.icon}`} aria-hidden="true" />
+              </div>
+
               <div>
-                <p className="hero-label">{greeting.text}</p>
-                <h1 className="hero-name">{user.name || "there"}</h1>
+                <span>{greeting.text}</span>
+
+                <h2>{user?.name || "there"}</h2>
               </div>
             </div>
 
-            <div className="hero-chips">
-              {user.shopName && (
-                <span className="chip chip-shop">
-                  <i className="ti ti-building-store" aria-hidden="true" />
+            <div className="dash-hero-chips">
+              {user?.shopName && (
+                <span className="dash-chip">
+                  <i className="ti ti-building-store" />
+
                   {user.shopName}
                 </span>
               )}
-              {user.businessType && <span className="chip chip-biz">{user.businessType}</span>}
-              {user.role && <span className="chip chip-role">{user.role}</span>}
+
+              {user?.businessType && (
+                <span className="dash-chip">{user.businessType}</span>
+              )}
+
+              {user?.role && (
+                <span className="dash-chip dash-chip-role">{user.role}</span>
+              )}
             </div>
 
-            <blockquote className="hero-quote">
-              <span className="qmark">"</span>
+            <blockquote className="dash-quote">
+              <span>“</span>
+
               {quote}
             </blockquote>
           </div>
 
-          <div className="hero-right">
-            <div className="date-badge">
-              <span className="date-day">
-                {time.toLocaleDateString("en-IN", { day: "numeric" })}
+          <div className="dash-hero-right">
+            <div className="dash-date-card">
+              <span className="dash-date-label">TODAY</span>
+
+              <strong className="dash-date-day">
+                {time.toLocaleDateString("en-IN", {
+                  day: "numeric",
+                })}
+              </strong>
+
+              <span className="dash-date-month">
+                {time
+                  .toLocaleDateString("en-IN", {
+                    month: "short",
+                  })
+                  .toUpperCase()}
               </span>
-              <span className="date-month">
-                {time.toLocaleDateString("en-IN", { month: "short" }).toUpperCase()}
-              </span>
-              <span className="date-dow">
-                {time.toLocaleDateString("en-IN", { weekday: "long" })}
+
+              <span className="dash-date-weekday">
+                {time.toLocaleDateString("en-IN", {
+                  weekday: "long",
+                })}
               </span>
             </div>
           </div>
         </section>
 
-        {/* ── Section header ── */}
-        <div className="section-hdr">
+        {/* =====================================
+            OVERVIEW HEADER
+        ====================================== */}
+
+        <section className="dash-section-heading">
           <div>
-            <h2 className="section-title">Business Overview</h2>
-            <p className="section-sub">Click any card to explore details</p>
+            <span className="dash-section-kicker">OVERVIEW</span>
+
+            <h2>Business Overview</h2>
+
+            <p>Select any card to explore more details.</p>
           </div>
+
           <button
-            className="refresh-btn"
+            type="button"
+            className="dash-refresh-btn"
             onClick={() => fetchDashboard(true)}
             disabled={refreshing}
             aria-busy={refreshing}
           >
             <i
-              className={`ti ti-refresh ${refreshing ? "spin" : ""}`}
+              className={`ti ti-refresh ${refreshing ? "dash-spin" : ""}`}
               aria-hidden="true"
             />
-            {refreshing ? "Refreshing…" : "Refresh"}
-          </button>
-        </div>
 
-        {/* ── Error banner ── */}
+            <span>{refreshing ? "Refreshing..." : "Refresh"}</span>
+          </button>
+        </section>
+
+        {/* =====================================
+            ERROR
+        ====================================== */}
+
         {error && (
-          <div className="error-banner" role="alert">
-            <i className="ti ti-alert-circle" aria-hidden="true" />
-            <span>{error}</span>
-            <button className="error-retry" onClick={() => fetchDashboard(true)}>
+          <div className="dash-error" role="alert">
+            <div className="dash-error-icon">
+              <i className="ti ti-alert-circle" />
+            </div>
+
+            <div className="dash-error-copy">
+              <strong>Dashboard couldn't refresh</strong>
+
+              <span>{error}</span>
+            </div>
+
+            <button type="button" onClick={() => fetchDashboard(true)}>
               Retry
             </button>
           </div>
         )}
 
-        {/* ── Stat Cards ── */}
+        {/* =====================================
+            STATS
+        ====================================== */}
+
         {loading ? (
-          <div className="loading-wrap">
-            <div className="spinner" />
-            <p>Fetching your data…</p>
+          <div className="dash-loading">
+            <div className="dash-loader" />
+
+            <h3>Loading dashboard</h3>
+
+            <p>Getting your latest business information...</p>
           </div>
         ) : (
-          <div className="stats-grid" aria-live="polite">
-            {cards.map((item, i) => (
+          <section className="dash-stats-grid" aria-live="polite">
+            {cards.map((item) => (
               <button
-                key={i}
-                className="stat-card"
-                style={{ "--cc": item.color, "--cb": item.bg, "--ca": item.accent }}
+                type="button"
+                key={item.title}
+                className="dash-stat-card"
+                style={{
+                  "--dash-accent": item.color,
+
+                  "--dash-accent-rgb": item.rgb,
+                }}
                 onClick={() => navigate(item.route)}
-                aria-label={`${item.title}: ${item.value}. ${item.desc}`}
+                aria-label={`${item.title}: ${item.value}. ${item.description}`}
               >
-                <div className="sc-stripe" />
-                <div className="sc-top">
-                  <div className="sc-icon-wrap">
-                    <i className={`ti ${item.icon} sc-icon`} aria-hidden="true" />
+                <span className="dash-stat-stripe" />
+
+                <div className="dash-stat-top">
+                  <div className="dash-stat-icon">
+                    <i className={`ti ${item.icon}`} aria-hidden="true" />
                   </div>
-                  <span className="sc-badge">{item.trend}</span>
+
+                  <span className="dash-stat-badge">{item.badge}</span>
                 </div>
-                <div className="sc-value">{item.value}</div>
-                <div className="sc-title">{item.title}</div>
-                <div className="sc-desc">{item.desc}</div>
-                <div className="sc-foot">
-                  <div className="sc-bar">
-                    <div className="sc-bar-fill" />
+
+                <strong className="dash-stat-value">
+                  {formatCount(item.value)}
+                </strong>
+
+                <h3>{item.title}</h3>
+
+                <p>{item.description}</p>
+
+                <div className="dash-stat-footer">
+                  <div className="dash-stat-line">
+                    <span />
                   </div>
-                  <i className="ti ti-arrow-right sc-arrow" aria-hidden="true" />
+
+                  <i className="ti ti-arrow-right" aria-hidden="true" />
                 </div>
               </button>
             ))}
-          </div>
+          </section>
         )}
 
-        {/* ── Bottom Row ── */}
-        <div className="bottom-row">
-          <div className="quick-card">
-            <h3 className="quick-title">
-              <i className="ti ti-bolt" aria-hidden="true" />
-              Quick Actions
-            </h3>
-            <div className="quick-grid">
-              {quickActions.map((a) => (
-                <button key={a.label} className="quick-btn" onClick={() => navigate(a.route)}>
-                  <i className={`ti ${a.icon} quick-icon`} aria-hidden="true" />
-                  <span>{a.label}</span>
+        {/* =====================================
+            LOWER GRID
+        ====================================== */}
+
+        <section className="dash-bottom-grid">
+          {/* QUICK ACTIONS */}
+
+          <div className="dash-panel">
+            <div className="dash-panel-heading">
+              <div className="dash-panel-icon dash-panel-icon-blue">
+                <i className="ti ti-bolt" />
+              </div>
+
+              <div>
+                <span>SHORTCUTS</span>
+
+                <h3>Quick Actions</h3>
+              </div>
+            </div>
+
+            <div className="dash-quick-grid">
+              {quickActions.map((action) => (
+                <button
+                  type="button"
+                  key={action.label}
+                  className="dash-quick-btn"
+                  onClick={() => navigate(action.route)}
+                >
+                  <div className="dash-quick-icon">
+                    <i className={`ti ${action.icon}`} />
+                  </div>
+
+                  <div>
+                    <strong>{action.label}</strong>
+
+                    <span>{action.description}</span>
+                  </div>
+
+                  <i className="ti ti-chevron-right dash-quick-arrow" />
                 </button>
               ))}
             </div>
           </div>
 
-          <div className="focus-card">
-            <h3 className="focus-title">
-              <i className="ti ti-target" aria-hidden="true" />
-              Today's Focus
-            </h3>
-            <ul className="focus-list">
-              {focusItems.map((f) => (
-                <li key={f.text}>
-                  <span className="focus-dot" style={{ background: f.color }} />
-                  {f.text}
-                </li>
+          {/* TODAY'S FOCUS */}
+
+          <div className="dash-panel">
+            <div className="dash-panel-heading">
+              <div className="dash-panel-icon dash-panel-icon-purple">
+                <i className="ti ti-target" />
+              </div>
+
+              <div>
+                <span>PRIORITIES</span>
+
+                <h3>Today's Focus</h3>
+              </div>
+            </div>
+
+            <div className="dash-focus-list">
+              {focusItems.map((item) => (
+                <div className="dash-focus-item" key={item.text}>
+                  <span
+                    className="dash-focus-dot"
+                    style={{
+                      background: item.color,
+                    }}
+                  />
+
+                  <div>
+                    <strong>{item.text}</strong>
+
+                    <span>{item.description}</span>
+                  </div>
+                </div>
               ))}
-            </ul>
+            </div>
           </div>
-        </div>
-      </div>
+        </section>
+
+        <footer className="dash-footer">
+          Smart Khatabook • Business management made simple
+        </footer>
+      </main>
     </div>
   );
 }

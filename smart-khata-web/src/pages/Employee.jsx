@@ -1,10 +1,12 @@
-// FILE: src/pages/Employees.jsx
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
-import React, { useEffect, useState } from "react";
-
-import api from "../api";
-
-import { useNavigate } from "react-router-dom";
+import {
+  useNavigate,
+} from "react-router-dom";
 
 import {
   FiArrowLeft,
@@ -16,1017 +18,1746 @@ import {
   FiCheckCircle,
   FiXCircle,
   FiEye,
+  FiMoon,
+  FiSun,
+  FiX,
 } from "react-icons/fi";
 
-import { FaRupeeSign } from "react-icons/fa";
+import {
+  FaRupeeSign,
+} from "react-icons/fa";
+
+import api from "../api";
+
+
+import "./Employee.css";
+// =====================================================
+// API
+// =====================================================
+
+const API = "/api/employees";
+
+// =====================================================
+// MONEY FORMATTER
+// =====================================================
+
+const formatMoney = (value) => {
+  const amount = Number(value || 0);
+
+  if (!Number.isFinite(amount)) {
+    return "₹0";
+  }
+
+  return `₹${amount.toLocaleString("en-IN", {
+    maximumFractionDigits: 2,
+  })}`;
+};
+
+// =====================================================
+// COMPONENT
+// =====================================================
 
 export default function Employees() {
   const navigate = useNavigate();
 
-  const API = "https://backend-of-smartkhata-book-vkcv.vercel.app/api/employees";
+  // =====================================================
+  // MAIN STATE
+  // =====================================================
 
-  const [search, setSearch] = useState("");
+  const [employees, setEmployees] =
+    useState([]);
 
-  const [showModal, setShowModal] = useState(false);
+  const [search, setSearch] =
+    useState("");
 
-  const [editId, setEditId] = useState(null);
+  const [loading, setLoading] =
+    useState(true);
 
-  const [employees, setEmployees] = useState([]);
+  const [error, setError] =
+    useState("");
 
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [saving, setSaving] =
+    useState(false);
 
-  const [selectedEmployee, setSelectedEmployee] = useState(null);
+  // =====================================================
+  // ADD / EDIT MODAL
+  // =====================================================
 
-  // NEW: delete confirmation modal state
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showModal, setShowModal] =
+    useState(false);
 
-  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [editId, setEditId] =
+    useState(null);
 
-  const [paymentData, setPaymentData] = useState({
+  const [formData, setFormData] =
+    useState({
+      name: "",
+      phone: "",
+      category: "",
+      salary: "",
+    });
+
+  // =====================================================
+  // PAYMENT MODAL
+  // =====================================================
+
+  const [
+    showPaymentModal,
+    setShowPaymentModal,
+  ] = useState(false);
+
+  const [
+    selectedEmployee,
+    setSelectedEmployee,
+  ] = useState(null);
+
+  const [
+    paymentData,
+    setPaymentData,
+  ] = useState({
     amount: "",
     method: "Cash",
     note: "",
   });
 
-  const [formData, setFormData] = useState({
-    name: "",
-    phone: "",
-    category: "",
-    salary: "",
-  });
+  // =====================================================
+  // DELETE MODAL
+  // =====================================================
+
+  const [
+    showDeleteModal,
+    setShowDeleteModal,
+  ] = useState(false);
+
+  const [
+    deleteTarget,
+    setDeleteTarget,
+  ] = useState(null);
+
+  // =====================================================
+  // DARK MODE
+  // =====================================================
+
+  const [darkMode, setDarkMode] =
+    useState(() => {
+      try {
+        const saved =
+          localStorage.getItem(
+            "smartkhata-theme"
+          );
+
+        if (saved === "dark") {
+          return true;
+        }
+
+        if (saved === "light") {
+          return false;
+        }
+
+        return (
+          window.matchMedia?.(
+            "(prefers-color-scheme: dark)"
+          ).matches || false
+        );
+      } catch {
+        return false;
+      }
+    });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        "smartkhata-theme",
+        darkMode
+          ? "dark"
+          : "light"
+      );
+    } catch {
+      // ignore storage errors
+    }
+  }, [darkMode]);
+
+  // =====================================================
+  // FETCH EMPLOYEES
+  // =====================================================
+
+  const fetchEmployees =
+    async () => {
+      try {
+        setLoading(true);
+
+        setError("");
+
+        const res =
+          await api.get(API);
+
+        setEmployees(
+          Array.isArray(
+            res.data?.employees
+          )
+            ? res.data.employees
+            : []
+        );
+      } catch (err) {
+        console.error(
+          "EMPLOYEE FETCH ERROR:",
+          err
+        );
+
+        setError(
+          err?.response?.data
+            ?.message ||
+            "Unable to load employees."
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
 
   useEffect(() => {
     fetchEmployees();
   }, []);
 
-  // =========================
-  // FETCH
-  // =========================
-  const fetchEmployees = async () => {
-    try {
-      const res = await api.get(API.replace("https://backend-of-smartkhata-book-vkcv.vercel.app", ""));
-
-      setEmployees(res.data.employees || []);
-    } catch (err) {
-      console.log(err);
-    }
-  };
-
-  // =========================
+  // =====================================================
   // FILTER
-  // =========================
-  const filteredEmployees = employees.filter((emp) =>
-    emp.name.toLowerCase().includes(search.toLowerCase()),
-  );
+  // =====================================================
 
-  // =========================
+  const filteredEmployees =
+    useMemo(() => {
+      const query =
+        search
+          .trim()
+          .toLowerCase();
+
+      if (!query) {
+        return employees;
+      }
+
+      return employees.filter(
+        (emp) =>
+          String(
+            emp?.name || ""
+          )
+            .toLowerCase()
+            .includes(query) ||
+          String(
+            emp?.phone || ""
+          )
+            .toLowerCase()
+            .includes(query) ||
+          String(
+            emp?.category || ""
+          )
+            .toLowerCase()
+            .includes(query)
+      );
+    }, [
+      employees,
+      search,
+    ]);
+
+  // =====================================================
   // SUMMARY
-  // =========================
-  const totalSalary = employees.reduce(
-    (acc, emp) => acc + Number(emp.salary || 0),
-    0,
-  );
+  // =====================================================
 
-  const totalPaid = employees.reduce((acc, emp) => {
-    const paid =
-      emp.payments?.reduce((sum, p) => sum + Number(p.amount), 0) || 0;
+  const summary =
+    useMemo(() => {
+      let totalSalary = 0;
+      let totalPaid = 0;
+      let present = 0;
 
-    return acc + paid;
-  }, 0);
+      employees.forEach(
+        (emp) => {
+          totalSalary +=
+            Number(
+              emp?.salary || 0
+            );
 
-  const pendingSalary = totalSalary - totalPaid;
+          const paid =
+            emp?.payments?.reduce(
+              (
+                total,
+                payment
+              ) =>
+                total +
+                Number(
+                  payment?.amount ||
+                    0
+                ),
+              0
+            ) || 0;
 
-  const presentEmployees = employees.filter((emp) => {
-    if (!emp.attendance?.length) return false;
+          totalPaid += paid;
 
-    return emp.attendance[emp.attendance.length - 1]?.status === "Present";
-  }).length;
+          const attendance =
+            emp?.attendance || [];
 
-  // =========================
-  // DELETE
-  // =========================
+          const latest =
+            attendance[
+              attendance.length -
+                1
+            ]?.status;
 
-  // Step 1: open confirmation modal instead of deleting directly
-  const requestDelete = (emp) => {
-    setDeleteTarget(emp);
-    setShowDeleteModal(true);
-  };
+          if (
+            latest ===
+            "Present"
+          ) {
+            present += 1;
+          }
+        }
+      );
 
-  // Step 2: user confirmed -> actually delete
-  const confirmDelete = async () => {
-    if (!deleteTarget) return;
+      return {
+        totalSalary,
 
-    try {
-      await api.delete(`${API.replace("https://backend-of-smartkhata-book-vkcv.vercel.app", "")}/delete/${deleteTarget._id}`);
+        totalPaid,
 
-      fetchEmployees();
-    } catch (err) {
-      console.log(err);
-    } finally {
-      setShowDeleteModal(false);
-      setDeleteTarget(null);
-    }
-  };
+        pendingSalary:
+          Math.max(
+            totalSalary -
+              totalPaid,
+            0
+          ),
 
-  // Step 3: user cancelled
-  const cancelDelete = () => {
-    setShowDeleteModal(false);
-    setDeleteTarget(null);
-  };
+        present,
+      };
+    }, [employees]);
 
-  // =========================
-  // ATTENDANCE
-  // =========================
-  const handleAttendance = async (id, currentStatus) => {
-    try {
-      const newStatus = currentStatus === "Present" ? "Absent" : "Present";
+  // =====================================================
+  // ADD EMPLOYEE
+  // =====================================================
 
-      await api.post(`${API.replace("https://backend-of-smartkhata-book-vkcv.vercel.app", "")}/attendance/${id}`, {
-        status: newStatus,
-        date: new Date().toISOString(),
-      });
-
-      fetchEmployees();
-    } catch (err) {
-      console.log(err);
-    }
-  };
-
-  // =========================
-  // PAYMENT
-  // =========================
-  const handleSalaryPayment = async () => {
-    try {
-      if (!paymentData.amount) {
-        alert("Enter amount");
-        return;
-      }
-
-      await api.post(`${API.replace("https://backend-of-smartkhata-book-vkcv.vercel.app", "")}/payment/${selectedEmployee._id}`, paymentData);
-
-      fetchEmployees();
-
-      setShowPaymentModal(false);
-
-      setPaymentData({
-        amount: "",
-        method: "Cash",
-        note: "",
-      });
-    } catch (err) {
-      console.log(err);
-    }
-  };
-
-  // =========================
-  // INPUT CHANGE
-  // =========================
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
-
-  // =========================
-  // SUBMIT
-  // =========================
-  const handleSubmit = async () => {
-    try {
-      if (!formData.name || !formData.phone || !formData.salary) {
-        alert("Please fill all fields");
-        return;
-      }
-
-      if (editId) {
-        await api.put(`${API.replace("https://backend-of-smartkhata-book-vkcv.vercel.app", "")}/update/${editId}`, formData);
-      } else {
-        await api.post(`${API.replace("https://backend-of-smartkhata-book-vkcv.vercel.app", "")}/add`, {
-          ...formData,
-          payments: [],
-          attendance: [],
-          status: "Active",
-        });
-      }
-
-      fetchEmployees();
-
-      setShowModal(false);
-
-      setEditId(null);
-
-      setFormData({
-        name: "",
-        phone: "",
-        category: "",
-        salary: "",
-      });
-    } catch (err) {
-      console.log(err);
-    }
-  };
-
-  // =========================
-  // EDIT
-  // =========================
-  const handleEdit = (emp) => {
-    setEditId(emp._id);
+  const openAddModal = () => {
+    setEditId(null);
 
     setFormData({
-      name: emp.name,
-      phone: emp.phone,
-      category: emp.category,
-      salary: emp.salary,
+      name: "",
+      phone: "",
+      category: "",
+      salary: "",
     });
 
     setShowModal(true);
   };
 
+  // =====================================================
+  // EDIT
+  // =====================================================
+
+  const handleEdit = (emp) => {
+    setEditId(emp._id);
+
+    setFormData({
+      name:
+        emp?.name || "",
+
+      phone:
+        emp?.phone || "",
+
+      category:
+        emp?.category || "",
+
+      salary:
+        emp?.salary || "",
+    });
+
+    setShowModal(true);
+  };
+
+  // =====================================================
+  // FORM CHANGE
+  // =====================================================
+
+  const handleChange = (
+    event
+  ) => {
+    const {
+      name,
+      value,
+    } = event.target;
+
+    setFormData(
+      (previous) => ({
+        ...previous,
+
+        [name]: value,
+      })
+    );
+  };
+
+  // =====================================================
+  // SAVE EMPLOYEE
+  // =====================================================
+
+  const handleSubmit =
+    async () => {
+      const name =
+        formData.name.trim();
+
+      const phone =
+        formData.phone.trim();
+
+      const category =
+        formData.category.trim();
+
+      const salary =
+        Number(
+          formData.salary
+        );
+
+      if (
+        !name ||
+        !phone ||
+        !category ||
+        !Number.isFinite(
+          salary
+        ) ||
+        salary <= 0
+      ) {
+        alert(
+          "Please enter valid employee details."
+        );
+
+        return;
+      }
+
+      try {
+        setSaving(true);
+
+        const payload = {
+          name,
+          phone,
+          category,
+          salary,
+        };
+
+        if (editId) {
+          await api.put(
+            `${API}/update/${editId}`,
+            payload
+          );
+        } else {
+          await api.post(
+            `${API}/add`,
+            {
+              ...payload,
+
+              payments: [],
+
+              attendance: [],
+
+              status:
+                "Active",
+            }
+          );
+        }
+
+        await fetchEmployees();
+
+        setShowModal(false);
+
+        setEditId(null);
+
+        setFormData({
+          name: "",
+          phone: "",
+          category: "",
+          salary: "",
+        });
+      } catch (err) {
+        console.error(
+          "EMPLOYEE SAVE ERROR:",
+          err
+        );
+
+        alert(
+          err?.response?.data
+            ?.message ||
+            "Failed to save employee."
+        );
+      } finally {
+        setSaving(false);
+      }
+    };
+
+  // =====================================================
+  // DELETE
+  // =====================================================
+
+  const requestDelete = (
+    employee
+  ) => {
+    setDeleteTarget(
+      employee
+    );
+
+    setShowDeleteModal(
+      true
+    );
+  };
+
+  const cancelDelete = () => {
+    if (saving) {
+      return;
+    }
+
+    setShowDeleteModal(
+      false
+    );
+
+    setDeleteTarget(null);
+  };
+
+  const confirmDelete =
+    async () => {
+      if (
+        !deleteTarget?._id
+      ) {
+        return;
+      }
+
+      try {
+        setSaving(true);
+
+        await api.delete(
+          `${API}/delete/${deleteTarget._id}`
+        );
+
+        await fetchEmployees();
+
+        setShowDeleteModal(
+          false
+        );
+
+        setDeleteTarget(null);
+      } catch (err) {
+        console.error(
+          "EMPLOYEE DELETE ERROR:",
+          err
+        );
+
+        alert(
+          err?.response?.data
+            ?.message ||
+            "Failed to delete employee."
+        );
+      } finally {
+        setSaving(false);
+      }
+    };
+
+  // =====================================================
+  // ATTENDANCE
+  // =====================================================
+
+  const handleAttendance =
+    async (
+      id,
+      currentStatus
+    ) => {
+      try {
+        const newStatus =
+          currentStatus ===
+          "Present"
+            ? "Absent"
+            : "Present";
+
+        await api.post(
+          `${API}/attendance/${id}`,
+          {
+            status:
+              newStatus,
+
+            date:
+              new Date().toISOString(),
+          }
+        );
+
+        await fetchEmployees();
+      } catch (err) {
+        console.error(
+          "ATTENDANCE ERROR:",
+          err
+        );
+
+        alert(
+          err?.response?.data
+            ?.message ||
+            "Unable to update attendance."
+        );
+      }
+    };
+
+  // =====================================================
+  // OPEN PAYMENT
+  // =====================================================
+
+  const openPaymentModal = (
+    employee
+  ) => {
+    setSelectedEmployee(
+      employee
+    );
+
+    setPaymentData({
+      amount: "",
+      method: "Cash",
+      note: "",
+    });
+
+    setShowPaymentModal(
+      true
+    );
+  };
+
+  // =====================================================
+  // SALARY PAYMENT
+  // =====================================================
+
+  const handleSalaryPayment =
+    async () => {
+      const amount =
+        Number(
+          paymentData.amount
+        );
+
+      if (
+        !selectedEmployee?._id
+      ) {
+        return;
+      }
+
+      if (
+        !Number.isFinite(
+          amount
+        ) ||
+        amount <= 0
+      ) {
+        alert(
+          "Enter a valid amount."
+        );
+
+        return;
+      }
+
+      try {
+        setSaving(true);
+
+        await api.post(
+          `${API}/payment/${selectedEmployee._id}`,
+          {
+            ...paymentData,
+
+            amount,
+          }
+        );
+
+        await fetchEmployees();
+
+        setShowPaymentModal(
+          false
+        );
+
+        setSelectedEmployee(
+          null
+        );
+
+        setPaymentData({
+          amount: "",
+          method: "Cash",
+          note: "",
+        });
+      } catch (err) {
+        console.error(
+          "SALARY PAYMENT ERROR:",
+          err
+        );
+
+        alert(
+          err?.response?.data
+            ?.message ||
+            "Salary payment failed."
+        );
+      } finally {
+        setSaving(false);
+      }
+    };
+
+  // =====================================================
+  // UI
+  // =====================================================
+
   return (
-    <>
-      <style>{`
-*{
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
-  font-family:Inter, Arial, sans-serif;
-}
-
-body{
-  background:#eef2ff;
-}
-
-.employee-page{
-  padding:30px;
-  min-height:100vh;
-  background:
-  linear-gradient(
-    135deg,
-    #eef2ff 0%,
-    #f8fafc 50%,
-    #ecfeff 100%
-  );
-}
-
-.top-header{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  margin-bottom:30px;
-  flex-wrap:wrap;
-  gap:20px;
-}
-
-.title-wrap h1{
-  font-size:38px;
-  font-weight:800;
-  color:#0f172a;
-}
-
-.title-wrap p{
-  margin-top:8px;
-  color:#64748b;
-}
-
-.add-btn{
-  background:linear-gradient(
-    135deg,
-    #2563eb,
-    #7c3aed
-  );
-
-  color:white;
-  border:none;
-  padding:15px 22px;
-  border-radius:16px;
-  display:flex;
-  align-items:center;
-  gap:10px;
-  cursor:pointer;
-  font-weight:700;
-  transition:0.3s;
-}
-
-.add-btn:hover{
-  transform:translateY(-3px);
-}
-
-.summary-grid{
-  display:grid;
-  grid-template-columns:
-  repeat(auto-fit,minmax(240px,1fr));
-
-  gap:20px;
-  margin-bottom:30px;
-}
-
-.summary-card{
-  background:white;
-  padding:24px;
-  border-radius:24px;
-  box-shadow:
-  0 10px 30px rgba(0,0,0,0.08);
-
-  transition:0.3s;
-}
-
-.summary-card:hover{
-  transform:translateY(-5px);
-}
-
-.summary-card h3{
-  color:#64748b;
-  margin-bottom:12px;
-}
-
-.summary-card h2{
-  font-size:34px;
-  font-weight:800;
-}
-
-.search-box{
-  background:white;
-  border-radius:18px;
-  padding:16px 18px;
-  display:flex;
-  align-items:center;
-  gap:12px;
-  margin-bottom:30px;
-
-  box-shadow:
-  0 8px 20px rgba(0,0,0,0.05);
-}
-
-.search-box input{
-  border:none;
-  outline:none;
-  width:100%;
-  font-size:15px;
-}
-
-.employee-grid{
-  display:grid;
-  grid-template-columns:
-  repeat(auto-fit,minmax(340px,1fr));
-
-  gap:24px;
-}
-
-.employee-card{
-  background:white;
-  border-radius:28px;
-  padding:24px;
-
-  box-shadow:
-  0 10px 30px rgba(0,0,0,0.08);
-
-  transition:0.35s;
-}
-
-.employee-card:hover{
-  transform:
-  translateY(-8px)
-  scale(1.01);
-}
-
-.employee-top{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-}
-
-.avatar{
-  width:72px;
-  height:72px;
-  border-radius:24px;
-
-  background:
-  linear-gradient(
-    135deg,
-    #2563eb,
-    #7c3aed
-  );
-
-  color:white;
-
-  display:flex;
-  align-items:center;
-  justify-content:center;
-
-  font-size:30px;
-}
-
-.employee-name{
-  font-size:24px;
-  font-weight:800;
-  margin-top:18px;
-}
-
-.employee-phone{
-  color:#64748b;
-  margin-top:8px;
-}
-
-.category{
-  display:inline-block;
-
-  margin-top:14px;
-
-  background:#dbeafe;
-
-  color:#1d4ed8;
-
-  padding:8px 14px;
-
-  border-radius:30px;
-
-  font-size:13px;
-
-  font-weight:700;
-}
-
-.badge{
-  padding:8px 16px;
-  border-radius:30px;
-  font-size:12px;
-  font-weight:700;
-}
-
-.active{
-  background:#dcfce7;
-  color:#166534;
-}
-
-.leave{
-  background:#fee2e2;
-  color:#991b1b;
-}
-
-.salary-section{
-  margin-top:24px;
-}
-
-.salary-top{
-  display:flex;
-  justify-content:space-between;
-  margin-bottom:10px;
-  font-size:14px;
-  font-weight:600;
-}
-
-.progress{
-  height:12px;
-  background:#e2e8f0;
-  border-radius:30px;
-  overflow:hidden;
-}
-
-.progress-bar{
-  height:100%;
-
-  background:
-  linear-gradient(
-    90deg,
-    #2563eb,
-    #7c3aed
-  );
-}
-
-.card-actions{
-  display:flex;
-  gap:12px;
-  margin-top:25px;
-  flex-wrap:wrap;
-}
-
-.action-btn{
-  flex:1;
-  border:none;
-  height:48px;
-  border-radius:16px;
-  color:white;
-  font-weight:700;
-  cursor:pointer;
-
-  display:flex;
-  align-items:center;
-  justify-content:center;
-
-  font-size:18px;
-
-  transition:0.3s;
-}
-
-.action-btn:hover{
-  transform:translateY(-3px);
-}
-
-.view-btn{
-  background:#0ea5e9;
-}
-
-.edit-btn{
-  background:#2563eb;
-}
-
-.delete-btn{
-  background:#ef4444;
-}
-
-.salary-btn{
-  background:
-  linear-gradient(
-    135deg,
-    #f59e0b,
-    #f97316
-  );
-}
-
-.attendance-btn{
-  background:#16a34a;
-}
-
-.attendance-off{
-  background:#f97316;
-}
-
-.modal-overlay{
-  position:fixed;
-  inset:0;
-  background:rgba(15,23,42,0.45);
-
-  display:flex;
-  align-items:center;
-  justify-content:center;
-
-  z-index:1000;
-}
-
-.modal{
-  width:430px;
-  background:white;
-  padding:30px;
-  border-radius:28px;
-}
-
-.modal h2{
-  margin-bottom:22px;
-  color:#111827;
-}
-
-.modal input{
-  width:100%;
-  padding:15px;
-  border-radius:14px;
-  border:1px solid #cbd5e1;
-  margin-bottom:16px;
-}
-
-.employee-select{
-  width:100%;
-  padding:15px;
-  border-radius:14px;
-  border:1px solid #cbd5e1;
-  margin-bottom:16px;
-}
-
-.modal-buttons{
-  display:flex;
-  gap:14px;
-}
-
-.modal-buttons button{
-  flex:1;
-  border:none;
-  padding:15px;
-  border-radius:14px;
-  cursor:pointer;
-  color:white;
-  font-weight:700;
-}
-
-.save-btn{
-  background:
-  linear-gradient(
-    135deg,
-    #2563eb,
-    #7c3aed
-  );
-}
-
-.cancel-btn{
-  background:#64748b;
-}
-
-.delete-confirm-text{
-  color:#374151;
-  margin-bottom:24px;
-  line-height:1.6;
-}
-
-.delete-confirm-text b{
-  color:#111827;
-}
-
-.confirm-delete-btn{
-  background:#ef4444;
-}
-
-@media(max-width:768px){
-
-  .employee-page{
-    padding:18px;
-  }
-
-  .employee-grid{
-    grid-template-columns:1fr;
-  }
-
-  .modal{
-    width:95%;
-  }
-
-  .action-btn{
-    min-width:48%;
-  }
-
-}
-      `}</style>
-
-      <div className="employee-page">
-        {/* HEADER */}
-
-        <div className="top-header">
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "16px",
-            }}
+    <div
+      className={`emp-page ${
+        darkMode
+          ? "emp-dark"
+          : ""
+      }`}
+    >
+      {/* =================================================
+          HERO
+      ================================================== */}
+
+      <header className="emp-hero">
+        <div className="emp-hero-glow emp-hero-glow-one" />
+
+        <div className="emp-hero-glow emp-hero-glow-two" />
+
+        <div className="emp-hero-left">
+          <button
+            type="button"
+            className="emp-back-btn"
+            onClick={() =>
+              navigate(
+                "/dashboard"
+              )
+            }
+            aria-label="Back to dashboard"
           >
-            <button
-              className="or-back-btn"
-              onClick={() => navigate("/dashboard")}
-              style={{
-                width: "52px",
-                height: "52px",
-                borderRadius: "16px",
-                border: "none",
-                background: "linear-gradient(135deg,#2563eb,#7c3aed)",
-                color: "white",
-                fontSize: "22px",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                boxShadow: "0 10px 25px rgba(37,99,235,0.25)",
-              }}
-            >
-              <FiArrowLeft />
-            </button>
+            <FiArrowLeft />
+          </button>
 
-            <div className="title-wrap">
-              <h1>Employee Management</h1>
+          <div className="emp-heading">
+            <div className="emp-heading-icon">
+              <FiUsers />
+            </div>
 
-              <p>Manage employees, salary & attendance</p>
+            <div>
+              <h1>
+                Employee Management
+              </h1>
+
+              <p>
+                Manage your team,
+                salaries and daily
+                attendance
+              </p>
             </div>
           </div>
+        </div>
+
+        <div className="emp-hero-actions">
+          <button
+            type="button"
+            className="emp-theme-btn"
+            onClick={() =>
+              setDarkMode(
+                (
+                  previous
+                ) =>
+                  !previous
+              )
+            }
+            aria-label={
+              darkMode
+                ? "Switch to light mode"
+                : "Switch to dark mode"
+            }
+            title={
+              darkMode
+                ? "Light mode"
+                : "Dark mode"
+            }
+          >
+            {darkMode ? (
+              <FiSun />
+            ) : (
+              <FiMoon />
+            )}
+          </button>
 
           <button
-            className="add-btn"
-            onClick={() => {
-              setShowModal(true);
-
-              setEditId(null);
-
-              setFormData({
-                name: "",
-                phone: "",
-                category: "",
-                salary: "",
-              });
-            }}
+            type="button"
+            className="emp-add-btn"
+            onClick={
+              openAddModal
+            }
           >
             <FiPlus />
-            Add Employee
+
+            <span>
+              Add Employee
+            </span>
           </button>
         </div>
+      </header>
 
-        {/* SUMMARY */}
+      {/* =================================================
+          SUMMARY
+      ================================================== */}
 
-        <div className="summary-grid">
-          <div className="summary-card">
-            <h3>Total Employees</h3>
-            <h2>{employees.length}</h2>
+      <section className="emp-summary-grid">
+        <div className="emp-summary-card emp-summary-blue">
+          <div className="emp-summary-icon">
+            <FiUsers />
           </div>
 
-          <div className="summary-card">
-            <h3>Total Salary</h3>
-            <h2>₹{totalSalary}</h2>
-          </div>
+          <div>
+            <span>
+              Total Employees
+            </span>
 
-          <div className="summary-card">
-            <h3>Pending Salary</h3>
-            <h2>₹{pendingSalary}</h2>
-          </div>
-
-          <div className="summary-card">
-            <h3>Present Today</h3>
-            <h2>{presentEmployees}</h2>
+            <strong>
+              {
+                employees.length
+              }
+            </strong>
           </div>
         </div>
 
-        {/* SEARCH */}
+        <div className="emp-summary-card emp-summary-purple">
+          <div className="emp-summary-icon">
+            <FaRupeeSign />
+          </div>
 
-        <div className="search-box">
+          <div>
+            <span>
+              Total Salary
+            </span>
+
+            <strong>
+              {formatMoney(
+                summary.totalSalary
+              )}
+            </strong>
+          </div>
+        </div>
+
+        <div className="emp-summary-card emp-summary-orange">
+          <div className="emp-summary-icon">
+            <FaRupeeSign />
+          </div>
+
+          <div>
+            <span>
+              Pending Salary
+            </span>
+
+            <strong>
+              {formatMoney(
+                summary.pendingSalary
+              )}
+            </strong>
+          </div>
+        </div>
+
+        <div className="emp-summary-card emp-summary-green">
+          <div className="emp-summary-icon">
+            <FiCheckCircle />
+          </div>
+
+          <div>
+            <span>
+              Present Today
+            </span>
+
+            <strong>
+              {
+                summary.present
+              }
+            </strong>
+          </div>
+        </div>
+      </section>
+
+      {/* =================================================
+          SEARCH
+      ================================================== */}
+
+      <section className="emp-toolbar">
+        <div className="emp-search">
           <FiSearch />
 
           <input
-            type="text"
-            placeholder="Search employee..."
+            type="search"
+            placeholder="Search by name, phone or role..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(
+              event
+            ) =>
+              setSearch(
+                event.target
+                  .value
+              )
+            }
           />
+
+          {search && (
+            <button
+              type="button"
+              className="emp-search-clear"
+              onClick={() =>
+                setSearch("")
+              }
+              aria-label="Clear search"
+            >
+              <FiX />
+            </button>
+          )}
         </div>
 
-        {/* EMPLOYEE LIST */}
+        <div className="emp-count">
+          <FiUsers />
 
-        <div className="employee-grid">
-          {filteredEmployees.map((emp) => {
-            const paid =
-              emp.payments?.reduce((sum, p) => sum + Number(p.amount), 0) || 0;
+          {
+            filteredEmployees.length
+          }{" "}
+          employee
+          {filteredEmployees.length ===
+          1
+            ? ""
+            : "s"}
+        </div>
+      </section>
 
-            const progress = (paid / emp.salary) * 100;
+      {/* =================================================
+          LOADING
+      ================================================== */}
 
-            const latestAttendance =
-              emp.attendance?.[emp.attendance.length - 1]?.status;
+      {loading && (
+        <div className="emp-state-card">
+          <div className="emp-loader" />
 
-            return (
-              <div className="employee-card" key={emp._id}>
-                <div className="employee-top">
-                  <div className="avatar">
-                    <FiUsers />
-                  </div>
+          <p>
+            Loading employees...
+          </p>
+        </div>
+      )}
 
-                  <span
-                    className={`badge ${
-                      emp.status === "Active" ? "active" : "leave"
-                    }`}
-                  >
-                    {emp.status}
-                  </span>
-                </div>
+      {/* =================================================
+          ERROR
+      ================================================== */}
 
-                <div className="employee-name">{emp.name}</div>
+      {!loading &&
+        error && (
+          <div className="emp-state-card emp-error-state">
+            <FiXCircle
+              size={32}
+            />
 
-                <div className="employee-phone">{emp.phone}</div>
+            <h3>
+              Unable to load
+              employees
+            </h3>
 
-                <div className="category">{emp.category}</div>
+            <p>
+              {error}
+            </p>
 
-                {/* SALARY */}
+            <button
+              type="button"
+              onClick={
+                fetchEmployees
+              }
+            >
+              Try Again
+            </button>
+          </div>
+        )}
 
-                <div className="salary-section">
-                  <div className="salary-top">
-                    <span>Paid ₹{paid}</span>
+      {/* =================================================
+          NO RESULTS
+      ================================================== */}
 
-                    <span>₹{emp.salary}</span>
-                  </div>
+      {!loading &&
+        !error &&
+        filteredEmployees.length ===
+          0 && (
+          <div className="emp-state-card">
+            <FiUsers
+              size={35}
+            />
 
-                  <div className="progress">
-                    <div
-                      className="progress-bar"
-                      style={{
-                        width: `${progress}%`,
-                      }}
-                    />
-                  </div>
-                </div>
+            <h3>
+              {search
+                ? "No matching employees"
+                : "No employees yet"}
+            </h3>
 
-                {/* ACTIONS */}
+            <p>
+              {search
+                ? "Try another name, phone number or role."
+                : "Add your first employee to start managing your team."}
+            </p>
 
-                <div className="card-actions">
-                  <button
-                    className="action-btn view-btn"
-                    onClick={() =>
-                      navigate("/employee-detail", {
-                        state: emp,
-                      })
+            {!search && (
+              <button
+                type="button"
+                onClick={
+                  openAddModal
+                }
+              >
+                <FiPlus />
+
+                Add Employee
+              </button>
+            )}
+          </div>
+        )}
+
+      {/* =================================================
+          EMPLOYEE GRID
+      ================================================== */}
+
+      {!loading &&
+        !error &&
+        filteredEmployees.length >
+          0 && (
+          <section className="emp-grid">
+            {filteredEmployees.map(
+              (emp) => {
+                const paid =
+                  emp?.payments?.reduce(
+                    (
+                      sum,
+                      payment
+                    ) =>
+                      sum +
+                      Number(
+                        payment?.amount ||
+                          0
+                      ),
+                    0
+                  ) || 0;
+
+                const salary =
+                  Number(
+                    emp?.salary ||
+                      0
+                  );
+
+                const rawProgress =
+                  salary > 0
+                    ? (paid /
+                        salary) *
+                      100
+                    : 0;
+
+                const progress =
+                  Math.min(
+                    Math.max(
+                      rawProgress,
+                      0
+                    ),
+                    100
+                  );
+
+                const attendance =
+                  emp?.attendance ||
+                  [];
+
+                const latestAttendance =
+                  attendance[
+                    attendance.length -
+                      1
+                  ]?.status;
+
+                const isPresent =
+                  latestAttendance ===
+                  "Present";
+
+                const initial =
+                  String(
+                    emp?.name ||
+                      "E"
+                  )
+                    .trim()
+                    .charAt(0)
+                    .toUpperCase();
+
+                return (
+                  <article
+                    className="emp-card"
+                    key={
+                      emp._id
                     }
                   >
-                    <FiEye />
-                  </button>
+                    {/* TOP */}
 
-                  <button
-                    className="action-btn edit-btn"
-                    onClick={() => handleEdit(emp)}
-                  >
-                    <FiEdit2 />
-                  </button>
+                    <div className="emp-card-top">
+                      <div className="emp-avatar">
+                        {
+                          initial
+                        }
+                      </div>
 
-                  <button
-                    className="action-btn delete-btn"
-                    onClick={() => requestDelete(emp)}
-                  >
-                    <FiTrash2 />
-                  </button>
+                      <div className="emp-card-badges">
+                        <span
+                          className={`emp-work-badge ${
+                            emp.status ===
+                            "Active"
+                              ? "emp-active"
+                              : "emp-leave"
+                          }`}
+                        >
+                          <span />
 
-                  <button
-                    className="action-btn salary-btn"
-                    onClick={() => {
-                      setSelectedEmployee(emp);
+                          {emp.status ||
+                            "Active"}
+                        </span>
 
-                      setShowPaymentModal(true);
-                    }}
-                  >
-                    <FaRupeeSign />
-                  </button>
+                        <span
+                          className={`emp-attendance-chip ${
+                            isPresent
+                              ? "emp-present"
+                              : "emp-absent"
+                          }`}
+                        >
+                          {isPresent
+                            ? "Present"
+                            : "Absent"}
+                        </span>
+                      </div>
+                    </div>
 
-                  <button
-                    className={`action-btn ${
-                      latestAttendance === "Present"
-                        ? "attendance-btn"
-                        : "attendance-off"
-                    }`}
-                    onClick={() => handleAttendance(emp._id, latestAttendance)}
-                  >
-                    {latestAttendance === "Present" ? (
-                      <FiCheckCircle />
-                    ) : (
-                      <FiXCircle />
-                    )}
-                  </button>
+                    {/* INFO */}
+
+                    <div className="emp-info">
+                      <h2>
+                        {emp.name ||
+                          "Unnamed Employee"}
+                      </h2>
+
+                      <p>
+                        {emp.phone ||
+                          "No phone number"}
+                      </p>
+
+                      <span className="emp-role">
+                        {emp.category ||
+                          "Employee"}
+                      </span>
+                    </div>
+
+                    {/* SALARY */}
+
+                    <div className="emp-salary">
+                      <div className="emp-salary-heading">
+                        <span>
+                          Salary Progress
+                        </span>
+
+                        <strong>
+                          {Math.round(
+                            progress
+                          )}
+                          %
+                        </strong>
+                      </div>
+
+                      <div className="emp-progress">
+                        <div
+                          className="emp-progress-fill"
+                          style={{
+                            width:
+                              `${progress}%`,
+                          }}
+                        />
+                      </div>
+
+                      <div className="emp-salary-numbers">
+                        <div>
+                          <span>
+                            Paid
+                          </span>
+
+                          <strong className="emp-paid-value">
+                            {formatMoney(
+                              paid
+                            )}
+                          </strong>
+                        </div>
+
+                        <div>
+                          <span>
+                            Salary
+                          </span>
+
+                          <strong>
+                            {formatMoney(
+                              salary
+                            )}
+                          </strong>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* ACTIONS */}
+
+                    <div className="emp-card-actions">
+                      <button
+                        type="button"
+                        className="emp-action emp-view"
+                        onClick={() =>
+                          navigate(
+                            "/employee-detail",
+                            {
+                              state:
+                                emp,
+                            }
+                          )
+                        }
+                        title="View employee"
+                      >
+                        <FiEye />
+
+                        <span>
+                          View
+                        </span>
+                      </button>
+
+                      <button
+                        type="button"
+                        className="emp-action emp-edit"
+                        onClick={() =>
+                          handleEdit(
+                            emp
+                          )
+                        }
+                        title="Edit employee"
+                      >
+                        <FiEdit2 />
+
+                        <span>
+                          Edit
+                        </span>
+                      </button>
+
+                      <button
+                        type="button"
+                        className="emp-action emp-pay"
+                        onClick={() =>
+                          openPaymentModal(
+                            emp
+                          )
+                        }
+                        title="Pay salary"
+                      >
+                        <FaRupeeSign />
+
+                        <span>
+                          Pay
+                        </span>
+                      </button>
+
+                      <button
+                        type="button"
+                        className={`emp-action ${
+                          isPresent
+                            ? "emp-attendance-present"
+                            : "emp-attendance-absent"
+                        }`}
+                        onClick={() =>
+                          handleAttendance(
+                            emp._id,
+                            latestAttendance
+                          )
+                        }
+                        title={
+                          isPresent
+                            ? "Mark absent"
+                            : "Mark present"
+                        }
+                      >
+                        {isPresent ? (
+                          <FiCheckCircle />
+                        ) : (
+                          <FiXCircle />
+                        )}
+
+                        <span>
+                          {isPresent
+                            ? "Present"
+                            : "Absent"}
+                        </span>
+                      </button>
+
+                      <button
+                        type="button"
+                        className="emp-action emp-delete"
+                        onClick={() =>
+                          requestDelete(
+                            emp
+                          )
+                        }
+                        title="Delete employee"
+                      >
+                        <FiTrash2 />
+
+                        <span>
+                          Delete
+                        </span>
+                      </button>
+                    </div>
+                  </article>
+                );
+              }
+            )}
+          </section>
+        )}
+
+      {/* =================================================
+          ADD / EDIT MODAL
+      ================================================== */}
+
+      {showModal && (
+        <div
+          className="emp-modal-overlay"
+          onClick={() => {
+            if (!saving) {
+              setShowModal(
+                false
+              );
+            }
+          }}
+        >
+          <div
+            className="emp-modal"
+            onClick={(
+              event
+            ) =>
+              event.stopPropagation()
+            }
+          >
+            <button
+              type="button"
+              className="emp-modal-close"
+              onClick={() =>
+                setShowModal(
+                  false
+                )
+              }
+              disabled={saving}
+            >
+              <FiX />
+            </button>
+
+            <div className="emp-modal-icon">
+              {editId ? (
+                <FiEdit2 />
+              ) : (
+                <FiPlus />
+              )}
+            </div>
+
+            <h2>
+              {editId
+                ? "Edit Employee"
+                : "Add Employee"}
+            </h2>
+
+            <p className="emp-modal-subtitle">
+              {editId
+                ? "Update employee information."
+                : "Add a new member to your team."}
+            </p>
+
+            <div className="emp-form">
+              <label>
+                Employee Name
+
+                <input
+                  type="text"
+                  name="name"
+                  placeholder="Enter employee name"
+                  value={
+                    formData.name
+                  }
+                  onChange={
+                    handleChange
+                  }
+                />
+              </label>
+
+              <label>
+                Phone Number
+
+                <input
+                  type="text"
+                  name="phone"
+                  placeholder="Enter phone number"
+                  value={
+                    formData.phone
+                  }
+                  onChange={
+                    handleChange
+                  }
+                />
+              </label>
+
+              <label>
+                Role
+
+                <select
+                  name="category"
+                  value={
+                    formData.category
+                  }
+                  onChange={
+                    handleChange
+                  }
+                >
+                  <option value="">
+                    Select Role
+                  </option>
+
+                  <option value="Salesman">
+                    Salesman
+                  </option>
+
+                  <option value="Cashier">
+                    Cashier
+                  </option>
+
+                  <option value="Manager">
+                    Manager
+                  </option>
+
+                  <option value="Delivery Boy">
+                    Delivery Boy
+                  </option>
+
+                  <option value="Accountant">
+                    Accountant
+                  </option>
+
+                  <option value="Helper">
+                    Helper
+                  </option>
+
+                  <option value="Other">
+                    Other
+                  </option>
+                </select>
+              </label>
+
+              <label>
+                Monthly Salary
+
+                <div className="emp-money-input">
+                  <FaRupeeSign />
+
+                  <input
+                    type="number"
+                    name="salary"
+                    min="0"
+                    placeholder="Enter salary"
+                    value={
+                      formData.salary
+                    }
+                    onChange={
+                      handleChange
+                    }
+                  />
                 </div>
-              </div>
-            );
-          })}
+              </label>
+            </div>
+
+            <div className="emp-modal-actions">
+              <button
+                type="button"
+                className="emp-modal-cancel"
+                onClick={() =>
+                  setShowModal(
+                    false
+                  )
+                }
+                disabled={saving}
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                className="emp-modal-primary"
+                onClick={
+                  handleSubmit
+                }
+                disabled={saving}
+              >
+                {saving
+                  ? "Saving..."
+                  : editId
+                    ? "Update Employee"
+                    : "Add Employee"}
+              </button>
+            </div>
+          </div>
         </div>
+      )}
 
-        {/* ADD / EDIT MODAL */}
+      {/* =================================================
+          PAYMENT MODAL
+      ================================================== */}
 
-        {showModal && (
-          <div className="modal-overlay">
-            <div className="modal">
-              <h2>{editId ? "Edit Employee" : "Add Employee"}</h2>
-
-              <input
-                type="text"
-                name="name"
-                placeholder="Employee Name"
-                value={formData.name}
-                onChange={handleChange}
-              />
-
-              <input
-                type="text"
-                name="phone"
-                placeholder="Phone Number"
-                value={formData.phone}
-                onChange={handleChange}
-              />
-
-              <select
-                name="category"
-                value={formData.category}
-                onChange={handleChange}
-                className="employee-select"
+      {showPaymentModal &&
+        selectedEmployee && (
+          <div
+            className="emp-modal-overlay"
+            onClick={() => {
+              if (!saving) {
+                setShowPaymentModal(
+                  false
+                );
+              }
+            }}
+          >
+            <div
+              className="emp-modal"
+              onClick={(
+                event
+              ) =>
+                event.stopPropagation()
+              }
+            >
+              <button
+                type="button"
+                className="emp-modal-close"
+                onClick={() =>
+                  setShowPaymentModal(
+                    false
+                  )
+                }
+                disabled={saving}
               >
-                <option value="">Select Category</option>
+                <FiX />
+              </button>
 
-                <option value="Salesman">Salesman</option>
-
-                <option value="Cashier">Cashier</option>
-
-                <option value="Manager">Manager</option>
-
-                <option value="Delivery Boy">Delivery Boy</option>
-
-                <option value="Accountant">Accountant</option>
-
-                <option value="Helper">Helper</option>
-
-                <option value="Other">Other</option>
-              </select>
-
-              <input
-                type="number"
-                name="salary"
-                placeholder="Salary"
-                value={formData.salary}
-                onChange={handleChange}
-              />
-
-              <div className="modal-buttons">
-                <button className="save-btn" onClick={handleSubmit}>
-                  {editId ? "Update" : "Save"}
-                </button>
-
-                <button
-                  className="cancel-btn"
-                  onClick={() => {
-                    setShowModal(false);
-
-                    setEditId(null);
-                  }}
-                >
-                  Cancel
-                </button>
+              <div className="emp-modal-icon emp-payment-icon">
+                <FaRupeeSign />
               </div>
-            </div>
-          </div>
-        )}
 
-        {/* PAYMENT MODAL */}
+              <h2>
+                Pay Salary
+              </h2>
 
-        {showPaymentModal && (
-          <div className="modal-overlay">
-            <div className="modal">
-              <h2>Pay Salary</h2>
-
-              <input
-                type="number"
-                placeholder="Amount"
-                value={paymentData.amount}
-                onChange={(e) =>
-                  setPaymentData({
-                    ...paymentData,
-                    amount: e.target.value,
-                  })
-                }
-              />
-
-              <select
-                className="employee-select"
-                value={paymentData.method}
-                onChange={(e) =>
-                  setPaymentData({
-                    ...paymentData,
-                    method: e.target.value,
-                  })
-                }
-              >
-                <option value="Cash">Cash</option>
-
-                <option value="UPI">UPI</option>
-
-                <option value="Bank Transfer">Bank Transfer</option>
-              </select>
-
-              <input
-                type="text"
-                placeholder="Note"
-                value={paymentData.note}
-                onChange={(e) =>
-                  setPaymentData({
-                    ...paymentData,
-                    note: e.target.value,
-                  })
-                }
-              />
-
-              <div className="modal-buttons">
-                <button className="save-btn" onClick={handleSalaryPayment}>
-                  Pay Now
-                </button>
-
-                <button
-                  className="cancel-btn"
-                  onClick={() => setShowPaymentModal(false)}
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* DELETE CONFIRMATION MODAL */}
-
-        {showDeleteModal && deleteTarget && (
-          <div className="modal-overlay">
-            <div className="modal">
-              <h2>Delete Employee?</h2>
-
-              <p className="delete-confirm-text">
-                Are you sure you want to delete{" "}
-                <b>{deleteTarget.name}</b>? This action cannot be undone.
+              <p className="emp-modal-subtitle">
+                Record salary payment
+                for{" "}
+                <strong>
+                  {
+                    selectedEmployee.name
+                  }
+                </strong>
+                .
               </p>
 
-              <div className="modal-buttons">
+              <div className="emp-form">
+                <label>
+                  Amount
+
+                  <div className="emp-money-input">
+                    <FaRupeeSign />
+
+                    <input
+                      type="number"
+                      min="0"
+                      placeholder="Enter amount"
+                      value={
+                        paymentData.amount
+                      }
+                      onChange={(
+                        event
+                      ) =>
+                        setPaymentData(
+                          (
+                            previous
+                          ) => ({
+                            ...previous,
+
+                            amount:
+                              event
+                                .target
+                                .value,
+                          })
+                        )
+                      }
+                    />
+                  </div>
+                </label>
+
+                <label>
+                  Payment Method
+
+                  <select
+                    value={
+                      paymentData.method
+                    }
+                    onChange={(
+                      event
+                    ) =>
+                      setPaymentData(
+                        (
+                          previous
+                        ) => ({
+                          ...previous,
+
+                          method:
+                            event
+                              .target
+                              .value,
+                        })
+                      )
+                    }
+                  >
+                    <option value="Cash">
+                      Cash
+                    </option>
+
+                    <option value="UPI">
+                      UPI
+                    </option>
+
+                    <option value="Bank Transfer">
+                      Bank Transfer
+                    </option>
+                  </select>
+                </label>
+
+                <label>
+                  Note
+
+                  <input
+                    type="text"
+                    placeholder="Optional note"
+                    value={
+                      paymentData.note
+                    }
+                    onChange={(
+                      event
+                    ) =>
+                      setPaymentData(
+                        (
+                          previous
+                        ) => ({
+                          ...previous,
+
+                          note:
+                            event
+                              .target
+                              .value,
+                        })
+                      )
+                    }
+                  />
+                </label>
+              </div>
+
+              <div className="emp-modal-actions">
                 <button
-                  className="save-btn confirm-delete-btn"
-                  onClick={confirmDelete}
+                  type="button"
+                  className="emp-modal-cancel"
+                  onClick={() =>
+                    setShowPaymentModal(
+                      false
+                    )
+                  }
+                  disabled={saving}
                 >
-                  Yes, Delete
+                  Cancel
                 </button>
 
-                <button className="cancel-btn" onClick={cancelDelete}>
-                  Cancel
+                <button
+                  type="button"
+                  className="emp-modal-primary emp-payment-primary"
+                  onClick={
+                    handleSalaryPayment
+                  }
+                  disabled={saving}
+                >
+                  <FaRupeeSign />
+
+                  {saving
+                    ? "Processing..."
+                    : "Pay Salary"}
                 </button>
               </div>
             </div>
           </div>
         )}
-      </div>
-    </>
+
+      {/* =================================================
+          DELETE MODAL
+      ================================================== */}
+
+      {showDeleteModal &&
+        deleteTarget && (
+          <div
+            className="emp-modal-overlay"
+            onClick={
+              cancelDelete
+            }
+          >
+            <div
+              className="emp-modal emp-delete-modal"
+              onClick={(
+                event
+              ) =>
+                event.stopPropagation()
+              }
+            >
+              <button
+                type="button"
+                className="emp-modal-close"
+                onClick={
+                  cancelDelete
+                }
+                disabled={saving}
+              >
+                <FiX />
+              </button>
+
+              <div className="emp-modal-icon emp-delete-icon">
+                <FiTrash2 />
+              </div>
+
+              <h2>
+                Delete Employee?
+              </h2>
+
+              <p className="emp-modal-subtitle">
+                Are you sure you
+                want to delete{" "}
+                <strong>
+                  {
+                    deleteTarget.name
+                  }
+                </strong>
+                ? This action cannot
+                be undone.
+              </p>
+
+              <div className="emp-modal-actions">
+                <button
+                  type="button"
+                  className="emp-modal-cancel"
+                  onClick={
+                    cancelDelete
+                  }
+                  disabled={saving}
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="button"
+                  className="emp-delete-confirm"
+                  onClick={
+                    confirmDelete
+                  }
+                  disabled={saving}
+                >
+                  <FiTrash2 />
+
+                  {saving
+                    ? "Deleting..."
+                    : "Yes, Delete"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+    </div>
   );
 }

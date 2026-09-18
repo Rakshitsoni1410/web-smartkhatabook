@@ -1,152 +1,377 @@
-import "./Profile.css";
-import { getStoredUser } from "../utils/session";
+import { useEffect, useMemo, useState } from "react";
+
 import { useNavigate } from "react-router-dom";
 
-// inside component:
+import {
+  FiArrowLeft,
+  FiBriefcase,
+  FiCalendar,
+  FiCreditCard,
+  FiMail,
+  FiMapPin,
+  FiMoon,
+  FiPackage,
+  FiPhone,
+  FiSun,
+  FiUser,
+} from "react-icons/fi";
+
+import { FaRupeeSign } from "react-icons/fa";
+
+import { getStoredUser } from "../utils/session";
+
+import "./Profile.css";
+
+// =====================================================
+// PROFILE
+// =====================================================
 
 export default function Profile() {
-  const user = getStoredUser();
-const navigate = useNavigate();
+  const navigate = useNavigate();
+
+  const user = getStoredUser() || {};
+
+  // =====================================================
+  // DARK MODE
+  // =====================================================
+
+  const [darkMode, setDarkMode] = useState(() => {
+    try {
+      const saved = localStorage.getItem("smartkhata-theme");
+
+      if (saved === "dark") {
+        return true;
+      }
+
+      if (saved === "light") {
+        return false;
+      }
+
+      return (
+        window.matchMedia?.("(prefers-color-scheme: dark)")?.matches || false
+      );
+    } catch {
+      return false;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("smartkhata-theme", darkMode ? "dark" : "light");
+    } catch {
+      // ignore storage errors
+    }
+  }, [darkMode]);
+
+  // =====================================================
+  // SAFE VALUES
+  // =====================================================
+
+  const initial = String(user?.name || user?.shopName || "S")
+    .trim()
+    .charAt(0)
+    .toUpperCase();
+
+  const memberSince = useMemo(() => {
+    if (!user?.createdAt) {
+      return "2024";
+    }
+
+    const date = new Date(user.createdAt);
+
+    if (Number.isNaN(date.getTime())) {
+      return "2024";
+    }
+
+    return String(date.getFullYear());
+  }, [user?.createdAt]);
+
+  // If you later add real order stats
+  // to the stored user object, these
+  // will automatically use them.
+
+  const totalOrders = Number(user?.orderStats?.total || 0);
+
+  const completedOrders = Number(user?.orderStats?.completed || 0);
+
+  const pendingOrders = Number(user?.orderStats?.pending || 0);
+
+  // =====================================================
+  // UI
+  // =====================================================
+
   return (
-    <div className="profile-page">
-      {/* HEADER */}
-    <button className="back-btn" onClick={() => navigate(-1)}>
-  <span className="back-arrow">‹</span>
-</button>
-      <div className="profile-header">
-        <div className="profile-avatar">
-          {user.name?.charAt(0).toUpperCase()}
-        </div>
-        <div className="profile-header-info">
-          <h1>{user.shopName || "Shop"}</h1>
-          <p>{user.role}</p>
-          <span className="header-badge">Active</span>
-        </div>
-        <div className="profile-header-right">
-          <div className="header-meta">
-            <span className="meta-label">Member since</span>
-            <span className="meta-value">2024</span>
-          </div>
-          <div className="header-meta">
-            <span className="meta-label">Business Type</span>
-            <span className="meta-value">{user.businessType || "—"}</span>
-          </div>
-        </div>
+    <div className={`profile-page ${darkMode ? "profile-dark" : ""}`}>
+      {/* =====================================
+          TOP BAR
+      ====================================== */}
+
+      <div className="profile-topbar">
+        <button
+          type="button"
+          className="profile-back-btn"
+          onClick={() => navigate(-1)}
+          aria-label="Go back"
+        >
+          <FiArrowLeft />
+        </button>
+
+        <button
+          type="button"
+          className="profile-theme-btn"
+          onClick={() => setDarkMode((previous) => !previous)}
+          aria-label={darkMode ? "Switch to light mode" : "Switch to dark mode"}
+          title={darkMode ? "Light mode" : "Dark mode"}
+        >
+          {darkMode ? <FiSun /> : <FiMoon />}
+        </button>
       </div>
 
-      {/* INFO GRID */}
-      <div className="profile-grid">
-        {/* BUSINESS INFO */}
-        <div className="profile-card">
-          <div className="card-title">
-            <div
-              className="card-icon"
-              style={{ background: "#EEF2FF", color: "#4F46E5" }}
-            >
-              🏢
-            </div>
-            <h3>Business Information</h3>
-          </div>
-          <div className="profile-row">
-            <span>Owner</span>
-            <strong>{user.name || "—"}</strong>
-          </div>
-          <div className="profile-row">
-            <span>Business Type</span>
-            <strong>{user.businessType || "—"}</strong>
-          </div>
-          <div className="profile-row">
-            <span>Role</span>
-            <strong>
-              <span className="role-pill">{user.role || "—"}</span>
-            </strong>
-          </div>
-          <div className="profile-row">
-            <span>Address</span>
-            <strong>{user.address || "—"}</strong>
+      {/* =====================================
+          PROFILE HEADER
+      ====================================== */}
+
+      <section className="profile-header">
+        <div className="profile-header-glow profile-glow-one" />
+
+        <div className="profile-header-glow profile-glow-two" />
+
+        <div className="profile-avatar">{initial}</div>
+
+        <div className="profile-header-info">
+          <span className="profile-header-kicker">BUSINESS PROFILE</span>
+
+          <h1>{user?.shopName || user?.name || "Shop"}</h1>
+
+          <div className="profile-header-tags">
+            <span className="profile-role-badge">{user?.role || "User"}</span>
+
+            <span className="profile-active-badge">
+              <span />
+              Active
+            </span>
           </div>
         </div>
+
+        <div className="profile-header-right">
+          <div className="profile-header-meta">
+            <span>Member since</span>
+
+            <strong>{memberSince}</strong>
+          </div>
+
+          <div className="profile-header-meta">
+            <span>Business Type</span>
+
+            <strong>{user?.businessType || "—"}</strong>
+          </div>
+        </div>
+      </section>
+
+      {/* =====================================
+          INFO GRID
+      ====================================== */}
+
+      <section className="profile-grid">
+        {/* BUSINESS INFO */}
+
+        <article className="profile-card">
+          <div className="profile-card-title">
+            <div className="profile-card-icon profile-icon-business">
+              <FiBriefcase />
+            </div>
+
+            <div>
+              <span>Business</span>
+
+              <h2>Business Information</h2>
+            </div>
+          </div>
+
+          <div className="profile-card-content">
+            <div className="profile-row">
+              <div className="profile-row-label">
+                <FiUser />
+
+                <span>Owner</span>
+              </div>
+
+              <strong>{user?.name || "—"}</strong>
+            </div>
+
+            <div className="profile-row">
+              <div className="profile-row-label">
+                <FiBriefcase />
+
+                <span>Business Type</span>
+              </div>
+
+              <strong>{user?.businessType || "—"}</strong>
+            </div>
+
+            <div className="profile-row">
+              <div className="profile-row-label">
+                <FiUser />
+
+                <span>Role</span>
+              </div>
+
+              <span className="profile-role-pill">{user?.role || "—"}</span>
+            </div>
+
+            <div className="profile-row profile-address-row">
+              <div className="profile-row-label">
+                <FiMapPin />
+
+                <span>Address</span>
+              </div>
+
+              <strong>{user?.address || "—"}</strong>
+            </div>
+          </div>
+        </article>
 
         {/* CONTACT INFO */}
-        <div className="profile-card">
-          <div className="card-title">
-            <div
-              className="card-icon"
-              style={{ background: "#F0FDF4", color: "#16A34A" }}
-            >
-              📞
+
+        <article className="profile-card">
+          <div className="profile-card-title">
+            <div className="profile-card-icon profile-icon-contact">
+              <FiPhone />
             </div>
-            <h3>Contact Information</h3>
+
+            <div>
+              <span>Contact</span>
+
+              <h2>Contact Information</h2>
+            </div>
           </div>
-          <div className="profile-row">
-            <span>Phone</span>
-            <strong>{user.phone || "—"}</strong>
+
+          <div className="profile-card-content">
+            <div className="profile-row">
+              <div className="profile-row-label">
+                <FiPhone />
+
+                <span>Phone</span>
+              </div>
+
+              <strong>{user?.phone || "—"}</strong>
+            </div>
+
+            <div className="profile-row profile-email-row">
+              <div className="profile-row-label">
+                <FiMail />
+
+                <span>Email</span>
+              </div>
+
+              <strong>{user?.email || "—"}</strong>
+            </div>
+
+            <div className="profile-row">
+              <div className="profile-row-label">
+                <FiCalendar />
+
+                <span>Status</span>
+              </div>
+
+              <span className="profile-status-text">
+                <span />
+                Active
+              </span>
+            </div>
           </div>
-          <div className="profile-row">
-            <span>Email</span>
-            <strong>{user.email || "—"}</strong>
-          </div>
-          <div className="profile-row">
-            <span>Status</span>
-            <strong className="active-text">● Active</strong>
-          </div>
-        </div>
+        </article>
 
         {/* ORDER STATS */}
-        <div className="profile-card">
-          <div className="card-title">
-            <div
-              className="card-icon"
-              style={{ background: "#FFF7ED", color: "#EA580C" }}
-            >
-              📦
+
+        <article className="profile-card">
+          <div className="profile-card-title">
+            <div className="profile-card-icon profile-icon-orders">
+              <FiPackage />
             </div>
-            <h3>Order Statistics</h3>
-          </div>
-          <div className="stats-grid">
-            <div className="stats-box">
-              <h2>0</h2>
-              <p>Total</p>
-            </div>
-            <div className="stats-box stats-box--green">
-              <h2>0</h2>
-              <p>Completed</p>
-            </div>
-            <div className="stats-box stats-box--amber">
-              <h2>0</h2>
-              <p>Pending</p>
+
+            <div>
+              <span>Orders</span>
+
+              <h2>Order Statistics</h2>
             </div>
           </div>
-        </div>
+
+          <div className="profile-stats-grid">
+            <div className="profile-stat-box profile-stat-total">
+              <FiPackage />
+
+              <strong>{totalOrders}</strong>
+
+              <span>Total</span>
+            </div>
+
+            <div className="profile-stat-box profile-stat-completed">
+              <FiPackage />
+
+              <strong>{completedOrders}</strong>
+
+              <span>Completed</span>
+            </div>
+
+            <div className="profile-stat-box profile-stat-pending">
+              <FiPackage />
+
+              <strong>{pendingOrders}</strong>
+
+              <span>Pending</span>
+            </div>
+          </div>
+        </article>
 
         {/* PAYMENT POLICY */}
-        <div className="profile-card">
-          <div className="card-title">
-            <div
-              className="card-icon"
-              style={{ background: "#FFF1F2", color: "#E11D48" }}
-            >
-              💳
+
+        <article className="profile-card">
+          <div className="profile-card-title">
+            <div className="profile-card-icon profile-icon-payment">
+              <FiCreditCard />
             </div>
-            <h3>Payment Policy</h3>
+
+            <div>
+              <span>Payments</span>
+
+              <h2>Payment Policy</h2>
+            </div>
           </div>
-          <div className="profile-row">
-            <span>Advance Payment</span>
-            <strong>
-              <span className="advance-pill">
-                {user.advancePercentage || 0}%
+
+          <div className="profile-card-content">
+            <div className="profile-row">
+              <div className="profile-row-label">
+                <FaRupeeSign />
+
+                <span>Advance Payment</span>
+              </div>
+
+              <span className="profile-advance-pill">
+                {Number(user?.advancePercentage || 0)}%
               </span>
-            </strong>
+            </div>
+
+            <div className="profile-row">
+              <div className="profile-row-label">
+                <FiCalendar />
+
+                <span>Delivery Time</span>
+              </div>
+
+              <strong>5 Days</strong>
+            </div>
+
+            <div className="profile-policy-note">
+              <span className="profile-policy-icon">💡</span>
+
+              <span>
+                Advance payment is collected before order processing begins.
+              </span>
+            </div>
           </div>
-          <div className="profile-row">
-            <span>Delivery Time</span>
-            <strong>5 Days</strong>
-          </div>
-          <div className="policy-note">
-            💡 Advance is collected before order processing begins.
-          </div>
-        </div>
-      </div>
+        </article>
+      </section>
     </div>
   );
 }

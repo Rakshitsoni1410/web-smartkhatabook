@@ -1,9 +1,12 @@
-
 const GenerateBillButton = ({
   order,
   label = "Generate Bill",
   disabled = false,
 }) => {
+  // =====================================================
+  // ESCAPE HTML
+  // =====================================================
+
   const escapeHtml = (value = "") =>
     String(value)
       .replaceAll("&", "&amp;")
@@ -12,420 +15,1416 @@ const GenerateBillButton = ({
       .replaceAll('"', "&quot;")
       .replaceAll("'", "&#039;");
 
+  // =====================================================
+  // CURRENCY
+  // =====================================================
+
   const formatCurrency = (amount = 0) => {
+    const value = Number(amount || 0);
+
+    if (!Number.isFinite(value)) {
+      return "₹0.00";
+    }
+
     return new Intl.NumberFormat("en-IN", {
       style: "currency",
       currency: "INR",
       minimumFractionDigits: 2,
-    }).format(Number(amount || 0));
+      maximumFractionDigits: 2,
+    }).format(value);
   };
 
-  const formatDate = (date) => {
-    if (!date) return "-";
+  // =====================================================
+  // DATE
+  // =====================================================
 
-    return new Date(date).toLocaleDateString("en-IN", {
+  const formatDate = (date) => {
+    if (!date) {
+      return "-";
+    }
+
+    const parsed = new Date(date);
+
+    if (Number.isNaN(parsed.getTime())) {
+      return "-";
+    }
+
+    return parsed.toLocaleDateString("en-IN", {
       day: "2-digit",
       month: "2-digit",
       year: "numeric",
     });
   };
 
+  // =====================================================
+  // PAYMENT STATUS
+  // =====================================================
+
   const getPaymentStatus = (status) => {
     const labels = {
       unpaid: "Unpaid",
+
       advanceRequested: "Advance Requested",
+
       advancePaid: "Advance Paid",
+
       partial: "Partially Paid",
+
       paid: "Paid",
     };
 
     return labels[status] || status || "-";
   };
 
+  // =====================================================
+  // ORDER STATUS
+  // =====================================================
+
   const getOrderStatus = (status) => {
     const labels = {
       pending: "Pending",
+
       approved: "Approved",
+
       advancePending: "Advance Pending",
+
       processing: "Processing",
+
       onTheWay: "On The Way",
+
       delivered: "Delivered",
+
       completed: "Completed",
+
       rejected: "Rejected",
     };
 
     return labels[status] || status || "-";
   };
 
+  // =====================================================
+  // GENERATE BILL
+  // =====================================================
+
   const handleGenerateBill = () => {
     if (!order) {
       alert("Bill information is not available.");
+
       return;
     }
 
-    const items = order.items || [];
+    // =================================================
+    // ITEMS
+    //
+    // Supports:
+    //
+    // order.items[]
+    //
+    // AND
+    //
+    // your main wholesaler order:
+    // productName
+    // quantity
+    // pricePerUnit
+    // =================================================
 
-    const subtotal = items.reduce((total, item) => {
-      return total + Number(item.qty || 0) * Number(item.pricePerUnit || 0);
+    let items = Array.isArray(order.items) ? order.items : [];
+
+    if (items.length === 0 && order.productName) {
+      items = [
+        {
+          name: order.productName,
+
+          qty: Number(order.quantity || 1),
+
+          pricePerUnit: Number(order.pricePerUnit || 0),
+        },
+      ];
+    }
+
+    // =================================================
+    // SUBTOTAL
+    // =================================================
+
+    const calculatedSubtotal = items.reduce((total, item) => {
+      const quantity = Number(item.qty ?? item.quantity ?? 0);
+
+      const price = Number(item.pricePerUnit ?? item.price ?? 0);
+
+      return total + quantity * price;
     }, 0);
 
-    const billWindow = window.open(
-      "",
-      "_blank",
-      "width=900,height=700"
-    );
+    const subtotal =
+      calculatedSubtotal > 0
+        ? calculatedSubtotal
+        : Number(order.totalAmount || 0);
+
+    // =================================================
+    // INVOICE NUMBER
+    // =================================================
+
+    const invoiceNumber =
+      order.invoiceNumber ||
+      order.billNumber ||
+      order.orderId ||
+      order._id ||
+      "-";
+
+    // =================================================
+    // DATE
+    // =================================================
+
+    const invoiceDate = order.date || order.createdAt || new Date();
+
+    // =================================================
+    // BUSINESS
+    // =================================================
+
+    const businessName =
+      order.businessName ||
+      order.wholesalerName ||
+      order.shopName ||
+      "Smart Khata Book";
+
+    // =================================================
+    // CUSTOMER
+    // =================================================
+
+    const customerName =
+      order.customerName || order.retailerName || order.partyName || "Retailer";
+
+    // =================================================
+    // OPEN WINDOW
+    // =================================================
+
+    const billWindow = window.open("", "_blank", "width=900,height=700");
 
     if (!billWindow) {
       alert("Please allow pop-ups to generate the bill.");
+
       return;
     }
 
+    // =================================================
+    // ITEMS HTML
+    // =================================================
+
     const itemsHtml = items
-      .map(
-        (item, index) => `
-          <tr>
-            <td>${index + 1}</td>
-            <td>${escapeHtml(item.name || "-")}</td>
-            <td>${item.qty || 0}</td>
-            <td>${formatCurrency(item.pricePerUnit)}</td>
-            <td>
-              ${formatCurrency(
-                Number(item.qty || 0) *
-                  Number(item.pricePerUnit || 0)
-              )}
-            </td>
-          </tr>
-        `
-      )
+      .map((item, index) => {
+        const itemName = item.name || item.productName || "-";
+
+        const quantity = Number(item.qty ?? item.quantity ?? 0);
+
+        const price = Number(item.pricePerUnit ?? item.price ?? 0);
+
+        const amount = quantity * price;
+
+        return `
+                <tr>
+                  <td>
+                    ${index + 1}
+                  </td>
+
+                  <td class="product-cell">
+                    ${escapeHtml(itemName)}
+                  </td>
+
+                  <td>
+                    ${quantity}
+                  </td>
+
+                  <td class="money-cell">
+                    ${formatCurrency(price)}
+                  </td>
+
+                  <td class="money-cell">
+                    ${formatCurrency(amount)}
+                  </td>
+                </tr>
+              `;
+      })
       .join("");
 
+    // =================================================
+    // EMPTY PRODUCT FALLBACK
+    // =================================================
+
+    const safeItemsHtml =
+      itemsHtml ||
+      `
+          <tr>
+            <td colspan="5" class="empty-row">
+              No product information available
+            </td>
+          </tr>
+        `;
+
+    // =================================================
+    // BUILD DOCUMENT
+    // =================================================
+
     billWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Invoice ${order.orderId || ""}</title>
+        <!DOCTYPE html>
 
-          <meta charset="UTF-8" />
+        <html lang="en">
+          <head>
+            <meta charset="UTF-8" />
 
-          <style>
-            * {
-              box-sizing: border-box;
-            }
+            <meta
+              name="viewport"
+              content="width=device-width, initial-scale=1.0"
+            />
 
-            body {
-              margin: 0;
-              padding: 40px;
-              font-family: Arial, Helvetica, sans-serif;
-              background: #f5f7fb;
-              color: #1f2937;
-            }
+            <title>
+              Invoice ${escapeHtml(String(invoiceNumber))}
+            </title>
 
-            .invoice {
-              max-width: 850px;
-              margin: auto;
-              background: white;
-              padding: 35px;
-              border-radius: 12px;
-              box-shadow: 0 5px 25px rgba(0,0,0,0.08);
-            }
-
-            .header {
-              display: flex;
-              justify-content: space-between;
-              align-items: flex-start;
-              border-bottom: 2px solid #2563eb;
-              padding-bottom: 20px;
-              margin-bottom: 25px;
-            }
-
-            .brand h1 {
-              margin: 0;
-              font-size: 28px;
-              color: #2563eb;
-            }
-
-            .brand p {
-              margin: 6px 0 0;
-              color: #6b7280;
-            }
-
-            .invoice-title {
-              text-align: right;
-            }
-
-            .invoice-title h2 {
-              margin: 0;
-              font-size: 24px;
-            }
-
-            .invoice-number {
-              color: #2563eb;
-              font-weight: bold;
-              margin-top: 6px;
-            }
-
-            .details {
-              display: grid;
-              grid-template-columns: 1fr 1fr;
-              gap: 20px;
-              margin-bottom: 28px;
-            }
-
-            .detail-box {
-              background: #f8fafc;
-              border: 1px solid #e5e7eb;
-              padding: 16px;
-              border-radius: 8px;
-            }
-
-            .detail-box span {
-              display: block;
-              font-size: 12px;
-              color: #6b7280;
-              margin-bottom: 5px;
-            }
-
-            .detail-box strong {
-              font-size: 15px;
-            }
-
-            table {
-              width: 100%;
-              border-collapse: collapse;
-              margin-top: 15px;
-            }
-
-            th {
-              background: #2563eb;
-              color: white;
-              padding: 12px;
-              text-align: left;
-              font-size: 13px;
-            }
-
-            td {
-              padding: 12px;
-              border-bottom: 1px solid #e5e7eb;
-              font-size: 13px;
-            }
-
-            th:last-child,
-            td:last-child {
-              text-align: right;
-            }
-
-            .summary {
-              width: 320px;
-              margin-left: auto;
-              margin-top: 25px;
-            }
-
-            .summary-row {
-              display: flex;
-              justify-content: space-between;
-              padding: 10px 0;
-              border-bottom: 1px solid #e5e7eb;
-            }
-
-            .grand-total {
-              font-size: 19px;
-              font-weight: bold;
-              color: #2563eb;
-              border-top: 2px solid #2563eb;
-              margin-top: 5px;
-              padding-top: 12px;
-            }
-
-            .status-area {
-              display: grid;
-              grid-template-columns: 1fr 1fr;
-              gap: 15px;
-              margin-top: 30px;
-            }
-
-            .status {
-              padding: 12px;
-              background: #f8fafc;
-              border-radius: 8px;
-              border: 1px solid #e5e7eb;
-            }
-
-            .status span {
-              color: #6b7280;
-              font-size: 12px;
-              display: block;
-              margin-bottom: 4px;
-            }
-
-            .footer {
-              margin-top: 40px;
-              text-align: center;
-              border-top: 1px solid #e5e7eb;
-              padding-top: 18px;
-              color: #6b7280;
-              font-size: 12px;
-            }
-
-            .print-btn {
-              margin: 25px auto 0;
-              display: block;
-              border: none;
-              background: #2563eb;
-              color: white;
-              padding: 11px 22px;
-              border-radius: 7px;
-              cursor: pointer;
-              font-size: 14px;
-              font-weight: bold;
-            }
-
-            @media print {
-              body {
-                background: white;
-                padding: 0;
+            <style>
+              * {
+                box-sizing: border-box;
               }
+
+              html {
+                -webkit-text-size-adjust: 100%;
+              }
+
+              body {
+                margin: 0;
+
+                padding: 40px 20px;
+
+                font-family:
+                  Arial,
+                  Helvetica,
+                  sans-serif;
+
+                background:
+                  #f5f7fb;
+
+                color:
+                  #1f2937;
+
+                overflow-x:
+                  hidden;
+              }
+
+              /* =================================
+                 INVOICE
+              ================================= */
 
               .invoice {
-                box-shadow: none;
-                max-width: 100%;
+                width: 100%;
+
+                max-width: 850px;
+
+                margin:
+                  0 auto;
+
+                background:
+                  #ffffff;
+
+                padding: 35px;
+
+                border-radius:
+                  14px;
+
+                box-shadow:
+                  0
+                  5px
+                  25px
+                  rgba(
+                    0,
+                    0,
+                    0,
+                    0.08
+                  );
+
+                overflow:
+                  hidden;
               }
+
+              /* =================================
+                 HEADER
+              ================================= */
+
+              .header {
+                display: flex;
+
+                justify-content:
+                  space-between;
+
+                align-items:
+                  flex-start;
+
+                gap: 25px;
+
+                border-bottom:
+                  2px solid
+                  #2563eb;
+
+                padding-bottom:
+                  20px;
+
+                margin-bottom:
+                  25px;
+              }
+
+              .brand {
+                min-width: 0;
+
+                flex: 1;
+              }
+
+              .brand h1 {
+                margin: 0;
+
+                color:
+                  #2563eb;
+
+                font-size:
+                  clamp(
+                    22px,
+                    4vw,
+                    28px
+                  );
+
+                line-height: 1.2;
+
+                overflow-wrap:
+                  anywhere;
+              }
+
+              .brand p {
+                margin:
+                  6px
+                  0
+                  0;
+
+                color:
+                  #6b7280;
+
+                font-size:
+                  13px;
+              }
+
+              /* =================================
+                 INVOICE TITLE
+              ================================= */
+
+              .invoice-title {
+                text-align:
+                  right;
+
+                min-width: 0;
+              }
+
+              .invoice-title h2 {
+                margin: 0;
+
+                font-size:
+                  clamp(
+                    20px,
+                    4vw,
+                    24px
+                  );
+              }
+
+              .invoice-number {
+                margin-top:
+                  6px;
+
+                color:
+                  #2563eb;
+
+                font-weight:
+                  bold;
+
+                font-size:
+                  13px;
+
+                overflow-wrap:
+                  anywhere;
+
+                word-break:
+                  break-word;
+              }
+
+              .invoice-date {
+                margin-top:
+                  6px;
+
+                color:
+                  #6b7280;
+
+                font-size:
+                  13px;
+              }
+
+              /* =================================
+                 DETAILS
+              ================================= */
+
+              .details {
+                display: grid;
+
+                grid-template-columns:
+                  minmax(0, 1fr)
+                  minmax(0, 1fr);
+
+                gap: 20px;
+
+                margin-bottom:
+                  28px;
+              }
+
+              .detail-box {
+                min-width: 0;
+
+                padding: 16px;
+
+                background:
+                  #f8fafc;
+
+                border:
+                  1px solid
+                  #e5e7eb;
+
+                border-radius:
+                  9px;
+              }
+
+              .detail-box span {
+                display:
+                  block;
+
+                margin-bottom:
+                  5px;
+
+                color:
+                  #6b7280;
+
+                font-size:
+                  12px;
+              }
+
+              .detail-box strong {
+                display:
+                  block;
+
+                font-size:
+                  15px;
+
+                overflow-wrap:
+                  anywhere;
+              }
+
+              /* =================================
+                 SECTION TITLE
+              ================================= */
+
+              h3 {
+                margin:
+                  0
+                  0
+                  10px;
+
+                font-size:
+                  17px;
+              }
+
+              /* =================================
+                 TABLE WRAPPER
+              ================================= */
+
+              .table-wrap {
+                width: 100%;
+
+                overflow-x:
+                  auto;
+
+                -webkit-overflow-scrolling:
+                  touch;
+
+                border:
+                  1px solid
+                  #e5e7eb;
+
+                border-radius:
+                  10px;
+              }
+
+              table {
+                width: 100%;
+
+                min-width:
+                  620px;
+
+                border-collapse:
+                  collapse;
+
+                background:
+                  #ffffff;
+              }
+
+              th {
+                padding:
+                  12px;
+
+                background:
+                  #2563eb;
+
+                color:
+                  #ffffff;
+
+                text-align:
+                  left;
+
+                font-size:
+                  13px;
+
+                white-space:
+                  nowrap;
+              }
+
+              td {
+                padding:
+                  12px;
+
+                border-bottom:
+                  1px solid
+                  #e5e7eb;
+
+                font-size:
+                  13px;
+
+                vertical-align:
+                  top;
+              }
+
+              tbody
+              tr:last-child
+              td {
+                border-bottom:
+                  none;
+              }
+
+              .product-cell {
+                min-width:
+                  180px;
+
+                overflow-wrap:
+                  anywhere;
+              }
+
+              .money-cell {
+                white-space:
+                  nowrap;
+              }
+
+              th:last-child,
+              td:last-child {
+                text-align:
+                  right;
+              }
+
+              .empty-row {
+                padding:
+                  25px;
+
+                color:
+                  #6b7280;
+
+                text-align:
+                  center !important;
+              }
+
+              /* =================================
+                 SUMMARY
+              ================================= */
+
+              .summary {
+                width: 100%;
+
+                max-width:
+                  320px;
+
+                margin:
+                  25px
+                  0
+                  0
+                  auto;
+              }
+
+              .summary-row {
+                display: flex;
+
+                align-items:
+                  center;
+
+                justify-content:
+                  space-between;
+
+                gap: 20px;
+
+                padding:
+                  10px
+                  0;
+
+                border-bottom:
+                  1px solid
+                  #e5e7eb;
+
+                font-size:
+                  14px;
+              }
+
+              .summary-row strong,
+              .summary-row span:last-child {
+                white-space:
+                  nowrap;
+              }
+
+              .grand-total {
+                margin-top:
+                  5px;
+
+                padding-top:
+                  12px;
+
+                border-top:
+                  2px solid
+                  #2563eb;
+
+                color:
+                  #2563eb;
+
+                font-size:
+                  19px;
+
+                font-weight:
+                  bold;
+              }
+
+              /* =================================
+                 STATUS
+              ================================= */
+
+              .status-area {
+                display: grid;
+
+                grid-template-columns:
+                  minmax(0, 1fr)
+                  minmax(0, 1fr);
+
+                gap: 15px;
+
+                margin-top:
+                  30px;
+              }
+
+              .status {
+                min-width: 0;
+
+                padding:
+                  12px;
+
+                background:
+                  #f8fafc;
+
+                border:
+                  1px solid
+                  #e5e7eb;
+
+                border-radius:
+                  8px;
+              }
+
+              .status span {
+                display:
+                  block;
+
+                margin-bottom:
+                  4px;
+
+                color:
+                  #6b7280;
+
+                font-size:
+                  12px;
+              }
+
+              .status strong {
+                display:
+                  block;
+
+                overflow-wrap:
+                  anywhere;
+              }
+
+              /* =================================
+                 FOOTER
+              ================================= */
+
+              .footer {
+                margin-top:
+                  40px;
+
+                padding-top:
+                  18px;
+
+                border-top:
+                  1px solid
+                  #e5e7eb;
+
+                color:
+                  #6b7280;
+
+                text-align:
+                  center;
+
+                font-size:
+                  12px;
+              }
+
+              .footer p {
+                margin:
+                  6px
+                  0
+                  0;
+              }
+
+              /* =================================
+                 BUTTON
+              ================================= */
 
               .print-btn {
-                display: none;
+                display:
+                  block;
+
+                width:
+                  fit-content;
+
+                margin:
+                  25px
+                  auto
+                  0;
+
+                padding:
+                  12px
+                  24px;
+
+                border:
+                  none;
+
+                border-radius:
+                  8px;
+
+                background:
+                  #2563eb;
+
+                color:
+                  #ffffff;
+
+                cursor:
+                  pointer;
+
+                font-size:
+                  14px;
+
+                font-weight:
+                  bold;
+
+                transition:
+                  all
+                  0.2s ease;
               }
-            }
-          </style>
-        </head>
 
-        <body>
+              .print-btn:hover {
+                background:
+                  #1d4ed8;
 
-          <div class="invoice">
+                transform:
+                  translateY(-1px);
+              }
 
-            <div class="header">
+              /* =================================
+                 TABLET
+              ================================= */
 
-              <div class="brand">
-                <h1>
-                  ${escapeHtml(order.businessName || "Smart Khata Book")}
-                </h1>
+              @media (
+                max-width: 768px
+              ) {
+                body {
+                  padding:
+                    20px
+                    14px;
+                }
 
-                <p>Business Invoice</p>
-              </div>
+                .invoice {
+                  padding:
+                    25px
+                    20px;
 
-              <div class="invoice-title">
-                <h2>INVOICE</h2>
+                  border-radius:
+                    12px;
+                }
 
-                <div class="invoice-number">
-                  ${escapeHtml(order.orderId || "-")}
+                .header {
+                  gap: 18px;
+                }
+
+                .details {
+                  gap: 12px;
+                }
+
+                th,
+                td {
+                  padding:
+                    10px;
+                }
+              }
+
+              /* =================================
+                 PHONE
+              ================================= */
+
+              @media (
+                max-width: 600px
+              ) {
+                body {
+                  padding:
+                    0;
+
+                  background:
+                    #ffffff;
+                }
+
+                .invoice {
+                  max-width:
+                    none;
+
+                  min-height:
+                    100vh;
+
+                  margin: 0;
+
+                  padding:
+                    22px
+                    16px
+                    30px;
+
+                  border-radius:
+                    0;
+
+                  box-shadow:
+                    none;
+                }
+
+                /* Header becomes vertical */
+
+                .header {
+                  flex-direction:
+                    column;
+
+                  align-items:
+                    stretch;
+
+                  gap: 16px;
+
+                  padding-bottom:
+                    16px;
+
+                  margin-bottom:
+                    20px;
+                }
+
+                .invoice-title {
+                  text-align:
+                    left;
+
+                  padding-top:
+                    14px;
+
+                  border-top:
+                    1px solid
+                    #e5e7eb;
+                }
+
+                /* Business/customer stack */
+
+                .details {
+                  grid-template-columns:
+                    1fr;
+
+                  gap: 10px;
+
+                  margin-bottom:
+                    22px;
+                }
+
+                .detail-box {
+                  padding:
+                    13px;
+                }
+
+                /* Table remains usable */
+
+                .table-wrap {
+                  margin:
+                    0
+                    -2px;
+                }
+
+                table {
+                  min-width:
+                    560px;
+                }
+
+                th,
+                td {
+                  padding:
+                    10px
+                    9px;
+
+                  font-size:
+                    12px;
+                }
+
+                /* Full width summary */
+
+                .summary {
+                  width: 100%;
+
+                  max-width:
+                    none;
+
+                  margin-top:
+                    20px;
+                }
+
+                .summary-row {
+                  font-size:
+                    13px;
+                }
+
+                .grand-total {
+                  font-size:
+                    17px;
+                }
+
+                /* Status vertical */
+
+                .status-area {
+                  grid-template-columns:
+                    1fr;
+
+                  gap: 10px;
+
+                  margin-top:
+                    24px;
+                }
+
+                .footer {
+                  margin-top:
+                    30px;
+                }
+
+                /* Button full width */
+
+                .print-btn {
+                  width:
+                    100%;
+
+                  min-height:
+                    46px;
+
+                  margin-top:
+                    20px;
+                }
+              }
+
+              /* =================================
+                 VERY SMALL PHONE
+              ================================= */
+
+              @media (
+                max-width: 380px
+              ) {
+                .invoice {
+                  padding:
+                    18px
+                    12px
+                    25px;
+                }
+
+                .brand h1 {
+                  font-size:
+                    20px;
+                }
+
+                .invoice-title h2 {
+                  font-size:
+                    19px;
+                }
+
+                .detail-box {
+                  padding:
+                    12px;
+                }
+
+                .summary-row {
+                  gap: 10px;
+                }
+              }
+
+              /* =================================
+                 PRINT / SAVE PDF
+              ================================= */
+
+              @media print {
+                @page {
+                  size: A4;
+
+                  margin:
+                    12mm;
+                }
+
+                html,
+                body {
+                  width: 100%;
+
+                  margin: 0;
+
+                  padding: 0;
+
+                  background:
+                    #ffffff;
+                }
+
+                body {
+                  -webkit-print-color-adjust:
+                    exact;
+
+                  print-color-adjust:
+                    exact;
+                }
+
+                .invoice {
+                  width: 100%;
+
+                  max-width:
+                    none;
+
+                  min-height:
+                    auto;
+
+                  margin: 0;
+
+                  padding: 0;
+
+                  border-radius:
+                    0;
+
+                  box-shadow:
+                    none;
+
+                  overflow:
+                    visible;
+                }
+
+                .header {
+                  flex-direction:
+                    row;
+
+                  align-items:
+                    flex-start;
+                }
+
+                .invoice-title {
+                  text-align:
+                    right;
+
+                  border-top:
+                    none;
+
+                  padding-top:
+                    0;
+                }
+
+                .details {
+                  grid-template-columns:
+                    1fr 1fr;
+                }
+
+                .table-wrap {
+                  overflow:
+                    visible;
+
+                  border:
+                    none;
+                }
+
+                table {
+                  min-width: 0;
+
+                  width: 100%;
+                }
+
+                th,
+                td {
+                  padding:
+                    8px;
+
+                  font-size:
+                    11px;
+                }
+
+                .summary {
+                  max-width:
+                    300px;
+                }
+
+                .status-area {
+                  grid-template-columns:
+                    1fr 1fr;
+                }
+
+                .print-btn {
+                  display:
+                    none !important;
+                }
+
+                .detail-box,
+                .status,
+                tr,
+                .summary {
+                  break-inside:
+                    avoid;
+                }
+              }
+            </style>
+          </head>
+
+          <body>
+            <main class="invoice">
+
+              <!-- =========================
+                   HEADER
+              ========================== -->
+
+              <header class="header">
+
+                <div class="brand">
+                  <h1>
+                    ${escapeHtml(businessName)}
+                  </h1>
+
+                  <p>
+                    Business Invoice
+                  </p>
                 </div>
 
-                <div style="margin-top:6px;font-size:13px;color:#6b7280;">
-                  ${formatDate(order.date)}
+                <div class="invoice-title">
+
+                  <h2>
+                    INVOICE
+                  </h2>
+
+                  <div class="invoice-number">
+                    ${escapeHtml(String(invoiceNumber))}
+                  </div>
+
+                  <div class="invoice-date">
+                    ${formatDate(invoiceDate)}
+                  </div>
+
                 </div>
-              </div>
 
-            </div>
+              </header>
 
-            <div class="details">
+              <!-- =========================
+                   PARTY DETAILS
+              ========================== -->
 
-              <div class="detail-box">
-                <span>Business</span>
+              <section class="details">
+
+                <div class="detail-box">
+                  <span>
+                    Business
+                  </span>
+
+                  <strong>
+                    ${escapeHtml(businessName)}
+                  </strong>
+                </div>
+
+                <div class="detail-box">
+                  <span>
+                    Customer / Party
+                  </span>
+
+                  <strong>
+                    ${escapeHtml(customerName)}
+                  </strong>
+                </div>
+
+              </section>
+
+              <!-- =========================
+                   ITEMS
+              ========================== -->
+
+              <section>
+
+                <h3>
+                  Order Details
+                </h3>
+
+                <div class="table-wrap">
+
+                  <table>
+
+                    <thead>
+                      <tr>
+                        <th>
+                          #
+                        </th>
+
+                        <th>
+                          Product
+                        </th>
+
+                        <th>
+                          Quantity
+                        </th>
+
+                        <th>
+                          Rate
+                        </th>
+
+                        <th>
+                          Amount
+                        </th>
+                      </tr>
+                    </thead>
+
+                    <tbody>
+                      ${safeItemsHtml}
+                    </tbody>
+
+                  </table>
+
+                </div>
+
+              </section>
+
+              <!-- =========================
+                   TOTAL
+              ========================== -->
+
+              <section class="summary">
+
+                <div class="summary-row">
+
+                  <span>
+                    Subtotal
+                  </span>
+
+                  <strong>
+                    ${formatCurrency(subtotal)}
+                  </strong>
+
+                </div>
+
+                <div class="summary-row grand-total">
+
+                  <span>
+                    Total
+                  </span>
+
+                  <span>
+                    ${formatCurrency(subtotal)}
+                  </span>
+
+                </div>
+
+              </section>
+
+              <!-- =========================
+                   STATUS
+              ========================== -->
+
+              <section class="status-area">
+
+                <div class="status">
+
+                  <span>
+                    Order Status
+                  </span>
+
+                  <strong>
+                    ${escapeHtml(getOrderStatus(order.orderStatus))}
+                  </strong>
+
+                </div>
+
+                <div class="status">
+
+                  <span>
+                    Payment Status
+                  </span>
+
+                  <strong>
+                    ${escapeHtml(getPaymentStatus(order.paymentStatus))}
+                  </strong>
+
+                </div>
+
+              </section>
+
+              <!-- =========================
+                   FOOTER
+              ========================== -->
+
+              <footer class="footer">
+
                 <strong>
-                  ${escapeHtml(order.businessName || "-")}
+                  Smart Khata Book
                 </strong>
-              </div>
 
-              <div class="detail-box">
-                <span>Customer / Party</span>
-                <strong>
-                  ${escapeHtml(order.customerName || "-")}
-                </strong>
-              </div>
+                <p>
+                  This is a
+                  computer-generated
+                  invoice.
+                </p>
 
-            </div>
+              </footer>
 
-            <h3>Order Details</h3>
+              <!-- =========================
+                   PRINT
+              ========================== -->
 
-            <table>
+              <button
+                class="print-btn"
+                onclick="window.print()"
+              >
+                Print / Save as PDF
+              </button>
 
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Product</th>
-                  <th>Quantity</th>
-                  <th>Rate</th>
-                  <th>Amount</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                ${itemsHtml}
-              </tbody>
-
-            </table>
-
-            <div class="summary">
-
-              <div class="summary-row">
-                <span>Subtotal</span>
-
-                <strong>
-                  ${formatCurrency(subtotal)}
-                </strong>
-              </div>
-
-              <div class="summary-row grand-total">
-                <span>Total</span>
-
-                <span>
-                  ${formatCurrency(subtotal)}
-                </span>
-              </div>
-
-            </div>
-
-            <div class="status-area">
-
-              <div class="status">
-                <span>Order Status</span>
-
-                <strong>
-                  ${escapeHtml(getOrderStatus(order.orderStatus))}
-                </strong>
-              </div>
-
-              <div class="status">
-                <span>Payment Status</span>
-
-                <strong>
-                  ${escapeHtml(getPaymentStatus(order.paymentStatus))}
-                </strong>
-              </div>
-
-            </div>
-
-            <div class="footer">
-              <strong>Smart Khata Book</strong>
-
-              <p>
-                This is a computer-generated invoice.
-              </p>
-            </div>
-
-            <button
-              class="print-btn"
-              onclick="window.print()"
-            >
-              Print / Save as PDF
-            </button>
-
-          </div>
-
-        </body>
-      </html>
-    `);
+            </main>
+          </body>
+        </html>
+      `);
 
     billWindow.document.close();
+
+    // Focus new bill window
+    billWindow.focus();
   };
+
+  // =====================================================
+  // BUTTON
+  // =====================================================
 
   return (
     <button

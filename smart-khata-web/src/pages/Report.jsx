@@ -1,20 +1,67 @@
 import { useCallback, useEffect, useState } from "react";
 
 import Sidebar from "../components/Sidebar";
+
 import api from "../api";
+
 import "./Report.css";
+
 import { getStoredUser } from "../utils/session";
+
+// =====================================================
+// REPORT
+// =====================================================
 
 export default function Report() {
   const user = getStoredUser();
 
   const userId = user?._id;
+
   const userRole = user?.role;
 
+  // =====================================================
+  // STATE
+  // =====================================================
+
   const [report, setReport] = useState(null);
+
   const [loading, setLoading] = useState(true);
+
   const [refreshing, setRefreshing] = useState(false);
+
   const [error, setError] = useState("");
+
+  // =====================================================
+  // DARK MODE
+  // =====================================================
+
+  const [darkMode, setDarkMode] = useState(() => {
+    try {
+      const saved = localStorage.getItem("smartkhata-theme");
+
+      if (saved === "dark") {
+        return true;
+      }
+
+      if (saved === "light") {
+        return false;
+      }
+
+      return (
+        window.matchMedia?.("(prefers-color-scheme: dark)")?.matches || false
+      );
+    } catch {
+      return false;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("smartkhata-theme", darkMode ? "dark" : "light");
+    } catch {
+      // Ignore localStorage errors
+    }
+  }, [darkMode]);
 
   // =====================================================
   // FETCH REPORT
@@ -24,8 +71,11 @@ export default function Report() {
     async (manual = false) => {
       if (!userId || !userRole) {
         setError("User information not found. Please login again.");
+
         setLoading(false);
+
         setRefreshing(false);
+
         return;
       }
 
@@ -55,11 +105,12 @@ export default function Report() {
         setReport(null);
 
         setError(
-          err.response?.data?.message ||
+          err?.response?.data?.message ||
             "Unable to load report. Please try again.",
         );
       } finally {
         setLoading(false);
+
         setRefreshing(false);
       }
     },
@@ -75,19 +126,27 @@ export default function Report() {
   // =====================================================
 
   const formatCurrency = (amount = 0) => {
+    const value = Number(amount || 0);
+
+    if (!Number.isFinite(value)) {
+      return "₹0";
+    }
+
     return new Intl.NumberFormat("en-IN", {
       style: "currency",
+
       currency: "INR",
+
       maximumFractionDigits: 0,
-    }).format(Number(amount || 0));
+    }).format(value);
   };
 
-  const formatDate = (date) => {
-    if (!date) {
+  const formatDate = (value) => {
+    if (!value) {
       return "-";
     }
 
-    const parsedDate = new Date(date);
+    const parsedDate = new Date(value);
 
     if (Number.isNaN(parsedDate.getTime())) {
       return "-";
@@ -95,7 +154,9 @@ export default function Report() {
 
     return parsedDate.toLocaleDateString("en-IN", {
       day: "2-digit",
-      month: "2-digit",
+
+      month: "short",
+
       year: "numeric",
     });
   };
@@ -103,18 +164,29 @@ export default function Report() {
   const formatStatus = (status = "") => {
     const statusMap = {
       pending: "Pending",
+
       approved: "Approved",
+
       advancePending: "Advance Pending",
+
       processing: "Processing",
+
       onTheWay: "On The Way",
+
       delivered: "Delivered",
+
       completed: "Completed",
+
       rejected: "Rejected",
 
       unpaid: "Unpaid",
+
       advanceRequested: "Advance Requested",
+
       advancePaid: "Advance Paid",
+
       partial: "Partially Paid",
+
       paid: "Paid",
     };
 
@@ -123,7 +195,7 @@ export default function Report() {
 
   const getStatusClass = (status) => {
     if (status === "completed" || status === "delivered" || status === "paid") {
-      return "report-status success";
+      return "report-status report-status-success";
     }
 
     if (
@@ -133,14 +205,14 @@ export default function Report() {
       status === "partial" ||
       status === "advancePaid"
     ) {
-      return "report-status warning";
+      return "report-status report-status-warning";
     }
 
     if (status === "rejected" || status === "unpaid") {
-      return "report-status danger";
+      return "report-status report-status-danger";
     }
 
-    return "report-status info";
+    return "report-status report-status-info";
   };
 
   const handlePrint = () => {
@@ -148,10 +220,12 @@ export default function Report() {
   };
 
   // =====================================================
-  // SAFE SIDEBAR ROLE
+  // SAFE ROLE
   // =====================================================
 
   const sidebarRole = userRole || "";
+
+  const layoutClassName = `report-layout ${darkMode ? "report-dark" : ""}`;
 
   // =====================================================
   // LOADING
@@ -159,14 +233,20 @@ export default function Report() {
 
   if (loading) {
     return (
-      <div className="report-layout">
+      <div className={layoutClassName}>
         <Sidebar role={sidebarRole} />
 
         <main className="report-main">
           <div className="report-loading">
-            <div className="report-spinner"></div>
+            <div className="report-loading-icon">
+              <i className="ti ti-chart-bar" />
+            </div>
 
-            <p>Preparing your business report...</p>
+            <div className="report-spinner" />
+
+            <h2>Preparing your report</h2>
+
+            <p>Gathering your latest business analytics...</p>
           </div>
         </main>
       </div>
@@ -179,12 +259,14 @@ export default function Report() {
 
   if (error) {
     return (
-      <div className="report-layout">
+      <div className={layoutClassName}>
         <Sidebar role={sidebarRole} />
 
         <main className="report-main">
           <div className="report-error">
-            <i className="ti ti-alert-circle"></i>
+            <div className="report-error-icon">
+              <i className="ti ti-alert-circle" />
+            </div>
 
             <h2>Unable to load report</h2>
 
@@ -195,6 +277,10 @@ export default function Report() {
               onClick={() => fetchReport(true)}
               disabled={refreshing}
             >
+              <i
+                className={`ti ti-refresh ${refreshing ? "report-spin" : ""}`}
+              />
+
               {refreshing ? "Trying..." : "Try Again"}
             </button>
           </div>
@@ -204,7 +290,7 @@ export default function Report() {
   }
 
   // =====================================================
-  // REPORT DATA
+  // SAFE REPORT DATA
   // =====================================================
 
   const orders = report?.orders || {};
@@ -228,16 +314,16 @@ export default function Report() {
   // =====================================================
 
   return (
-    <div className="report-layout">
+    <div className={layoutClassName}>
       <Sidebar role={sidebarRole} />
 
       <main className="report-main">
-        {/* =========================================
+        {/* =====================================
             HEADER
-        ========================================= */}
+        ====================================== */}
 
-        <div className="report-header">
-          <div>
+        <header className="report-header">
+          <div className="report-header-copy">
             <span className="report-small-title">BUSINESS ANALYTICS</span>
 
             <h1>Business Report</h1>
@@ -245,7 +331,27 @@ export default function Report() {
             <p>Complete overview of your business performance and activity.</p>
           </div>
 
-          <div className="report-header-actions">
+          <div className="report-header-actions no-print">
+            {/* DARK MODE */}
+
+            <button
+              type="button"
+              className="report-theme-btn"
+              onClick={() => setDarkMode((previous) => !previous)}
+              title={darkMode ? "Light Mode" : "Dark Mode"}
+              aria-label={
+                darkMode ? "Switch to light mode" : "Switch to dark mode"
+              }
+            >
+              <i className={darkMode ? "ti ti-sun" : "ti ti-moon"} />
+
+              <span className="report-theme-text">
+                {darkMode ? "Light" : "Dark"}
+              </span>
+            </button>
+
+            {/* REFRESH */}
+
             <button
               type="button"
               className="report-refresh-btn"
@@ -254,51 +360,60 @@ export default function Report() {
             >
               <i
                 className={`ti ti-refresh ${refreshing ? "report-spin" : ""}`}
-              ></i>
+              />
 
-              {refreshing ? "Refreshing..." : "Refresh"}
+              <span>{refreshing ? "Refreshing..." : "Refresh"}</span>
             </button>
+
+            {/* PRINT */}
 
             <button
               type="button"
               className="report-print-btn"
               onClick={handlePrint}
             >
-              <i className="ti ti-printer"></i>
-              Print Report
+              <i className="ti ti-printer" />
+
+              <span>Print Report</span>
             </button>
           </div>
-        </div>
+        </header>
 
-        {/* =========================================
-            BUSINESS INFO
-        ========================================= */}
+        {/* =====================================
+            BUSINESS CARD
+        ====================================== */}
 
         <section className="report-business-card">
+          <div className="report-business-decoration report-decoration-one" />
+
+          <div className="report-business-decoration report-decoration-two" />
+
           <div className="report-business-left">
             <div className="report-business-icon">
-              <i className="ti ti-building-store"></i>
+              <i className="ti ti-building-store" />
             </div>
 
-            <div>
+            <div className="report-business-info">
+              <span className="report-business-label">BUSINESS PROFILE</span>
+
               <h2>{user?.shopName || user?.name || "My Business"}</h2>
 
               <div className="report-business-meta">
                 <span>
-                  <i className="ti ti-user"></i>
+                  <i className="ti ti-user" />
 
                   {user?.name || "User"}
                 </span>
 
                 <span>
-                  <i className="ti ti-briefcase"></i>
+                  <i className="ti ti-briefcase" />
 
                   {userRole || "-"}
                 </span>
 
                 {user?.businessType && (
                   <span>
-                    <i className="ti ti-category"></i>
+                    <i className="ti ti-category" />
 
                     {user.businessType}
                   </span>
@@ -308,22 +423,20 @@ export default function Report() {
           </div>
 
           <div className="report-date">
-            <span>Report Date</span>
+            <span>REPORT DATE</span>
 
             <strong>{formatDate(new Date())}</strong>
           </div>
         </section>
 
-        {/* =========================================
+        {/* =====================================
             FINANCIAL SUMMARY
-        ========================================= */}
+        ====================================== */}
 
         <section className="report-summary-grid">
-          {/* Total value */}
-
-          <div className="report-summary-card blue">
+          <div className="report-summary-card report-summary-blue">
             <div className="report-summary-icon">
-              <i className="ti ti-wallet"></i>
+              <i className="ti ti-wallet" />
             </div>
 
             <div>
@@ -337,11 +450,9 @@ export default function Report() {
             </div>
           </div>
 
-          {/* Paid */}
-
-          <div className="report-summary-card green">
+          <div className="report-summary-card report-summary-green">
             <div className="report-summary-icon">
-              <i className="ti ti-circle-check"></i>
+              <i className="ti ti-circle-check" />
             </div>
 
             <div>
@@ -353,11 +464,9 @@ export default function Report() {
             </div>
           </div>
 
-          {/* Pending */}
-
-          <div className="report-summary-card orange">
+          <div className="report-summary-card report-summary-orange">
             <div className="report-summary-icon">
-              <i className="ti ti-clock"></i>
+              <i className="ti ti-clock" />
             </div>
 
             <div>
@@ -369,11 +478,9 @@ export default function Report() {
             </div>
           </div>
 
-          {/* Stock */}
-
-          <div className="report-summary-card purple">
+          <div className="report-summary-card report-summary-purple">
             <div className="report-summary-icon">
-              <i className="ti ti-package"></i>
+              <i className="ti ti-package" />
             </div>
 
             <div>
@@ -386,20 +493,22 @@ export default function Report() {
           </div>
         </section>
 
-        {/* =========================================
+        {/* =====================================
             ORDER SUMMARY
-        ========================================= */}
+        ====================================== */}
 
         <section className="report-section">
           <div className="report-section-header">
             <div>
+              <span className="report-section-label">ORDERS</span>
+
               <h2>Order Summary</h2>
 
               <p>Current order status overview</p>
             </div>
 
             <div className="report-section-icon">
-              <i className="ti ti-shopping-cart"></i>
+              <i className="ti ti-shopping-cart" />
             </div>
           </div>
 
@@ -410,43 +519,43 @@ export default function Report() {
               <strong>{orders.total || 0}</strong>
             </div>
 
-            <div className="report-mini-card warning">
+            <div className="report-mini-card report-mini-warning">
               <span>Pending</span>
 
               <strong>{orders.pending || 0}</strong>
             </div>
 
-            <div className="report-mini-card info">
+            <div className="report-mini-card report-mini-info">
               <span>Approved</span>
 
               <strong>{orders.approved || 0}</strong>
             </div>
 
-            <div className="report-mini-card purple">
+            <div className="report-mini-card report-mini-purple">
               <span>Processing</span>
 
               <strong>{orders.processing || 0}</strong>
             </div>
 
-            <div className="report-mini-card blue">
+            <div className="report-mini-card report-mini-blue">
               <span>On The Way</span>
 
               <strong>{orders.onTheWay || 0}</strong>
             </div>
 
-            <div className="report-mini-card success">
+            <div className="report-mini-card report-mini-success">
               <span>Delivered</span>
 
               <strong>{orders.delivered || 0}</strong>
             </div>
 
-            <div className="report-mini-card success">
+            <div className="report-mini-card report-mini-success">
               <span>Completed</span>
 
               <strong>{orders.completed || 0}</strong>
             </div>
 
-            <div className="report-mini-card danger">
+            <div className="report-mini-card report-mini-danger">
               <span>Rejected</span>
 
               <strong>{orders.rejected || 0}</strong>
@@ -454,23 +563,25 @@ export default function Report() {
           </div>
         </section>
 
-        {/* =========================================
+        {/* =====================================
             PAYMENT + INVENTORY
-        ========================================= */}
+        ====================================== */}
 
         <div className="report-two-column">
-          {/* Payment */}
+          {/* PAYMENT */}
 
           <section className="report-section">
             <div className="report-section-header">
               <div>
+                <span className="report-section-label">FINANCE</span>
+
                 <h2>Payment Summary</h2>
 
                 <p>Payment performance</p>
               </div>
 
-              <div className="report-section-icon green-icon">
-                <i className="ti ti-currency-rupee"></i>
+              <div className="report-section-icon report-green-icon">
+                <i className="ti ti-currency-rupee" />
               </div>
             </div>
 
@@ -531,18 +642,20 @@ export default function Report() {
             </div>
           </section>
 
-          {/* Inventory */}
+          {/* INVENTORY */}
 
           <section className="report-section">
             <div className="report-section-header">
               <div>
+                <span className="report-section-label">INVENTORY</span>
+
                 <h2>Inventory Summary</h2>
 
                 <p>Your current stock position</p>
               </div>
 
-              <div className="report-section-icon orange-icon">
-                <i className="ti ti-box"></i>
+              <div className="report-section-icon report-orange-icon">
+                <i className="ti ti-box" />
               </div>
             </div>
 
@@ -598,20 +711,18 @@ export default function Report() {
           </section>
         </div>
 
-        {/* =========================================
+        {/* =====================================
             REVIEWS + LEDGER
-        ========================================= */}
+        ====================================== */}
 
         <div className="report-two-column">
-          {/* Reviews */}
-
           <section className="report-section report-small-section">
-            <div className="report-stat-icon yellow-icon">
-              <i className="ti ti-star"></i>
+            <div className="report-stat-icon report-yellow-icon">
+              <i className="ti ti-star" />
             </div>
 
             <div>
-              <span>Reviews</span>
+              <span>REVIEWS</span>
 
               <h2>{reviews.total || 0}</h2>
 
@@ -622,15 +733,13 @@ export default function Report() {
             </div>
           </section>
 
-          {/* Ledger */}
-
           <section className="report-section report-small-section">
-            <div className="report-stat-icon ledger-icon">
-              <i className="ti ti-book"></i>
+            <div className="report-stat-icon report-ledger-icon">
+              <i className="ti ti-book" />
             </div>
 
             <div>
-              <span>Ledger Entries</span>
+              <span>LEDGER ENTRIES</span>
 
               <h2>{ledger.totalEntries || 0}</h2>
 
@@ -639,26 +748,30 @@ export default function Report() {
           </section>
         </div>
 
-        {/* =========================================
+        {/* =====================================
             RECENT ORDERS
-        ========================================= */}
+        ====================================== */}
 
         <section className="report-section report-table-section">
           <div className="report-section-header">
             <div>
+              <span className="report-section-label">ACTIVITY</span>
+
               <h2>Recent Orders</h2>
 
               <p>Your latest business activity</p>
             </div>
 
             <div className="report-section-icon">
-              <i className="ti ti-history"></i>
+              <i className="ti ti-history" />
             </div>
           </div>
 
           {recentOrders.length === 0 ? (
             <div className="report-empty">
-              <i className="ti ti-file-off"></i>
+              <div className="report-empty-icon">
+                <i className="ti ti-file-off" />
+              </div>
 
               <h3>No orders found</h3>
 
@@ -690,35 +803,39 @@ export default function Report() {
                 <tbody>
                   {recentOrders.map((order) => (
                     <tr key={order._id}>
-                      <td>
+                      <td data-label="Invoice">
                         <span className="report-invoice">
                           {order.invoiceNumber || "-"}
                         </span>
                       </td>
 
-                      <td>{formatDate(order.createdAt)}</td>
+                      <td data-label="Date">{formatDate(order.createdAt)}</td>
 
-                      <td>{isRetailer ? order.wholesaler : order.retailer}</td>
+                      <td data-label={isRetailer ? "Wholesaler" : "Retailer"}>
+                        {isRetailer
+                          ? order.wholesaler || "-"
+                          : order.retailer || "-"}
+                      </td>
 
-                      <td>{order.productName || "-"}</td>
+                      <td data-label="Product">{order.productName || "-"}</td>
 
-                      <td>
+                      <td data-label="Quantity">
                         {order.quantity || 0} {order.unit || ""}
                       </td>
 
-                      <td>
+                      <td data-label="Order Status">
                         <span className={getStatusClass(order.orderStatus)}>
                           {formatStatus(order.orderStatus)}
                         </span>
                       </td>
 
-                      <td>
+                      <td data-label="Payment">
                         <span className={getStatusClass(order.paymentStatus)}>
                           {formatStatus(order.paymentStatus)}
                         </span>
                       </td>
 
-                      <td className="report-amount">
+                      <td data-label="Amount" className="report-amount">
                         {formatCurrency(order.totalAmount)}
                       </td>
                     </tr>
@@ -729,16 +846,16 @@ export default function Report() {
           )}
         </section>
 
-        {/* =========================================
+        {/* =====================================
             FOOTER
-        ========================================= */}
+        ====================================== */}
 
-        <div className="report-footer">
+        <footer className="report-footer">
           <p>
-            SmartKhatabook Business Report • Generated on{" "}
+            Smart Khatabook Business Report • Generated on{" "}
             {formatDate(new Date())}
           </p>
-        </div>
+        </footer>
       </main>
     </div>
   );

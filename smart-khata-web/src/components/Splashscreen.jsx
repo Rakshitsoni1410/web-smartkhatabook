@@ -1,515 +1,2340 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+
 import { createPortal } from "react-dom";
+
+// =====================================================
+// PARTICLES
+// =====================================================
+
+const PARTICLES = [
+  {
+    left: "8%",
+    top: "18%",
+    size: 5,
+    color: "#6c63ff",
+    delay: 0,
+    duration: 2.8,
+  },
+  {
+    left: "18%",
+    top: "70%",
+    size: 3,
+    color: "#48b9f8",
+    delay: 0.3,
+    duration: 3.2,
+  },
+  {
+    left: "30%",
+    top: "30%",
+    size: 3,
+    color: "#6c63ff",
+    delay: 0.6,
+    duration: 2.6,
+  },
+  {
+    left: "42%",
+    top: "78%",
+    size: 4,
+    color: "#48b9f8",
+    delay: 0.9,
+    duration: 3.5,
+  },
+  {
+    left: "55%",
+    top: "16%",
+    size: 3,
+    color: "#6c63ff",
+    delay: 1.2,
+    duration: 2.9,
+  },
+  {
+    left: "67%",
+    top: "72%",
+    size: 5,
+    color: "#48b9f8",
+    delay: 0.4,
+    duration: 3.3,
+  },
+  {
+    left: "78%",
+    top: "26%",
+    size: 3,
+    color: "#6c63ff",
+    delay: 0.8,
+    duration: 2.7,
+  },
+  {
+    left: "88%",
+    top: "62%",
+    size: 4,
+    color: "#48b9f8",
+    delay: 1.1,
+    duration: 3.1,
+  },
+  {
+    left: "94%",
+    top: "38%",
+    size: 3,
+    color: "#6c63ff",
+    delay: 0.5,
+    duration: 3.4,
+  },
+];
+
+// =====================================================
+// SPLASH
+// =====================================================
 
 export default function SplashScreen({ onComplete = () => {} }) {
   const [phase, setPhase] = useState("init");
-  // init → bookOpen → writeLines → brandReveal → exit
 
-  const [prefersReducedMotion] = useState(
-    () =>
-      typeof window !== "undefined" &&
-      Boolean(window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches),
-  );
+  const completedRef = useRef(false);
+
+  const onCompleteRef = useRef(onComplete);
+
+  const timersRef = useRef([]);
+
+  // =====================================================
+  // KEEP CALLBACK CURRENT
+  // =====================================================
 
   useEffect(() => {
-    // Respect reduced-motion: skip straight to the brand, exit quickly.
-    if (prefersReducedMotion) {
-      setPhase("brandReveal");
-      const t = setTimeout(() => {
-        setPhase("exit");
-        setTimeout(onComplete, 200);
-      }, 900);
-      return () => clearTimeout(t);
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
+
+  // =====================================================
+  // REDUCED MOTION
+  // =====================================================
+
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(() => {
+    if (typeof window === "undefined") {
+      return false;
     }
 
-    const t1 = setTimeout(() => setPhase("bookOpen"), 300);
-    const t2 = setTimeout(() => setPhase("writeLines"), 1150);
-    const t3 = setTimeout(() => setPhase("brandReveal"), 2000);
-    const t4 = setTimeout(() => setPhase("exit"), 3600);
-    // Fire onComplete only after the exit fade/scale transition (0.75s) has finished.
-    const t5 = setTimeout(() => onComplete(), 4380);
-    return () => [t1, t2, t3, t4, t5].forEach(clearTimeout);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    return Boolean(
+      window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches,
+    );
+  });
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.matchMedia) {
+      return;
+    }
+
+    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+    const handleChange = (event) => {
+      setPrefersReducedMotion(event.matches);
+    };
+
+    media.addEventListener?.("change", handleChange);
+
+    return () => {
+      media.removeEventListener?.("change", handleChange);
+    };
   }, []);
 
+  // =====================================================
+  // COMPLETE ONCE
+  // =====================================================
+
+  const completeSplash = () => {
+    if (completedRef.current) {
+      return;
+    }
+
+    completedRef.current = true;
+
+    onCompleteRef.current?.();
+  };
+
+  // =====================================================
+  // CLEAR TIMERS
+  // =====================================================
+
+  const clearTimers = () => {
+    timersRef.current.forEach((timer) => clearTimeout(timer));
+
+    timersRef.current = [];
+  };
+
+  // =====================================================
+  // SPLASH TIMELINE
+  // =====================================================
+
+  useEffect(() => {
+    completedRef.current = false;
+
+    clearTimers();
+
+    if (prefersReducedMotion) {
+      setPhase("brandReveal");
+
+      const exitTimer = setTimeout(() => {
+        setPhase("exit");
+      }, 700);
+
+      const completeTimer = setTimeout(() => {
+        completeSplash();
+      }, 950);
+
+      timersRef.current = [exitTimer, completeTimer];
+
+      return () => {
+        clearTimers();
+      };
+    }
+
+    const timeline = [
+      {
+        delay: 250,
+        phase: "bookOpen",
+      },
+      {
+        delay: 1100,
+        phase: "writeLines",
+      },
+      {
+        delay: 1950,
+        phase: "brandReveal",
+      },
+      {
+        delay: 3550,
+        phase: "exit",
+      },
+    ];
+
+    timersRef.current = timeline.map(({ delay, phase: nextPhase }) =>
+      setTimeout(() => {
+        setPhase(nextPhase);
+      }, delay),
+    );
+
+    const completeTimer = setTimeout(() => {
+      completeSplash();
+    }, 4300);
+
+    timersRef.current.push(completeTimer);
+
+    return () => {
+      clearTimers();
+    };
+  }, [prefersReducedMotion]);
+
+  // =====================================================
+  // LOCK PAGE SCROLL
+  // =====================================================
+
+  useEffect(() => {
+    if (typeof document === "undefined") {
+      return;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, []);
+
+  // =====================================================
+  // PHASE HELPERS
+  // =====================================================
+
   const isOpen = phase !== "init";
-  const showLines =
-    phase === "writeLines" || phase === "brandReveal" || phase === "exit";
-  const showBrand = phase === "brandReveal" || phase === "exit";
+
+  const showLines = ["writeLines", "brandReveal", "exit"].includes(phase);
+
+  const showBrand = ["brandReveal", "exit"].includes(phase);
+
   const isExiting = phase === "exit";
 
   const brandText = "Smart Khatabook";
 
-  // Portal straight to document.body — guarantees this is centered on the
-  // real viewport even if a parent wrapper has a CSS transform/filter/
-  // perspective on it (any of those turns `position: fixed` into
-  // "fixed relative to that ancestor" instead of the whole screen, which
-  // is what was pushing the book off to one side).
+  // =====================================================
+  // SSR SAFETY
+  // =====================================================
+
+  if (typeof document === "undefined") {
+    return null;
+  }
+
+  // =====================================================
+  // PORTAL
+  // =====================================================
+
   return createPortal(
     <div
       role="status"
       aria-live="polite"
       aria-label="Loading Smart Khatabook"
-      className="skb-splash-root"
-      style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 9999,
-        background:
-          "radial-gradient(circle at 50% 30%, #14203f 0%, #0f1729 60%, #0a0f1e 100%)",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        overflow: "hidden",
-        transition: isExiting
-          ? "opacity 0.75s cubic-bezier(0.5,0,0.75,0), transform 0.75s cubic-bezier(0.5,0,0.75,0)"
-          : "none",
-        opacity: isExiting ? 0 : 1,
-        transform: isExiting ? "scale(1.08)" : "scale(1)",
-      }}
+      className={`skb-splash-root ${isExiting ? "skb-splash-exit" : ""}`}
     >
-      {/* Screen-reader-only text — decorative visuals below are hidden from AT */}
-      <span
-        style={{
-          position: "absolute",
-          width: 1,
-          height: 1,
-          padding: 0,
-          margin: -1,
-          overflow: "hidden",
-          clip: "rect(0,0,0,0)",
-          whiteSpace: "nowrap",
-          border: 0,
-        }}
-      >
-        Smart Khatabook is loading, please wait.
+      {/* =====================================
+          ACCESSIBILITY TEXT
+      ====================================== */}
+
+      <span className="skb-sr-only">
+        Smart Khatabook is loading. Please wait.
       </span>
 
-      {/* ── Keyframes & animation styles ── */}
-      <style>{`
-        @keyframes writeLine {
-          from { transform: scaleX(0); }
-          to   { transform: scaleX(1); }
-        }
-        @keyframes fadeInScale {
-          from { opacity: 0; transform: scale(0.5) rotate(-8deg); }
-          to   { opacity: 1; transform: scale(1) rotate(0deg); }
-        }
-        @keyframes floatDot {
-          0%, 100% { transform: translate(0,0); }
-          50%      { transform: translate(6px,-10px); }
-        }
-        @keyframes pencilWrite {
-          0%   { opacity: 0; transform: translate(0,0) rotate(45deg); }
-          15%  { opacity: 1; }
-          50%  { transform: translate(-14px,8px) rotate(40deg); }
-          85%  { opacity: 1; }
-          100% { opacity: 0; transform: translate(-26px,16px) rotate(45deg); }
-        }
-        @keyframes loadBar {
-          from { transform: scaleX(0); }
-          to   { transform: scaleX(1); }
-        }
-        @keyframes shimmer {
-          0%   { transform: translateX(-100%); }
-          100% { transform: translateX(220%); }
-        }
-        @keyframes glowPulse {
-          0%, 100% { opacity: 0.7; transform: translate(-50%,-50%) scale(1); }
-          50%      { opacity: 1;   transform: translate(-50%,-50%) scale(1.12); }
-        }
-        @keyframes letterUp {
-          from { opacity: 0; transform: translateY(16px) rotateX(60deg); }
-          to   { opacity: 1; transform: translateY(0) rotateX(0deg); }
-        }
-        @keyframes bookSettle {
-          0%   { transform: translateY(-6px) scale(0.96); }
-          60%  { transform: translateY(2px) scale(1.01); }
-          100% { transform: translateY(0) scale(1); }
-        }
-        @keyframes taglineWave {
-          from { letter-spacing: 0.4em; opacity: 0; }
-          to   { letter-spacing: 0.2em; opacity: 1; }
-        }
-        @media (prefers-reduced-motion: reduce) {
-          .skb-splash-root, .skb-splash-root * { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
-        }
-      `}</style>
+      {/* =====================================
+          BACKGROUND EFFECTS
+      ====================================== */}
 
-      {/* Ambient glow — pulsing */}
+      <div aria-hidden="true" className="skb-bg-orb skb-bg-orb-one" />
+
+      <div aria-hidden="true" className="skb-bg-orb skb-bg-orb-two" />
+
       <div
         aria-hidden="true"
-        style={{
-          position: "absolute",
-          top: "38%",
-          left: "50%",
-          width: 560,
-          height: 560,
-          borderRadius: "50%",
-          background:
-            "radial-gradient(circle, rgba(108,99,255,0.16) 0%, rgba(72,185,248,0.06) 45%, transparent 72%)",
-          transition: "opacity 1s",
-          opacity: showBrand ? 1 : 0,
-          animation:
-            showBrand && !prefersReducedMotion
-              ? "glowPulse 3.2s ease-in-out infinite"
-              : "none",
-          pointerEvents: "none",
-        }}
+        className={`skb-main-glow ${showBrand ? "skb-main-glow-show" : ""}`}
       />
 
-      {/* Floating particles */}
+      {/* =====================================
+          PARTICLES
+      ====================================== */}
+
       {!prefersReducedMotion &&
-        [...Array(9)].map((_, i) => (
-          <div
-            key={i}
+        PARTICLES.map((particle, index) => (
+          <span
+            key={index}
             aria-hidden="true"
+            className={`skb-particle ${showBrand ? "skb-particle-show" : ""}`}
             style={{
-              position: "absolute",
-              width: i % 3 === 0 ? 5 : 3,
-              height: i % 3 === 0 ? 5 : 3,
-              borderRadius: "50%",
-              background: i % 2 === 0 ? "#6c63ff" : "#48b9f8",
-              left: `${10 + i * 9}%`,
-              top: `${18 + (i % 4) * 20}%`,
-              boxShadow:
-                i % 2 === 0
-                  ? "0 0 8px rgba(108,99,255,0.8)"
-                  : "0 0 8px rgba(72,185,248,0.8)",
-              opacity: showBrand ? 0.6 : 0,
-              transition: `opacity 0.9s ease ${i * 0.08}s`,
-              animation: showBrand
-                ? `floatDot ${2.4 + (i % 3) * 0.6}s ease-in-out infinite ${i * 0.35}s`
-                : "none",
+              "--particle-left": particle.left,
+
+              "--particle-top": particle.top,
+
+              "--particle-size": `${particle.size}px`,
+
+              "--particle-color": particle.color,
+
+              "--particle-delay": `${particle.delay}s`,
+
+              "--particle-duration": `${particle.duration}s`,
             }}
           />
         ))}
 
-      {/* ── BOOK ── */}
-      <div
-        aria-hidden="true"
-        style={{
-          position: "relative",
-          width: 160,
-          height: 200,
-          marginBottom: 36,
-          perspective: 900,
-          WebkitPerspective: 900,
-          transformStyle: "preserve-3d",
-          WebkitTransformStyle: "preserve-3d",
-          animation:
-            isOpen && !prefersReducedMotion
-              ? "bookSettle 0.9s cubic-bezier(0.34,1.35,0.64,1) 0.05s both"
-              : "none",
-        }}
-      >
-        {/* Book spine / back cover */}
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            background: "linear-gradient(160deg, #1a4fa8 0%, #0d3070 100%)",
-            borderRadius: "4px 14px 14px 4px",
-            boxShadow:
-              "0 24px 70px rgba(26,79,168,0.45), 0 6px 20px rgba(0,0,0,0.45)",
-          }}
-        />
+      {/* =====================================
+          CONTENT
+      ====================================== */}
 
-        {/* Front cover — flips fully open */}
+      <div className="skb-splash-content">
+        {/* ===================================
+            BOOK AREA
+        ==================================== */}
+
         <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            transformOrigin: "left center",
-            transform: isOpen ? "rotateY(-180deg)" : "rotateY(0deg)",
-            WebkitTransform: isOpen ? "rotateY(-180deg)" : "rotateY(0deg)",
-            transition: "transform 1s cubic-bezier(0.34,1.15,0.64,1)",
-            transformStyle: "preserve-3d",
-            WebkitTransformStyle: "preserve-3d",
-            zIndex: 3,
-          }}
+          aria-hidden="true"
+          className={`skb-book-wrap ${isOpen ? "skb-book-open" : ""}`}
         >
-          {/* Front face */}
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              background: "linear-gradient(160deg, #2563eb 0%, #1a4fa8 100%)",
-              borderRadius: "4px 14px 14px 4px",
-              backfaceVisibility: "hidden",
-              WebkitBackfaceVisibility: "hidden",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 10,
-              padding: 16,
-              boxShadow: "inset 0 0 40px rgba(0,0,0,0.15)",
-            }}
-          >
-            <svg
-              width="40"
-              height="40"
-              fill="none"
-              stroke="rgba(255,255,255,0.9)"
-              strokeWidth="2"
-              viewBox="0 0 24 24"
-            >
-              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-            </svg>
-            <span
-              style={{
-                color: "rgba(255,255,255,0.9)",
-                fontSize: 11,
-                fontWeight: 700,
-                letterSpacing: "0.08em",
-                textTransform: "uppercase",
-              }}
-            >
-              Smart Khatabook
-            </span>
+          {/* SHADOW */}
+
+          <div className="skb-book-floor-shadow" />
+
+          {/* BACK COVER */}
+
+          <div className="skb-book-back" />
+
+          {/* PAGES */}
+
+          <div className="skb-pages">
+            {[...Array(8)].map((_, index) => (
+              <div className="skb-page-row" key={index}>
+                <span className="skb-page-margin" />
+
+                <span className="skb-page-rule">
+                  {showLines && index < 7 && (
+                    <span
+                      className={`skb-written-line skb-line-${index % 3}`}
+                      style={{
+                        "--line-width": `${52 + ((index * 7) % 40)}%`,
+
+                        "--line-delay": `${index * 0.075}s`,
+                      }}
+                    />
+                  )}
+                </span>
+              </div>
+            ))}
+
+            {/* RUPEE */}
+
+            {showLines && <div className="skb-rupee">₹</div>}
           </div>
-          {/* Back of cover (inside) */}
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              background: "#f8f9ff",
-              borderRadius: "4px 14px 14px 4px",
-              backfaceVisibility: "hidden",
-              WebkitBackfaceVisibility: "hidden",
-              transform: "rotateY(180deg)",
-              WebkitTransform: "rotateY(180deg)",
-            }}
-          />
-        </div>
 
-        {/* Pages (inside the book) */}
-        <div
-          style={{
-            position: "absolute",
-            inset: "4px 6px",
-            background: "#ffffff",
-            borderRadius: "2px 10px 10px 2px",
-            zIndex: 2,
-            padding: "14px 12px",
-            overflow: "hidden",
-            display: "flex",
-            flexDirection: "column",
-            gap: 7,
-            boxShadow: "inset -6px 0 14px rgba(0,0,0,0.04)",
-          }}
-        >
-          {[...Array(8)].map((_, i) => (
-            <div
-              key={i}
-              style={{ display: "flex", alignItems: "center", gap: 6 }}
-            >
-              <div
-                style={{
-                  width: 1,
-                  height: 12,
-                  background: "#ffb3b3",
-                  flexShrink: 0,
-                }}
-              />
-              <div
-                style={{
-                  flex: 1,
-                  height: 1.5,
-                  background: "#e8eaf0",
-                  borderRadius: 1,
-                  overflow: "hidden",
-                  position: "relative",
-                }}
-              >
-                {showLines && i < 7 && (
-                  <div
-                    style={{
-                      position: "absolute",
-                      inset: 0,
-                      background:
-                        i % 3 === 0
-                          ? "linear-gradient(to right, #6c63ff, #8b83ff)"
-                          : i % 3 === 1
-                            ? "linear-gradient(to right, #1a4fa8, #4878d4)"
-                            : "linear-gradient(to right, #48b9f8, #7dd4fc)",
-                      borderRadius: 1,
-                      transformOrigin: "left",
-                      animation: prefersReducedMotion
-                        ? "none"
-                        : "writeLine 0.42s cubic-bezier(0.4,0,0.2,1) forwards",
-                      animationDelay: `${i * 0.075}s`,
-                      transform: prefersReducedMotion
-                        ? "scaleX(1)"
-                        : "scaleX(0)",
-                      width: `${50 + ((i * 7) % 45)}%`,
-                    }}
-                  />
-                )}
+          {/* FRONT COVER */}
+
+          <div className="skb-front-cover">
+            {/* OUTSIDE */}
+
+            <div className="skb-cover-face skb-cover-front">
+              <div className="skb-cover-logo">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+
+                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                </svg>
+              </div>
+
+              <span>Smart Khatabook</span>
+
+              <small>Business Ledger</small>
+            </div>
+
+            {/* INSIDE */}
+
+            <div className="skb-cover-face skb-cover-inside">
+              <div className="skb-inside-decoration">
+                <span />
+                <span />
+                <span />
               </div>
             </div>
-          ))}
+          </div>
 
-          {/* Rupee symbol */}
-          {showLines && (
-            <div
-              style={{
-                position: "absolute",
-                bottom: 12,
-                right: 12,
-                fontSize: 22,
-                color: "#6c63ff",
-                fontWeight: 800,
-                opacity: prefersReducedMotion ? 1 : 0,
-                animation: prefersReducedMotion
-                  ? "none"
-                  : "fadeInScale 0.45s cubic-bezier(0.34,1.6,0.64,1) 0.65s forwards",
-              }}
-            >
-              ₹
-            </div>
+          {/* PAGE CURL */}
+
+          {isOpen && <div className="skb-page-curl" />}
+
+          {/* PENCIL */}
+
+          {showLines && !prefersReducedMotion && (
+            <div className="skb-pencil">✏️</div>
           )}
         </div>
 
-        {/* Page curl shadow */}
-        {isOpen && (
-          <div
-            style={{
-              position: "absolute",
-              right: -6,
-              top: "10%",
-              bottom: "10%",
-              width: 6,
-              background:
-                "linear-gradient(to right, rgba(0,0,0,0.14), transparent)",
-              borderRadius: "0 4px 4px 0",
-            }}
-          />
-        )}
+        {/* ===================================
+            BRAND
+        ==================================== */}
 
-        {/* Pencil writing animation */}
-        {showLines && !prefersReducedMotion && (
-          <div
-            style={{
-              position: "absolute",
-              right: -14,
-              top: 18,
-              fontSize: 24,
-              transformOrigin: "center",
-              animation: "pencilWrite 1.3s ease-in-out forwards",
-              opacity: 0,
-            }}
-          >
-            ✏️
-          </div>
-        )}
-      </div>
-
-      {/* ── BRAND ── */}
-      <div
-        style={{
-          textAlign: "center",
-          transform: showBrand ? "translateY(0)" : "translateY(24px)",
-          opacity: showBrand ? 1 : 0,
-          transition:
-            "transform 0.7s cubic-bezier(0.34,1.4,0.64,1), opacity 0.7s ease",
-        }}
-      >
-        <h1
-          style={{
-            fontFamily: "'Plus Jakarta Sans', sans-serif",
-            fontSize: "2rem",
-            fontWeight: 800,
-            color: "#ffffff",
-            letterSpacing: "-0.03em",
-            margin: "0 0 6px",
-            lineHeight: 1,
-            display: "flex",
-            justifyContent: "center",
-            perspective: 300,
-          }}
-        >
-          {brandText.split("").map((ch, i) => (
-            <span
-              key={i}
-              style={{
-                display: "inline-block",
-                whiteSpace: "pre",
-                opacity: prefersReducedMotion ? 1 : 0,
-                animation:
-                  showBrand && !prefersReducedMotion
-                    ? `letterUp 0.5s cubic-bezier(0.2,0.9,0.3,1.2) ${0.05 * i}s forwards`
-                    : "none",
-              }}
-            >
-              {ch}
-            </span>
-          ))}
-        </h1>
-
-        <p
-          style={{
-            color: "#6c63ff",
-            fontSize: "0.72rem",
-            textTransform: "uppercase",
-            fontWeight: 700,
-            margin: "0 0 20px",
-            opacity: prefersReducedMotion ? 1 : 0,
-            animation:
-              showBrand && !prefersReducedMotion
-                ? "taglineWave 0.6s ease 0.55s forwards"
-                : "none",
-          }}
-        >
-          Track · Manage · Profit
-        </p>
-
-        {/* Loading bar with shimmer */}
         <div
-          style={{
-            width: 140,
-            height: 3,
-            background: "rgba(255,255,255,0.08)",
-            borderRadius: 10,
-            margin: "0 auto",
-            overflow: "hidden",
-            position: "relative",
-          }}
+          className={`skb-brand-area ${showBrand ? "skb-brand-visible" : ""}`}
         >
-          <div
-            style={{
-              height: "100%",
-              background: "linear-gradient(to right, #6c63ff, #48b9f8)",
-              borderRadius: 10,
-              animation:
-                showBrand && !prefersReducedMotion
-                  ? "loadBar 1.6s cubic-bezier(0.4,0,0.2,1) 0.2s forwards"
-                  : "none",
-              transform: prefersReducedMotion ? "scaleX(1)" : "scaleX(0)",
-              transformOrigin: "left",
-              position: "relative",
-              overflow: "hidden",
-            }}
-          >
+          <h1 className="skb-brand-title">
+            {brandText.split("").map((character, index) => (
+              <span
+                key={index}
+                style={{
+                  "--letter-delay": `${0.045 * index}s`,
+                }}
+                className={
+                  showBrand
+                    ? "skb-brand-letter skb-brand-letter-show"
+                    : "skb-brand-letter"
+                }
+              >
+                {character}
+              </span>
+            ))}
+          </h1>
+
+          <p className="skb-tagline">
+            Track
+            <span>•</span>
+            Manage
+            <span>•</span>
+            Profit
+          </p>
+
+          {/* LOADING */}
+
+          <div className="skb-loading-track">
             <div
-              style={{
-                position: "absolute",
-                inset: 0,
-                background:
-                  "linear-gradient(90deg, transparent, rgba(255,255,255,0.7), transparent)",
-                width: "40%",
-                animation:
-                  showBrand && !prefersReducedMotion
-                    ? "shimmer 1.3s ease-in-out 0.5s infinite"
-                    : "none",
-              }}
-            />
+              className={`skb-loading-fill ${
+                showBrand ? "skb-loading-fill-active" : ""
+              }`}
+            >
+              <span className="skb-loading-shimmer" />
+            </div>
           </div>
+
+          <div className="skb-loading-label">Smart business. Simple khata.</div>
         </div>
       </div>
+
+      {/* =====================================
+          STYLES
+      ====================================== */}
+
+      <style>{`
+        /* ==========================================
+           ROOT
+        ========================================== */
+
+        .skb-splash-root,
+        .skb-splash-root * {
+          box-sizing: border-box;
+        }
+
+        .skb-splash-root {
+          position: fixed;
+          inset: 0;
+
+          z-index: 999999;
+
+          width: 100%;
+          height: 100dvh;
+
+          overflow: hidden;
+
+          display: flex;
+          align-items: center;
+          justify-content: center;
+
+          padding:
+            max(
+              20px,
+              env(
+                safe-area-inset-top
+              )
+            )
+            max(
+              20px,
+              env(
+                safe-area-inset-right
+              )
+            )
+            max(
+              20px,
+              env(
+                safe-area-inset-bottom
+              )
+            )
+            max(
+              20px,
+              env(
+                safe-area-inset-left
+              )
+            );
+
+          background:
+            radial-gradient(
+              circle
+              at
+              50%
+              28%,
+              #19284d
+              0%,
+              #10192e
+              43%,
+              #0b1120
+              72%,
+              #070b14
+              100%
+            );
+
+          font-family:
+            "Plus Jakarta Sans",
+            Inter,
+            system-ui,
+            -apple-system,
+            BlinkMacSystemFont,
+            "Segoe UI",
+            sans-serif;
+
+          opacity: 1;
+
+          transform:
+            scale(1);
+
+          transition:
+            opacity
+              0.72s
+              cubic-bezier(
+                0.5,
+                0,
+                0.75,
+                0
+              ),
+            transform
+              0.72s
+              cubic-bezier(
+                0.5,
+                0,
+                0.75,
+                0
+              );
+        }
+
+        .skb-splash-root::before {
+          content: "";
+
+          position: absolute;
+          inset: 0;
+
+          pointer-events:
+            none;
+
+          background:
+            linear-gradient(
+              115deg,
+              rgba(
+                255,
+                255,
+                255,
+                0.015
+              ),
+              transparent
+                30%,
+              rgba(
+                108,
+                99,
+                255,
+                0.03
+              )
+                60%,
+              transparent
+            );
+        }
+
+        .skb-splash-exit {
+          opacity: 0;
+
+          transform:
+            scale(1.07);
+
+          pointer-events:
+            none;
+        }
+
+        /* ==========================================
+           SCREEN READER
+        ========================================== */
+
+        .skb-sr-only {
+          position: absolute;
+
+          width: 1px;
+          height: 1px;
+
+          padding: 0;
+
+          margin: -1px;
+
+          overflow: hidden;
+
+          clip:
+            rect(
+              0,
+              0,
+              0,
+              0
+            );
+
+          white-space:
+            nowrap;
+
+          border: 0;
+        }
+
+        /* ==========================================
+           CONTENT
+        ========================================== */
+
+        .skb-splash-content {
+          position: relative;
+
+          z-index: 10;
+
+          width: 100%;
+
+          max-width: 680px;
+
+          display: flex;
+
+          flex-direction:
+            column;
+
+          align-items:
+            center;
+
+          justify-content:
+            center;
+
+          gap:
+            clamp(
+              20px,
+              4vh,
+              34px
+            );
+        }
+
+        /* ==========================================
+           BACKGROUND ORBS
+        ========================================== */
+
+        .skb-bg-orb {
+          position: absolute;
+
+          border-radius:
+            50%;
+
+          pointer-events:
+            none;
+
+          filter:
+            blur(2px);
+        }
+
+        .skb-bg-orb-one {
+          width:
+            min(
+              60vw,
+              650px
+            );
+
+          aspect-ratio:
+            1;
+
+          left: -20%;
+
+          top: -28%;
+
+          background:
+            radial-gradient(
+              circle,
+              rgba(
+                79,
+                70,
+                229,
+                0.16
+              ),
+              transparent
+                68%
+            );
+        }
+
+        .skb-bg-orb-two {
+          width:
+            min(
+              55vw,
+              600px
+            );
+
+          aspect-ratio:
+            1;
+
+          right: -20%;
+
+          bottom: -34%;
+
+          background:
+            radial-gradient(
+              circle,
+              rgba(
+                56,
+                189,
+                248,
+                0.10
+              ),
+              transparent
+                70%
+            );
+        }
+
+        /* ==========================================
+           MAIN GLOW
+        ========================================== */
+
+        .skb-main-glow {
+          position: absolute;
+
+          left: 50%;
+          top: 43%;
+
+          width:
+            clamp(
+              300px,
+              65vw,
+              650px
+            );
+
+          aspect-ratio:
+            1;
+
+          border-radius:
+            50%;
+
+          pointer-events:
+            none;
+
+          opacity: 0;
+
+          transform:
+            translate(
+              -50%,
+              -50%
+            );
+
+          background:
+            radial-gradient(
+              circle,
+              rgba(
+                108,
+                99,
+                255,
+                0.18
+              )
+                0%,
+              rgba(
+                72,
+                185,
+                248,
+                0.07
+              )
+                45%,
+              transparent
+                72%
+            );
+
+          transition:
+            opacity
+            0.8s ease;
+        }
+
+        .skb-main-glow-show {
+          opacity: 1;
+
+          animation:
+            skbGlowPulse
+            3.2s
+            ease-in-out
+            infinite;
+        }
+
+        /* ==========================================
+           PARTICLES
+        ========================================== */
+
+        .skb-particle {
+          position: absolute;
+
+          left:
+            var(
+              --particle-left
+            );
+
+          top:
+            var(
+              --particle-top
+            );
+
+          width:
+            var(
+              --particle-size
+            );
+
+          height:
+            var(
+              --particle-size
+            );
+
+          border-radius:
+            50%;
+
+          background:
+            var(
+              --particle-color
+            );
+
+          opacity: 0;
+
+          pointer-events:
+            none;
+
+          box-shadow:
+            0
+            0
+            10px
+            var(
+              --particle-color
+            );
+
+          transition:
+            opacity
+            0.8s ease;
+        }
+
+        .skb-particle-show {
+          opacity: 0.55;
+
+          animation:
+            skbFloatParticle
+            var(
+              --particle-duration
+            )
+            ease-in-out
+            infinite
+            var(
+              --particle-delay
+            );
+        }
+
+        /* ==========================================
+           BOOK
+        ========================================== */
+
+        .skb-book-wrap {
+          --book-width:
+            clamp(
+              120px,
+              26vw,
+              165px
+            );
+
+          --book-height:
+            calc(
+              var(
+                --book-width
+              ) *
+              1.24
+            );
+
+          position: relative;
+
+          width:
+            var(
+              --book-width
+            );
+
+          height:
+            var(
+              --book-height
+            );
+
+          perspective:
+            1100px;
+
+          -webkit-perspective:
+            1100px;
+
+          transform-style:
+            preserve-3d;
+
+          -webkit-transform-style:
+            preserve-3d;
+        }
+
+        .skb-book-open {
+          animation:
+            skbBookSettle
+            0.9s
+            cubic-bezier(
+              0.34,
+              1.35,
+              0.64,
+              1
+            )
+            0.05s
+            both;
+        }
+
+        /* ==========================================
+           BOOK FLOOR SHADOW
+        ========================================== */
+
+        .skb-book-floor-shadow {
+          position: absolute;
+
+          left: 50%;
+
+          bottom:
+            -18%;
+
+          width: 125%;
+
+          height: 18%;
+
+          border-radius:
+            50%;
+
+          transform:
+            translateX(-50%);
+
+          background:
+            rgba(
+              0,
+              0,
+              0,
+              0.36
+            );
+
+          filter:
+            blur(14px);
+
+          opacity: 0.7;
+        }
+
+        /* ==========================================
+           BACK COVER
+        ========================================== */
+
+        .skb-book-back {
+          position: absolute;
+
+          inset: 0;
+
+          border-radius:
+            4px
+            14px
+            14px
+            4px;
+
+          background:
+            linear-gradient(
+              150deg,
+              #245fc2
+                0%,
+              #164187
+                48%,
+              #0d2c66
+                100%
+            );
+
+          box-shadow:
+            0
+            24px
+            70px
+            rgba(
+              26,
+              79,
+              168,
+              0.38
+            ),
+            0
+            8px
+            25px
+            rgba(
+              0,
+              0,
+              0,
+              0.38
+            );
+        }
+
+        /* ==========================================
+           PAGES
+        ========================================== */
+
+        .skb-pages {
+          position: absolute;
+
+          inset:
+            4px
+            6px;
+
+          z-index: 2;
+
+          overflow: hidden;
+
+          padding:
+            clamp(
+              10px,
+              2.8vw,
+              14px
+            )
+            clamp(
+              9px,
+              2.4vw,
+              12px
+            );
+
+          border-radius:
+            2px
+            10px
+            10px
+            2px;
+
+          background:
+            linear-gradient(
+              90deg,
+              #f5f6fa,
+              #ffffff
+                14%,
+              #ffffff
+                90%,
+              #f1f3f8
+            );
+
+          box-shadow:
+            inset
+            -6px
+            0
+            14px
+            rgba(
+              0,
+              0,
+              0,
+              0.05
+            );
+        }
+
+        .skb-page-row {
+          display: flex;
+
+          align-items:
+            center;
+
+          gap:
+            clamp(
+              4px,
+              1.3vw,
+              6px
+            );
+
+          margin-bottom:
+            clamp(
+              5px,
+              1.3vw,
+              7px
+            );
+        }
+
+        .skb-page-margin {
+          width: 1px;
+
+          height:
+            clamp(
+              8px,
+              2.5vw,
+              12px
+            );
+
+          flex-shrink: 0;
+
+          background:
+            #fca5a5;
+        }
+
+        .skb-page-rule {
+          position: relative;
+
+          flex: 1;
+
+          height: 2px;
+
+          overflow: hidden;
+
+          border-radius:
+            2px;
+
+          background:
+            #e8eaf0;
+        }
+
+        .skb-written-line {
+          position: absolute;
+
+          inset:
+            0
+            auto
+            0
+            0;
+
+          width:
+            var(
+              --line-width
+            );
+
+          border-radius:
+            2px;
+
+          transform:
+            scaleX(0);
+
+          transform-origin:
+            left;
+
+          animation:
+            skbWriteLine
+            0.42s
+            cubic-bezier(
+              0.4,
+              0,
+              0.2,
+              1
+            )
+            var(
+              --line-delay
+            )
+            forwards;
+        }
+
+        .skb-line-0 {
+          background:
+            linear-gradient(
+              90deg,
+              #6c63ff,
+              #908aff
+            );
+        }
+
+        .skb-line-1 {
+          background:
+            linear-gradient(
+              90deg,
+              #1a4fa8,
+              #4878d4
+            );
+        }
+
+        .skb-line-2 {
+          background:
+            linear-gradient(
+              90deg,
+              #48b9f8,
+              #7dd4fc
+            );
+        }
+
+        /* ==========================================
+           RUPEE
+        ========================================== */
+
+        .skb-rupee {
+          position: absolute;
+
+          right:
+            clamp(
+              8px,
+              2.5vw,
+              12px
+            );
+
+          bottom:
+            clamp(
+              8px,
+              2.5vw,
+              12px
+            );
+
+          color:
+            #6c63ff;
+
+          font-size:
+            clamp(
+              17px,
+              5vw,
+              22px
+            );
+
+          font-weight: 900;
+
+          opacity: 0;
+
+          animation:
+            skbRupeeIn
+            0.45s
+            cubic-bezier(
+              0.34,
+              1.6,
+              0.64,
+              1
+            )
+            0.62s
+            forwards;
+        }
+
+        /* ==========================================
+           FRONT COVER
+        ========================================== */
+
+        .skb-front-cover {
+          position: absolute;
+
+          inset: 0;
+
+          z-index: 4;
+
+          transform-origin:
+            left center;
+
+          transform:
+            rotateY(
+              0deg
+            );
+
+          -webkit-transform:
+            rotateY(
+              0deg
+            );
+
+          transform-style:
+            preserve-3d;
+
+          -webkit-transform-style:
+            preserve-3d;
+
+          transition:
+            transform
+            1s
+            cubic-bezier(
+              0.34,
+              1.15,
+              0.64,
+              1
+            );
+        }
+
+        .skb-book-open
+        .skb-front-cover {
+          transform:
+            rotateY(
+              -180deg
+            );
+
+          -webkit-transform:
+            rotateY(
+              -180deg
+            );
+        }
+
+        .skb-cover-face {
+          position: absolute;
+
+          inset: 0;
+
+          backface-visibility:
+            hidden;
+
+          -webkit-backface-visibility:
+            hidden;
+
+          border-radius:
+            4px
+            14px
+            14px
+            4px;
+        }
+
+        .skb-cover-front {
+          display: flex;
+
+          flex-direction:
+            column;
+
+          align-items: center;
+
+          justify-content:
+            center;
+
+          gap:
+            clamp(
+              7px,
+              2vw,
+              10px
+            );
+
+          padding:
+            14px;
+
+          color:
+            rgba(
+              255,
+              255,
+              255,
+              0.95
+            );
+
+          text-align: center;
+
+          background:
+            linear-gradient(
+              145deg,
+              #3b82f6
+                0%,
+              #2563eb
+                42%,
+              #194aa0
+                100%
+            );
+
+          box-shadow:
+            inset
+            0
+            0
+            45px
+            rgba(
+              0,
+              0,
+              0,
+              0.14
+            );
+        }
+
+        .skb-cover-front::after {
+          content: "";
+
+          position: absolute;
+
+          inset: 0;
+
+          border-radius:
+            inherit;
+
+          pointer-events:
+            none;
+
+          background:
+            linear-gradient(
+              120deg,
+              rgba(
+                255,
+                255,
+                255,
+                0.13
+              ),
+              transparent
+                35%,
+              transparent
+                70%,
+              rgba(
+                255,
+                255,
+                255,
+                0.04
+              )
+            );
+        }
+
+        .skb-cover-logo {
+          width:
+            clamp(
+              34px,
+              8vw,
+              42px
+            );
+
+          height:
+            clamp(
+              34px,
+              8vw,
+              42px
+            );
+        }
+
+        .skb-cover-logo svg {
+          width: 100%;
+
+          height: 100%;
+        }
+
+        .skb-cover-front span {
+          font-size:
+            clamp(
+              8px,
+              2.4vw,
+              11px
+            );
+
+          font-weight: 800;
+
+          letter-spacing:
+            0.08em;
+
+          text-transform:
+            uppercase;
+        }
+
+        .skb-cover-front small {
+          color:
+            rgba(
+              255,
+              255,
+              255,
+              0.58
+            );
+
+          font-size:
+            clamp(
+              6px,
+              1.8vw,
+              8px
+            );
+
+          letter-spacing:
+            0.08em;
+
+          text-transform:
+            uppercase;
+        }
+
+        /* ==========================================
+           INSIDE COVER
+        ========================================== */
+
+        .skb-cover-inside {
+          transform:
+            rotateY(
+              180deg
+            );
+
+          -webkit-transform:
+            rotateY(
+              180deg
+            );
+
+          display: flex;
+
+          align-items: center;
+
+          justify-content:
+            center;
+
+          background:
+            linear-gradient(
+              145deg,
+              #f7f8ff,
+              #e8ebf8
+            );
+        }
+
+        .skb-inside-decoration {
+          width: 55%;
+
+          display: flex;
+
+          flex-direction:
+            column;
+
+          gap: 7px;
+
+          opacity: 0.55;
+        }
+
+        .skb-inside-decoration span {
+          height: 2px;
+
+          border-radius:
+            20px;
+
+          background:
+            #b8c0d9;
+        }
+
+        .skb-inside-decoration span:nth-child(2) {
+          width: 72%;
+        }
+
+        .skb-inside-decoration span:nth-child(3) {
+          width: 42%;
+        }
+
+        /* ==========================================
+           PAGE CURL
+        ========================================== */
+
+        .skb-page-curl {
+          position: absolute;
+
+          right: -6px;
+
+          top: 10%;
+          bottom: 10%;
+
+          width: 6px;
+
+          border-radius:
+            0
+            4px
+            4px
+            0;
+
+          background:
+            linear-gradient(
+              90deg,
+              rgba(
+                0,
+                0,
+                0,
+                0.15
+              ),
+              transparent
+            );
+        }
+
+        /* ==========================================
+           PENCIL
+        ========================================== */
+
+        .skb-pencil {
+          position: absolute;
+
+          right:
+            clamp(
+              -17px,
+              -3vw,
+              -12px
+            );
+
+          top:
+            clamp(
+              12px,
+              3vw,
+              20px
+            );
+
+          z-index: 6;
+
+          font-size:
+            clamp(
+              19px,
+              5vw,
+              25px
+            );
+
+          transform-origin:
+            center;
+
+          opacity: 0;
+
+          animation:
+            skbPencilWrite
+            1.3s
+            ease-in-out
+            forwards;
+        }
+
+        /* ==========================================
+           BRAND AREA
+        ========================================== */
+
+        .skb-brand-area {
+          width: 100%;
+
+          text-align: center;
+
+          opacity: 0;
+
+          transform:
+            translateY(
+              24px
+            );
+
+          transition:
+            opacity
+              0.7s
+              ease,
+            transform
+              0.7s
+              cubic-bezier(
+                0.34,
+                1.4,
+                0.64,
+                1
+              );
+        }
+
+        .skb-brand-visible {
+          opacity: 1;
+
+          transform:
+            translateY(
+              0
+            );
+        }
+
+        .skb-brand-title {
+          margin:
+            0
+            0
+            9px;
+
+          display: flex;
+
+          justify-content:
+            center;
+
+          flex-wrap: nowrap;
+
+          perspective:
+            300px;
+
+          color:
+            #ffffff;
+
+          font-size:
+            clamp(
+              1.65rem,
+              6vw,
+              2.25rem
+            );
+
+          font-weight: 900;
+
+          line-height: 1.05;
+
+          letter-spacing:
+            -0.035em;
+        }
+
+        .skb-brand-letter {
+          display: inline-block;
+
+          white-space: pre;
+
+          opacity: 0;
+        }
+
+        .skb-brand-letter-show {
+          animation:
+            skbLetterUp
+            0.5s
+            cubic-bezier(
+              0.2,
+              0.9,
+              0.3,
+              1.2
+            )
+            var(
+              --letter-delay
+            )
+            forwards;
+        }
+
+        /* ==========================================
+           TAGLINE
+        ========================================== */
+
+        .skb-tagline {
+          margin:
+            0
+            0
+            20px;
+
+          display: flex;
+
+          justify-content:
+            center;
+
+          align-items: center;
+
+          gap:
+            clamp(
+              6px,
+              2vw,
+              10px
+            );
+
+          color:
+            #8b83ff;
+
+          font-size:
+            clamp(
+              0.60rem,
+              2.3vw,
+              0.72rem
+            );
+
+          font-weight: 800;
+
+          letter-spacing:
+            0.16em;
+
+          text-transform:
+            uppercase;
+
+          opacity: 0;
+
+          animation:
+            skbTaglineReveal
+            0.6s
+            ease
+            0.48s
+            forwards;
+        }
+
+        .skb-tagline span {
+          color:
+            rgba(
+              255,
+              255,
+              255,
+              0.35
+            );
+        }
+
+        /* ==========================================
+           LOADING
+        ========================================== */
+
+        .skb-loading-track {
+          position: relative;
+
+          width:
+            clamp(
+              120px,
+              36vw,
+              170px
+            );
+
+          height: 4px;
+
+          margin:
+            0
+            auto;
+
+          overflow: hidden;
+
+          border-radius:
+            20px;
+
+          background:
+            rgba(
+              255,
+              255,
+              255,
+              0.08
+            );
+        }
+
+        .skb-loading-fill {
+          position: relative;
+
+          width: 100%;
+
+          height: 100%;
+
+          overflow: hidden;
+
+          border-radius:
+            20px;
+
+          background:
+            linear-gradient(
+              90deg,
+              #6c63ff,
+              #48b9f8
+            );
+
+          transform:
+            scaleX(0);
+
+          transform-origin:
+            left;
+        }
+
+        .skb-loading-fill-active {
+          animation:
+            skbLoadBar
+            1.6s
+            cubic-bezier(
+              0.4,
+              0,
+              0.2,
+              1
+            )
+            0.15s
+            forwards;
+        }
+
+        .skb-loading-shimmer {
+          position: absolute;
+
+          inset: 0;
+
+          width: 40%;
+
+          background:
+            linear-gradient(
+              90deg,
+              transparent,
+              rgba(
+                255,
+                255,
+                255,
+                0.8
+              ),
+              transparent
+            );
+
+          animation:
+            skbShimmer
+            1.3s
+            ease-in-out
+            0.45s
+            infinite;
+        }
+
+        .skb-loading-label {
+          margin-top: 10px;
+
+          color:
+            rgba(
+              255,
+              255,
+              255,
+              0.36
+            );
+
+          font-size:
+            clamp(
+              9px,
+              2.4vw,
+              11px
+            );
+
+          font-weight: 500;
+
+          letter-spacing:
+            0.04em;
+        }
+
+        /* ==========================================
+           KEYFRAMES
+        ========================================== */
+
+        @keyframes skbWriteLine {
+          from {
+            transform:
+              scaleX(0);
+          }
+
+          to {
+            transform:
+              scaleX(1);
+          }
+        }
+
+        @keyframes skbRupeeIn {
+          from {
+            opacity: 0;
+
+            transform:
+              scale(0.45)
+              rotate(-8deg);
+          }
+
+          to {
+            opacity: 1;
+
+            transform:
+              scale(1)
+              rotate(0);
+          }
+        }
+
+        @keyframes skbPencilWrite {
+          0% {
+            opacity: 0;
+
+            transform:
+              translate(
+                0,
+                0
+              )
+              rotate(
+                45deg
+              );
+          }
+
+          15% {
+            opacity: 1;
+          }
+
+          50% {
+            transform:
+              translate(
+                -14px,
+                8px
+              )
+              rotate(
+                40deg
+              );
+          }
+
+          85% {
+            opacity: 1;
+          }
+
+          100% {
+            opacity: 0;
+
+            transform:
+              translate(
+                -26px,
+                16px
+              )
+              rotate(
+                45deg
+              );
+          }
+        }
+
+        @keyframes skbLoadBar {
+          from {
+            transform:
+              scaleX(0);
+          }
+
+          to {
+            transform:
+              scaleX(1);
+          }
+        }
+
+        @keyframes skbShimmer {
+          from {
+            transform:
+              translateX(
+                -110%
+              );
+          }
+
+          to {
+            transform:
+              translateX(
+                260%
+              );
+          }
+        }
+
+        @keyframes skbGlowPulse {
+          0%,
+          100% {
+            transform:
+              translate(
+                -50%,
+                -50%
+              )
+              scale(1);
+          }
+
+          50% {
+            transform:
+              translate(
+                -50%,
+                -50%
+              )
+              scale(1.1);
+          }
+        }
+
+        @keyframes skbLetterUp {
+          from {
+            opacity: 0;
+
+            transform:
+              translateY(
+                16px
+              )
+              rotateX(
+                60deg
+              );
+          }
+
+          to {
+            opacity: 1;
+
+            transform:
+              translateY(
+                0
+              )
+              rotateX(
+                0
+              );
+          }
+        }
+
+        @keyframes skbBookSettle {
+          0% {
+            transform:
+              translateY(
+                -7px
+              )
+              scale(
+                0.96
+              );
+          }
+
+          60% {
+            transform:
+              translateY(
+                2px
+              )
+              scale(
+                1.015
+              );
+          }
+
+          100% {
+            transform:
+              translateY(
+                0
+              )
+              scale(
+                1
+              );
+          }
+        }
+
+        @keyframes skbTaglineReveal {
+          from {
+            opacity: 0;
+
+            transform:
+              translateY(
+                6px
+              );
+
+            letter-spacing:
+              0.28em;
+          }
+
+          to {
+            opacity: 1;
+
+            transform:
+              translateY(
+                0
+              );
+
+            letter-spacing:
+              0.16em;
+          }
+        }
+
+        @keyframes skbFloatParticle {
+          0%,
+          100% {
+            transform:
+              translate(
+                0,
+                0
+              );
+          }
+
+          50% {
+            transform:
+              translate(
+                6px,
+                -11px
+              );
+          }
+        }
+
+        /* ==========================================
+           MOBILE
+        ========================================== */
+
+        @media (
+          max-width: 600px
+        ) {
+          .skb-splash-root {
+            padding:
+              max(
+                18px,
+                env(
+                  safe-area-inset-top
+                )
+              )
+              16px
+              max(
+                18px,
+                env(
+                  safe-area-inset-bottom
+                )
+              );
+          }
+
+          .skb-splash-content {
+            gap:
+              clamp(
+                18px,
+                4vh,
+                28px
+              );
+          }
+
+          .skb-book-wrap {
+            --book-width:
+              clamp(
+                120px,
+                39vw,
+                150px
+              );
+          }
+
+          .skb-bg-orb-one {
+            width: 100vw;
+          }
+
+          .skb-bg-orb-two {
+            width: 90vw;
+          }
+        }
+
+        /* ==========================================
+           SMALL MOBILE
+        ========================================== */
+
+        @media (
+          max-width: 380px
+        ) {
+          .skb-book-wrap {
+            --book-width:
+              clamp(
+                112px,
+                40vw,
+                138px
+              );
+          }
+
+          .skb-brand-title {
+            font-size:
+              clamp(
+                1.45rem,
+                7vw,
+                1.75rem
+              );
+          }
+
+          .skb-tagline {
+            margin-bottom:
+              16px;
+          }
+
+          .skb-particle:nth-of-type(n+7) {
+            display: none;
+          }
+        }
+
+        /* ==========================================
+           SHORT SCREENS / LANDSCAPE
+        ========================================== */
+
+        @media (
+          max-height: 620px
+        ) {
+          .skb-splash-content {
+            flex-direction:
+              row;
+
+            max-width:
+              760px;
+
+            gap:
+              clamp(
+                28px,
+                7vw,
+                70px
+              );
+          }
+
+          .skb-book-wrap {
+            --book-width:
+              clamp(
+                95px,
+                21vh,
+                130px
+              );
+
+            flex-shrink: 0;
+          }
+
+          .skb-brand-area {
+            width: auto;
+
+            min-width:
+              min(
+                310px,
+                46vw
+              );
+          }
+
+          .skb-brand-title {
+            font-size:
+              clamp(
+                1.35rem,
+                4vw,
+                2rem
+              );
+          }
+        }
+
+        /* ==========================================
+           VERY SHORT SCREEN
+        ========================================== */
+
+        @media (
+          max-height: 430px
+        ) {
+          .skb-splash-root {
+            padding: 10px;
+          }
+
+          .skb-splash-content {
+            gap: 25px;
+          }
+
+          .skb-book-wrap {
+            --book-width:
+              95px;
+          }
+
+          .skb-loading-label {
+            display: none;
+          }
+
+          .skb-tagline {
+            margin-bottom:
+              12px;
+          }
+        }
+
+        /* ==========================================
+           REDUCED MOTION
+        ========================================== */
+
+        @media (
+          prefers-reduced-motion:
+            reduce
+        ) {
+          .skb-splash-root,
+          .skb-splash-root *,
+          .skb-splash-root *::before,
+          .skb-splash-root *::after {
+            animation-duration:
+              0.01ms !important;
+
+            animation-delay:
+              0ms !important;
+
+            animation-iteration-count:
+              1 !important;
+
+            transition-duration:
+              0.01ms !important;
+          }
+
+          .skb-brand-letter {
+            opacity: 1;
+          }
+
+          .skb-tagline {
+            opacity: 1;
+          }
+
+          .skb-loading-fill {
+            transform:
+              scaleX(1);
+          }
+
+          .skb-rupee {
+            opacity: 1;
+          }
+        }
+      `}</style>
     </div>,
     document.body,
   );

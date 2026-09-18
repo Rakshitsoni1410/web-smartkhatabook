@@ -1,6 +1,9 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+
 import { useNavigate } from "react-router-dom";
+
 import api from "../api";
+
 import { getStoredUser } from "../utils/session";
 
 import {
@@ -8,817 +11,278 @@ import {
   FiRefreshCw,
   FiPackage,
   FiShoppingBag,
+  FiMoon,
+  FiSun,
 } from "react-icons/fi";
+
+// =====================================================
+// MONEY
+// =====================================================
+
+const formatMoney = (value) => {
+  const amount = Number(value || 0);
+
+  if (!Number.isFinite(amount)) {
+    return "₹0";
+  }
+
+  return `₹${amount.toLocaleString("en-IN", {
+    maximumFractionDigits: 2,
+  })}`;
+};
+
+// =====================================================
+// ORDERS
+// =====================================================
 
 export default function Orders() {
   const navigate = useNavigate();
 
   const user = getStoredUser();
 
-  const role = user.role?.trim().toLowerCase();
+  const role = String(user?.role || "")
+    .trim()
+    .toLowerCase();
+
+  // =====================================================
+  // STATE
+  // =====================================================
 
   const [orders, setOrders] = useState([]);
+
   const [loading, setLoading] = useState(true);
 
-  // ✅ NEW — selected order category
-  const [activeFilter, setActiveFilter] =
-    useState("all");
+  const [refreshing, setRefreshing] = useState(false);
+
+  const [error, setError] = useState("");
+
+  const [activeFilter, setActiveFilter] = useState("all");
+
+  // =====================================================
+  // DARK MODE
+  // =====================================================
+
+  const [darkMode, setDarkMode] = useState(() => {
+    try {
+      const saved = localStorage.getItem("smartkhata-theme");
+
+      if (saved === "dark") {
+        return true;
+      }
+
+      if (saved === "light") {
+        return false;
+      }
+
+      return (
+        window.matchMedia?.("(prefers-color-scheme: dark)")?.matches || false
+      );
+    } catch {
+      return false;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("smartkhata-theme", darkMode ? "dark" : "light");
+    } catch {
+      // ignore storage errors
+    }
+  }, [darkMode]);
+
+  // =====================================================
+  // FETCH ORDERS
+  // =====================================================
+
+  const fetchOrders = useCallback(
+    async (showRefresh = false) => {
+      if (!user?._id) {
+        setError("User information not found. Please log in again.");
+
+        setLoading(false);
+
+        return;
+      }
+
+      try {
+        if (showRefresh) {
+          setRefreshing(true);
+        }
+
+        setError("");
+
+        const url =
+          role === "wholesaler"
+            ? `/api/orders/wholesaler/${user._id}`
+            : `/api/orders/retailer/${user._id}`;
+
+        const res = await api.get(url);
+
+        const list = Array.isArray(res.data)
+          ? res.data
+          : Array.isArray(res.data?.orders)
+            ? res.data.orders
+            : [];
+
+        setOrders(list);
+      } catch (err) {
+        console.error("FETCH ORDERS ERROR:", err);
+
+        setError(err?.response?.data?.message || "Unable to load orders.");
+      } finally {
+        setLoading(false);
+
+        if (showRefresh) {
+          setRefreshing(false);
+        }
+      }
+    },
+    [role, user?._id],
+  );
+
+  // =====================================================
+  // AUTO REFRESH
+  // =====================================================
 
   useEffect(() => {
     fetchOrders();
 
-    const timer = setInterval(fetchOrders, 5000);
+    const timer = setInterval(() => {
+      fetchOrders();
+    }, 5000);
 
     return () => clearInterval(timer);
+  }, [fetchOrders]);
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const fetchOrders = async () => {
-    try {
-      const url =
-        role === "wholesaler"
-          ? `https://backend-of-smartkhata-book-vkcv.vercel.app/api/orders/wholesaler/${user._id}`
-          : `https://backend-of-smartkhata-book-vkcv.vercel.app/api/orders/retailer/${user._id}`;
-
-      const res = await api.get(url);
-
-      setOrders(res.data || []);
-    } catch (error) {
-      console.log("FETCH ORDERS ERROR:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // ==========================================
-  // ORDER STATUS CONFIG
-  // ==========================================
+  // =====================================================
+  // STATUS CONFIG
+  // =====================================================
 
   const statusConfig = {
     pending: {
-      color: "#fff",
+      color: "#ffffff",
       bg: "#f59e0b",
       label: "Pending",
-      shadow: "rgba(245,158,11,0.3)",
+      shadow: "rgba(245,158,11,0.30)",
     },
 
     approved: {
-      color: "#fff",
+      color: "#ffffff",
       bg: "#6366f1",
       label: "Approved",
-      shadow: "rgba(99,102,241,0.3)",
+      shadow: "rgba(99,102,241,0.30)",
     },
 
     advancePending: {
-      color: "#fff",
+      color: "#ffffff",
       bg: "#f97316",
       label: "Advance Pending",
-      shadow: "rgba(249,115,22,0.3)",
+      shadow: "rgba(249,115,22,0.30)",
     },
 
     processing: {
-      color: "#fff",
+      color: "#ffffff",
       bg: "#8b5cf6",
       label: "Processing",
-      shadow: "rgba(139,92,246,0.3)",
+      shadow: "rgba(139,92,246,0.30)",
     },
 
     onTheWay: {
-      color: "#fff",
+      color: "#ffffff",
       bg: "#0ea5e9",
       label: "On The Way",
-      shadow: "rgba(14,165,233,0.3)",
+      shadow: "rgba(14,165,233,0.30)",
     },
 
     delivered: {
-      color: "#fff",
+      color: "#ffffff",
       bg: "#22c55e",
       label: "Delivered",
-      shadow: "rgba(34,197,94,0.3)",
+      shadow: "rgba(34,197,94,0.30)",
     },
 
     completed: {
-      color: "#fff",
+      color: "#ffffff",
       bg: "#10b981",
       label: "Completed",
-      shadow: "rgba(16,185,129,0.3)",
+      shadow: "rgba(16,185,129,0.30)",
     },
 
     rejected: {
-      color: "#fff",
+      color: "#ffffff",
       bg: "#ef4444",
       label: "Rejected",
-      shadow: "rgba(239,68,68,0.3)",
+      shadow: "rgba(239,68,68,0.30)",
     },
   };
 
   const getStatus = (status) =>
     statusConfig[status] || {
-      color: "#fff",
+      color: "#ffffff",
       bg: "#94a3b8",
       label: status || "Unknown",
-      shadow: "rgba(0,0,0,0.1)",
+      shadow: "rgba(0,0,0,0.10)",
     };
 
-  // ==========================================
-  // FILTER ORDERS
-  // ==========================================
+  // =====================================================
+  // FILTERED ORDERS
+  // =====================================================
 
-  const filteredOrders =
-    activeFilter === "all"
-      ? orders
-      : orders.filter(
-          (order) =>
-            order.orderStatus === activeFilter
-        );
+  const filteredOrders = useMemo(() => {
+    if (activeFilter === "all") {
+      return orders;
+    }
 
-  // ==========================================
+    return orders.filter((order) => order.orderStatus === activeFilter);
+  }, [orders, activeFilter]);
+
+  // =====================================================
   // STATUS COUNT
-  // ==========================================
+  // =====================================================
 
-  const getStatusCount = (status) => {
-    return orders.filter(
-      (order) => order.orderStatus === status
-    ).length;
-  };
+  const getStatusCount = (status) =>
+    orders.filter((order) => order.orderStatus === status).length;
+
+  // =====================================================
+  // CURRENT FILTER LABEL
+  // =====================================================
+
+  const currentFilterLabel =
+    activeFilter === "all"
+      ? "All Orders"
+      : statusConfig[activeFilter]?.label || activeFilter;
+
+  // =====================================================
+  // UI
+  // =====================================================
 
   return (
     <>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap');
+      <style>{pageStyles}</style>
 
-        * {
-          box-sizing: border-box;
-          margin: 0;
-          padding: 0;
-        }
-
-        .or-page {
-          min-height: 100vh;
-          background: #eef2f7;
-          font-family: 'Outfit', sans-serif;
-          padding: 28px 32px;
-        }
-
-        /* =====================================
-           TOPBAR
-        ===================================== */
-
-        .or-topbar {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          margin-bottom: 28px;
-          gap: 20px;
-        }
-
-        .or-topbar-left {
-          display: flex;
-          align-items: center;
-          gap: 16px;
-        }
-
-        .or-back-btn {
-          width: 40px;
-          height: 40px;
-          border-radius: 12px;
-          border: none;
-          background: #fff;
-          color: #64748b;
-          cursor: pointer;
-
-          display: flex;
-          align-items: center;
-          justify-content: center;
-
-          font-size: 16px;
-
-          box-shadow:
-            0 1px 4px rgba(0, 0, 0, 0.08);
-
-          transition: all 0.15s;
-        }
-
-        .or-back-btn:hover {
-          background: #f1f5f9;
-          color: #0f172a;
-          transform: translateX(-2px);
-        }
-
-        .or-heading {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-        }
-
-        .or-title {
-          font-size: 26px;
-          font-weight: 800;
-          color: #0f172a;
-          letter-spacing: -0.5px;
-        }
-
-        .or-count-badge {
-          display: inline-flex;
-          align-items: center;
-
-          padding: 3px 11px;
-
-          background: #0f172a;
-          color: #fff;
-
-          border-radius: 20px;
-
-          font-size: 12px;
-          font-weight: 700;
-        }
-
-        .or-subtitle {
-          font-size: 13px;
-          color: #94a3b8;
-          margin-top: 2px;
-          font-weight: 400;
-        }
-
-        /* =====================================
-           REFRESH BUTTON
-        ===================================== */
-
-        .or-refresh-btn {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 8px;
-
-          padding: 10px 20px;
-
-          border-radius: 12px;
-          border: none;
-
-          background: #0ea5e9;
-          color: #fff;
-
-          font-size: 13px;
-          font-weight: 600;
-
-          cursor: pointer;
-
-          transition: all 0.15s;
-
-          font-family: 'Outfit', sans-serif;
-
-          box-shadow:
-            0 4px 12px rgba(14, 165, 233, 0.35);
-        }
-
-        .or-refresh-btn:hover {
-          background: #0284c7;
-
-          transform: translateY(-1px);
-
-          box-shadow:
-            0 6px 16px rgba(14, 165, 233, 0.4);
-        }
-
-        /* =====================================
-           FILTER / SUMMARY
-        ===================================== */
-
-        .or-summary {
-          display: flex;
-          gap: 10px;
-
-          margin-bottom: 24px;
-
-          flex-wrap: wrap;
-        }
-
-        .or-summary-pill {
-          display: flex;
-          align-items: center;
-          gap: 7px;
-
-          padding: 8px 14px;
-
-          background: #fff;
-
-          border-radius: 10px;
-          border: 1.5px solid transparent;
-
-          font-size: 12px;
-          font-weight: 600;
-
-          color: #64748b;
-
-          cursor: pointer;
-
-          font-family: 'Outfit', sans-serif;
-
-          box-shadow:
-            0 1px 3px rgba(0, 0, 0, 0.06);
-
-          transition: all 0.18s ease;
-        }
-
-        .or-summary-pill:hover {
-          transform: translateY(-2px);
-
-          border-color: #cbd5e1;
-
-          box-shadow:
-            0 5px 14px rgba(0, 0, 0, 0.08);
-        }
-
-        .or-summary-pill-active {
-          background: #0f172a;
-
-          color: #fff;
-
-          border-color: #0f172a;
-
-          box-shadow:
-            0 5px 14px
-            rgba(15, 23, 42, 0.2);
-        }
-
-        .or-summary-pill-active:hover {
-          border-color: #0f172a;
-        }
-
-        .or-summary-dot {
-          width: 8px;
-          height: 8px;
-
-          border-radius: 50%;
-
-          flex-shrink: 0;
-        }
-
-        .or-summary-num {
-          font-weight: 800;
-
-          color: #0f172a;
-        }
-
-        .or-summary-pill-active
-        .or-summary-num {
-          color: #fff;
-        }
-
-        /* =====================================
-           CURRENT FILTER INFO
-        ===================================== */
-
-        .or-filter-info {
-          margin-bottom: 16px;
-
-          display: flex;
-
-          align-items: center;
-
-          justify-content: space-between;
-
-          gap: 10px;
-        }
-
-        .or-filter-text {
-          font-size: 13px;
-
-          color: #64748b;
-        }
-
-        .or-filter-text strong {
-          color: #0f172a;
-        }
-
-        /* =====================================
-           GRID
-        ===================================== */
-
-        .or-grid {
-          display: grid;
-
-          grid-template-columns:
-            repeat(
-              auto-fill,
-              minmax(260px, 1fr)
-            );
-
-          gap: 16px;
-        }
-
-        /* =====================================
-           ORDER CARD
-        ===================================== */
-
-        .or-card {
-          background: #fff;
-
-          border-radius: 18px;
-
-          padding: 0;
-
-          cursor: pointer;
-
-          transition: all 0.2s;
-
-          position: relative;
-
-          overflow: hidden;
-
-          box-shadow:
-            0 2px 8px
-            rgba(0, 0, 0, 0.06);
-
-          border:
-            1.5px solid #f1f5f9;
-
-          animation:
-            fadeUp 0.25s ease both;
-        }
-
-        .or-card:hover {
-          transform:
-            translateY(-3px);
-
-          box-shadow:
-            0 12px 28px
-            rgba(0, 0, 0, 0.1);
-
-          border-color:
-            #e2e8f0;
-        }
-
-        .or-card-strip {
-          height: 5px;
-          width: 100%;
-        }
-
-        .or-card-body {
-          padding: 18px 20px 20px;
-        }
-
-        /* =====================================
-           CARD TOP
-        ===================================== */
-
-        .or-card-top {
-          display: flex;
-
-          align-items: flex-start;
-
-          justify-content:
-            space-between;
-
-          margin-bottom: 14px;
-        }
-
-        .or-card-icon-wrap {
-          width: 42px;
-          height: 42px;
-
-          border-radius: 12px;
-
-          display: flex;
-
-          align-items: center;
-
-          justify-content: center;
-
-          font-size: 18px;
-        }
-
-        /* =====================================
-           STATUS BADGE
-        ===================================== */
-
-        .or-badge {
-          display: inline-flex;
-
-          align-items: center;
-
-          gap: 5px;
-
-          padding: 5px 12px;
-
-          border-radius: 20px;
-
-          font-size: 11px;
-
-          font-weight: 700;
-
-          letter-spacing: 0.2px;
-        }
-
-        /* =====================================
-           ORDER DETAILS
-        ===================================== */
-
-        .or-product-name {
-          font-size: 16px;
-
-          font-weight: 700;
-
-          color: #0f172a;
-
-          margin-bottom: 3px;
-        }
-
-        .or-order-id {
-          font-size: 11px;
-
-          color: #cbd5e1;
-
-          font-weight: 500;
-
-          letter-spacing: 0.5px;
-        }
-
-        .or-divider {
-          height: 1px;
-
-          background: #f1f5f9;
-
-          margin: 14px 0;
-        }
-
-        .or-stats {
-          display: flex;
-
-          justify-content:
-            space-between;
-
-          align-items: flex-end;
-
-          gap: 15px;
-        }
-
-        .or-stat-label {
-          display: block;
-
-          font-size: 10px;
-
-          font-weight: 600;
-
-          letter-spacing: 0.8px;
-
-          text-transform: uppercase;
-
-          color: #94a3b8;
-
-          margin-bottom: 3px;
-        }
-
-        .or-stat-value {
-          font-size: 16px;
-
-          font-weight: 700;
-
-          color: #0f172a;
-        }
-
-        .or-stat-total {
-          font-size: 18px;
-
-          font-weight: 800;
-
-          color: #22c55e;
-        }
-
-        /* =====================================
-           EMPTY
-        ===================================== */
-
-        .or-empty {
-          grid-column: 1 / -1;
-
-          text-align: center;
-
-          padding: 70px 20px;
-
-          background: #fff;
-
-          border-radius: 18px;
-
-          box-shadow:
-            0 2px 8px
-            rgba(0, 0, 0, 0.05);
-
-          border:
-            1.5px solid #f1f5f9;
-        }
-
-        .or-empty-icon {
-          width: 64px;
-          height: 64px;
-
-          border-radius: 18px;
-
-          background: #f8fafc;
-
-          display: flex;
-
-          align-items: center;
-
-          justify-content: center;
-
-          font-size: 26px;
-
-          color: #cbd5e1;
-
-          margin: 0 auto 16px;
-        }
-
-        .or-empty h3 {
-          font-size: 17px;
-
-          font-weight: 700;
-
-          color: #64748b;
-
-          margin-bottom: 6px;
-        }
-
-        .or-empty p {
-          font-size: 13px;
-
-          color: #94a3b8;
-
-          font-weight: 400;
-        }
-
-        /* =====================================
-           ANIMATION
-        ===================================== */
-
-        @keyframes fadeUp {
-          from {
-            opacity: 0;
-
-            transform:
-              translateY(12px);
-          }
-
-          to {
-            opacity: 1;
-
-            transform:
-              translateY(0);
-          }
-        }
-
-        /* =====================================
-           TABLET
-        ===================================== */
-
-        @media (max-width: 768px) {
-          .or-page {
-            padding: 20px 16px;
-          }
-
-          .or-topbar {
-            align-items: flex-start;
-          }
-
-          .or-title {
-            font-size: 23px;
-          }
-
-          .or-refresh-btn {
-            padding: 10px 14px;
-          }
-
-          .or-refresh-btn span {
-            display: none;
-          }
-
-          .or-summary {
-            gap: 8px;
-          }
-
-          .or-summary-pill {
-            padding: 7px 11px;
-          }
-
-          .or-grid {
-            grid-template-columns:
-              repeat(
-                auto-fill,
-                minmax(220px, 1fr)
-              );
-          }
-        }
-
-        /* =====================================
-           MOBILE
-        ===================================== */
-
-        @media (max-width: 520px) {
-          .or-page {
-            padding: 18px 12px;
-          }
-
-          .or-topbar {
-            margin-bottom: 20px;
-          }
-
-          .or-topbar-left {
-            gap: 11px;
-          }
-
-          .or-back-btn {
-            width: 38px;
-            height: 38px;
-          }
-
-          .or-title {
-            font-size: 21px;
-          }
-
-          .or-subtitle {
-            font-size: 11px;
-          }
-
-          .or-refresh-btn {
-            width: 40px;
-            height: 40px;
-
-            padding: 0;
-
-            border-radius: 11px;
-          }
-
-          .or-refresh-text {
-            display: none;
-          }
-
-          .or-summary {
-            display: flex;
-
-            flex-wrap: nowrap;
-
-            overflow-x: auto;
-
-            padding-bottom: 7px;
-
-            scrollbar-width: none;
-          }
-
-          .or-summary::-webkit-scrollbar {
-            display: none;
-          }
-
-          .or-summary-pill {
-            flex-shrink: 0;
-          }
-
-          .or-filter-info {
-            margin-bottom: 13px;
-          }
-
-          .or-grid {
-            grid-template-columns: 1fr;
-          }
-
-          .or-card-body {
-            padding: 17px;
-          }
-        }
-      `}</style>
-
-      <div className="or-page">
-
+      <div className={`or-page ${darkMode ? "or-dark" : ""}`}>
         {/* =====================================
             TOP BAR
-        ===================================== */}
+        ====================================== */}
 
         <div className="or-topbar">
           <div className="or-topbar-left">
-
             <button
+              type="button"
               className="or-back-btn"
-              onClick={() =>
-                navigate("/dashboard")
-              }
-              aria-label="Back"
+              onClick={() => navigate("/dashboard")}
+              aria-label="Back to dashboard"
             >
               <FiArrowLeft />
             </button>
 
-            <div>
+            <div className="or-heading-area">
               <div className="or-heading">
-
-                <span className="or-title">
-                  Orders
-                </span>
+                <span className="or-title">Orders</span>
 
                 {orders.length > 0 && (
-                  <span className="or-count-badge">
-                    {orders.length}
-                  </span>
+                  <span className="or-count-badge">{orders.length}</span>
                 )}
-
               </div>
 
               <div className="or-subtitle">
@@ -827,62 +291,71 @@ export default function Orders() {
             </div>
           </div>
 
-          <button
-            className="or-refresh-btn"
-            onClick={fetchOrders}
-          >
-            <FiRefreshCw size={14} />
+          <div className="or-topbar-actions">
+            {/* DARK MODE */}
 
-            <span className="or-refresh-text">
-              Refresh
-            </span>
-          </button>
+            <button
+              type="button"
+              className="or-theme-btn"
+              onClick={() => setDarkMode((previous) => !previous)}
+              aria-label={
+                darkMode ? "Switch to light mode" : "Switch to dark mode"
+              }
+              title={darkMode ? "Light Mode" : "Dark Mode"}
+            >
+              {darkMode ? <FiSun /> : <FiMoon />}
+            </button>
+
+            {/* REFRESH */}
+
+            <button
+              type="button"
+              className="or-refresh-btn"
+              onClick={() => fetchOrders(true)}
+              disabled={refreshing}
+            >
+              <FiRefreshCw className={refreshing ? "or-spin" : ""} />
+
+              <span className="or-refresh-text">
+                {refreshing ? "Refreshing" : "Refresh"}
+              </span>
+            </button>
+          </div>
         </div>
 
         {/* =====================================
-            ORDER FILTERS
-        ===================================== */}
+            FILTERS
+        ====================================== */}
 
         {orders.length > 0 && (
           <>
             <div className="or-summary">
-
-              {/* ALL ORDERS */}
+              {/* ALL */}
 
               <button
                 type="button"
                 className={`or-summary-pill ${
-                  activeFilter === "all"
-                    ? "or-summary-pill-active"
-                    : ""
+                  activeFilter === "all" ? "or-summary-pill-active" : ""
                 }`}
-                onClick={() =>
-                  setActiveFilter("all")
-                }
+                onClick={() => setActiveFilter("all")}
               >
                 <span
                   className="or-summary-dot"
                   style={{
-                    background: "#0f172a",
+                    background: "#64748b",
                   }}
                 />
 
-                All Orders
+                <span>All Orders</span>
 
-                <span className="or-summary-num">
-                  {orders.length}
-                </span>
+                <span className="or-summary-num">{orders.length}</span>
               </button>
 
-              {/* STATUS CATEGORIES */}
+              {/* STATUS */}
 
-              {Object.entries(
-                statusConfig
-              ).map(([key, value]) => {
-                const count =
-                  getStatusCount(key);
+              {Object.entries(statusConfig).map(([key, value]) => {
+                const count = getStatusCount(key);
 
-                // Don't show empty categories
                 if (count === 0) {
                   return null;
                 }
@@ -892,181 +365,148 @@ export default function Orders() {
                     type="button"
                     key={key}
                     className={`or-summary-pill ${
-                      activeFilter === key
-                        ? "or-summary-pill-active"
-                        : ""
+                      activeFilter === key ? "or-summary-pill-active" : ""
                     }`}
-                    onClick={() =>
-                      setActiveFilter(key)
-                    }
+                    onClick={() => setActiveFilter(key)}
                   >
                     <span
                       className="or-summary-dot"
                       style={{
-                        background:
-                          value.bg,
+                        background: value.bg,
                       }}
                     />
 
-                    {value.label}
+                    <span>{value.label}</span>
 
-                    <span className="or-summary-num">
-                      {count}
-                    </span>
+                    <span className="or-summary-num">{count}</span>
                   </button>
                 );
               })}
             </div>
 
-            {/* SELECTED CATEGORY */}
+            {/* FILTER INFO */}
 
             <div className="or-filter-info">
               <span className="or-filter-text">
-                Showing{" "}
-                <strong>
-                  {filteredOrders.length}
-                </strong>{" "}
-                {activeFilter === "all"
-                  ? "orders"
-                  : `${
-                      statusConfig[
-                        activeFilter
-                      ]?.label ||
-                      activeFilter
-                    } orders`}
+                Showing <strong>{filteredOrders.length}</strong>{" "}
+                {currentFilterLabel.toLowerCase()}
               </span>
             </div>
           </>
         )}
 
         {/* =====================================
+            ERROR
+        ====================================== */}
+
+        {!loading && error && (
+          <div className="or-state-card or-error-card">
+            <div className="or-empty-icon">
+              <FiPackage />
+            </div>
+
+            <h3>Unable to load orders</h3>
+
+            <p>{error}</p>
+
+            <button
+              type="button"
+              className="or-retry-btn"
+              onClick={() => fetchOrders(true)}
+            >
+              <FiRefreshCw />
+              Try Again
+            </button>
+          </div>
+        )}
+
+        {/* =====================================
             ORDERS GRID
-        ===================================== */}
+        ====================================== */}
 
-        <div className="or-grid">
+        {!error && (
+          <div className="or-grid">
+            {/* LOADING */}
 
-          {/* LOADING */}
+            {loading ? (
+              <div className="or-empty">
+                <div className="or-empty-icon">
+                  <FiPackage />
+                </div>
 
-          {loading ? (
-            <div className="or-empty">
+                <div className="or-loader" />
 
-              <div className="or-empty-icon">
-                <FiPackage />
+                <p>Loading orders...</p>
               </div>
+            ) : orders.length === 0 ? (
+              /* NO ORDERS */
 
-              <p>Loading orders...</p>
-            </div>
-          ) : orders.length === 0 ? (
+              <div className="or-empty">
+                <div className="or-empty-icon">
+                  <FiShoppingBag />
+                </div>
 
-            /* NO ORDERS AT ALL */
+                <h3>No Orders Found</h3>
 
-            <div className="or-empty">
-
-              <div className="or-empty-icon">
-                <FiShoppingBag />
+                <p>
+                  {role === "retailer"
+                    ? "Place an order from the stock page."
+                    : "No retailer orders have been received yet."}
+                </p>
               </div>
+            ) : filteredOrders.length === 0 ? (
+              /* FILTER EMPTY */
 
-              <h3>No Orders Found</h3>
+              <div className="or-empty">
+                <div className="or-empty-icon">
+                  <FiPackage />
+                </div>
 
-              <p>
-                {role === "retailer"
-                  ? "Place an order from the stock page."
-                  : "No retailer orders have been received yet."}
-              </p>
-            </div>
+                <h3>No {currentFilterLabel} Found</h3>
 
-          ) : filteredOrders.length === 0 ? (
-
-            /* EMPTY SELECTED CATEGORY */
-
-            <div className="or-empty">
-
-              <div className="or-empty-icon">
-                <FiPackage />
+                <p>No orders are currently available in this category.</p>
               </div>
-
-              <h3>
-                No{" "}
-                {statusConfig[
-                  activeFilter
-                ]?.label || ""}{" "}
-                Orders
-              </h3>
-
-              <p>
-                No orders are available in this
-                category.
-              </p>
-            </div>
-
-          ) : (
-
-            /* =================================
-               ORDER CARDS
-            ================================= */
-
-            filteredOrders.map(
-              (item, index) => {
-                const status =
-                  getStatus(
-                    item.orderStatus
-                  );
+            ) : (
+              filteredOrders.map((item, index) => {
+                const status = getStatus(item.orderStatus);
 
                 return (
-                  <div
+                  <article
                     key={item._id}
                     className="or-card"
                     style={{
-                      animationDelay: `${
-                        index * 0.05
-                      }s`,
+                      animationDelay: `${Math.min(index, 8) * 0.04}s`,
                     }}
-                    onClick={() =>
-                      navigate(
-                        `/order/${item._id}`
-                      )
-                    }
+                    onClick={() => navigate(`/order/${item._id}`)}
                   >
-
-                    {/* STATUS COLOR */}
+                    {/* STATUS STRIP */}
 
                     <div
                       className="or-card-strip"
                       style={{
-                        background:
-                          status.bg,
+                        background: status.bg,
                       }}
                     />
 
                     <div className="or-card-body">
-
                       {/* CARD TOP */}
 
                       <div className="or-card-top">
-
                         <div
                           className="or-card-icon-wrap"
                           style={{
-                            background:
-                              status.bg +
-                              "18",
+                            background: `${status.bg}18`,
                           }}
                         >
-                          <FiPackage
-                            color={
-                              status.bg
-                            }
-                          />
+                          <FiPackage color={status.bg} />
                         </div>
 
                         <span
                           className="or-badge"
                           style={{
-                            background:
-                              status.bg,
+                            background: status.bg,
 
-                            color:
-                              status.color,
+                            color: status.color,
 
                             boxShadow: `0 3px 10px ${status.shadow}`,
                           }}
@@ -1078,66 +518,1428 @@ export default function Orders() {
                       {/* PRODUCT */}
 
                       <div className="or-product-name">
-                        {item.productName}
+                        {item.productName || "Unnamed Product"}
                       </div>
 
                       {/* ORDER ID */}
 
                       <div className="or-order-id">
-                        #
-                        {item._id
-                          ?.slice(-6)
-                          .toUpperCase()}
+                        #{item._id?.slice(-6).toUpperCase()}
                       </div>
 
                       <div className="or-divider" />
 
-                      {/* ORDER DATA */}
+                      {/* DETAILS */}
 
                       <div className="or-stats">
-
-                        <div>
-                          <span className="or-stat-label">
-                            Quantity
-                          </span>
+                        <div className="or-stat-block">
+                          <span className="or-stat-label">Quantity</span>
 
                           <span className="or-stat-value">
-                            {item.quantity}{" "}
-                            {item.unit ||
-                              "units"}
+                            {item.quantity || 0} {item.unit || "units"}
                           </span>
                         </div>
 
-                        <div
-                          style={{
-                            textAlign:
-                              "right",
-                          }}
-                        >
-                          <span className="or-stat-label">
-                            Total
-                          </span>
+                        <div className="or-stat-block or-stat-right">
+                          <span className="or-stat-label">Total</span>
 
                           <span className="or-stat-total">
-                            ₹
-                            {Number(
-                              item.totalAmount ||
-                                0
-                            ).toLocaleString(
-                              "en-IN"
-                            )}
+                            {formatMoney(item.totalAmount)}
                           </span>
                         </div>
-
                       </div>
                     </div>
-                  </div>
+                  </article>
                 );
-              }
-            )
-          )}
-        </div>
+              })
+            )}
+          </div>
+        )}
       </div>
     </>
   );
 }
+
+// =====================================================
+// STYLES
+// =====================================================
+
+const pageStyles = `
+  @import url(
+    'https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap'
+  );
+
+  /* =====================================================
+     PAGE
+  ===================================================== */
+
+  .or-page,
+  .or-page * {
+    box-sizing: border-box;
+  }
+
+  .or-page {
+    --or-bg: #eef2f7;
+    --or-card: #ffffff;
+    --or-card-soft: #f8fafc;
+
+    --or-text: #0f172a;
+    --or-secondary: #475569;
+    --or-muted: #94a3b8;
+
+    --or-border: #e8edf4;
+    --or-divider: #f1f5f9;
+
+    --or-hover: #f8fafc;
+
+    --or-shadow:
+      0 4px 14px
+      rgba(
+        15,
+        23,
+        42,
+        0.05
+      );
+
+    min-width: 0;
+
+    width: 100%;
+
+    min-height: 100vh;
+    min-height: 100dvh;
+
+    padding:
+      28px
+      32px;
+
+    overflow-x: hidden;
+
+    background:
+      radial-gradient(
+        circle at 8% 0%,
+        rgba(
+          59,
+          130,
+          246,
+          0.06
+        ),
+        transparent 30%
+      ),
+      var(--or-bg);
+
+    color:
+      var(--or-text);
+
+    font-family:
+      'Outfit',
+      sans-serif;
+
+    transition:
+      background
+        0.25s
+        ease,
+      color
+        0.25s
+        ease;
+  }
+
+  /* =====================================================
+     DARK MODE
+  ===================================================== */
+
+  .or-page.or-dark {
+    --or-bg: #090f1d;
+
+    --or-card: #111827;
+
+    --or-card-soft: #172033;
+
+    --or-text: #f8fafc;
+
+    --or-secondary: #cbd5e1;
+
+    --or-muted: #94a3b8;
+
+    --or-border: #263244;
+
+    --or-divider: #1e293b;
+
+    --or-hover: #172033;
+
+    --or-shadow:
+      0 7px 24px
+      rgba(
+        0,
+        0,
+        0,
+        0.28
+      );
+  }
+
+  /* =====================================================
+     TOP BAR
+  ===================================================== */
+
+  .or-topbar {
+    display: flex;
+
+    align-items: center;
+
+    justify-content:
+      space-between;
+
+    gap: 18px;
+
+    margin-bottom: 25px;
+  }
+
+  .or-topbar-left {
+    min-width: 0;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 14px;
+  }
+
+  .or-heading-area {
+    min-width: 0;
+  }
+
+  .or-heading {
+    min-width: 0;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 9px;
+  }
+
+  .or-title {
+    color:
+      var(--or-text);
+
+    font-size: 27px;
+
+    font-weight: 800;
+
+    letter-spacing:
+      -0.04em;
+  }
+
+  .or-count-badge {
+    min-width: 25px;
+
+    height: 24px;
+
+    padding:
+      0
+      8px;
+
+    border-radius: 20px;
+
+    background:
+      var(--or-text);
+
+    color:
+      var(--or-card);
+
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    font-size: 11px;
+
+    font-weight: 800;
+  }
+
+  .or-subtitle {
+    margin-top: 3px;
+
+    color:
+      var(--or-muted);
+
+    font-size: 12px;
+
+    line-height: 1.4;
+  }
+
+  /* =====================================================
+     TOP ACTIONS
+  ===================================================== */
+
+  .or-topbar-actions {
+    flex-shrink: 0;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 8px;
+  }
+
+  .or-back-btn,
+  .or-theme-btn {
+    width: 42px;
+    height: 42px;
+
+    flex:
+      0 0
+      42px;
+
+    border:
+      1px solid
+      var(--or-border);
+
+    border-radius: 12px;
+
+    background:
+      var(--or-card);
+
+    color:
+      var(--or-secondary);
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    font-size: 17px;
+
+    cursor: pointer;
+
+    box-shadow:
+      var(--or-shadow);
+
+    transition:
+      transform
+        0.18s
+        ease,
+      color
+        0.18s
+        ease,
+      background
+        0.18s
+        ease;
+  }
+
+  .or-back-btn:hover {
+    transform:
+      translateX(-2px);
+
+    background:
+      var(--or-hover);
+
+    color:
+      var(--or-text);
+  }
+
+  .or-theme-btn:hover {
+    transform:
+      translateY(-2px);
+
+    background:
+      var(--or-hover);
+
+    color:
+      var(--or-text);
+  }
+
+  /* =====================================================
+     REFRESH
+  ===================================================== */
+
+  .or-refresh-btn {
+    min-height: 42px;
+
+    padding:
+      0
+      16px;
+
+    border: none;
+
+    border-radius: 12px;
+
+    background:
+      linear-gradient(
+        135deg,
+        #0ea5e9,
+        #2563eb
+      );
+
+    color: #ffffff;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 7px;
+
+    font-family: inherit;
+
+    font-size: 12px;
+
+    font-weight: 700;
+
+    cursor: pointer;
+
+    box-shadow:
+      0
+      5px
+      15px
+      rgba(
+        37,
+        99,
+        235,
+        0.22
+      );
+
+    transition:
+      transform
+        0.18s
+        ease,
+      filter
+        0.18s
+        ease;
+  }
+
+  .or-refresh-btn:hover:not(
+    :disabled
+  ) {
+    transform:
+      translateY(-2px);
+
+    filter:
+      brightness(1.05);
+  }
+
+  .or-refresh-btn:disabled {
+    opacity: 0.7;
+
+    cursor:
+      not-allowed;
+  }
+
+  .or-spin {
+    animation:
+      orSpin
+      0.75s linear infinite;
+  }
+
+  @keyframes orSpin {
+    to {
+      transform:
+        rotate(360deg);
+    }
+  }
+
+  /* =====================================================
+     FILTERS
+  ===================================================== */
+
+  .or-summary {
+    display: flex;
+
+    align-items: center;
+
+    gap: 8px;
+
+    margin-bottom: 16px;
+
+    flex-wrap: wrap;
+  }
+
+  .or-summary-pill {
+    min-height: 38px;
+
+    padding:
+      7px
+      12px;
+
+    border:
+      1px solid
+      var(--or-border);
+
+    border-radius: 11px;
+
+    background:
+      var(--or-card);
+
+    color:
+      var(--or-secondary);
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 7px;
+
+    font-family: inherit;
+
+    font-size: 11px;
+
+    font-weight: 700;
+
+    cursor: pointer;
+
+    box-shadow:
+      var(--or-shadow);
+
+    transition:
+      transform
+        0.18s
+        ease,
+      background
+        0.18s
+        ease,
+      border-color
+        0.18s
+        ease;
+  }
+
+  .or-summary-pill:hover {
+    transform:
+      translateY(-2px);
+
+    background:
+      var(--or-hover);
+  }
+
+  .or-summary-pill-active {
+    border-color:
+      #2563eb;
+
+    background:
+      #2563eb;
+
+    color: #ffffff;
+
+    box-shadow:
+      0
+      5px
+      16px
+      rgba(
+        37,
+        99,
+        235,
+        0.22
+      );
+  }
+
+  .or-summary-pill-active:hover {
+    background:
+      #2563eb;
+  }
+
+  .or-summary-dot {
+    width: 7px;
+    height: 7px;
+
+    flex:
+      0 0
+      7px;
+
+    border-radius: 50%;
+  }
+
+  .or-summary-num {
+    color:
+      var(--or-text);
+
+    font-weight: 800;
+  }
+
+  .or-summary-pill-active
+  .or-summary-num {
+    color: #ffffff;
+  }
+
+  /* =====================================================
+     FILTER INFO
+  ===================================================== */
+
+  .or-filter-info {
+    margin-bottom: 15px;
+  }
+
+  .or-filter-text {
+    color:
+      var(--or-muted);
+
+    font-size: 11px;
+  }
+
+  .or-filter-text strong {
+    color:
+      var(--or-text);
+  }
+
+  /* =====================================================
+     GRID
+  ===================================================== */
+
+  .or-grid {
+    display: grid;
+
+    grid-template-columns:
+      repeat(
+        auto-fill,
+        minmax(
+          min(
+            100%,
+            280px
+          ),
+          1fr
+        )
+      );
+
+    gap: 16px;
+  }
+
+  /* =====================================================
+     CARD
+  ===================================================== */
+
+  .or-card {
+    min-width: 0;
+
+    position: relative;
+
+    overflow: hidden;
+
+    border:
+      1px solid
+      var(--or-border);
+
+    border-radius: 18px;
+
+    background:
+      var(--or-card);
+
+    cursor: pointer;
+
+    box-shadow:
+      var(--or-shadow);
+
+    transition:
+      transform
+        0.2s
+        ease,
+      box-shadow
+        0.2s
+        ease,
+      border-color
+        0.2s
+        ease;
+
+    animation:
+      orFadeUp
+      0.25s ease both;
+  }
+
+  .or-card:hover {
+    transform:
+      translateY(-4px);
+
+    border-color:
+      rgba(
+        99,
+        102,
+        241,
+        0.25
+      );
+
+    box-shadow:
+      0
+      12px
+      28px
+      rgba(
+        15,
+        23,
+        42,
+        0.10
+      );
+  }
+
+  .or-dark
+  .or-card:hover {
+    box-shadow:
+      0
+      14px
+      32px
+      rgba(
+        0,
+        0,
+        0,
+        0.36
+      );
+  }
+
+  @keyframes orFadeUp {
+    from {
+      opacity: 0;
+
+      transform:
+        translateY(
+          10px
+        );
+    }
+
+    to {
+      opacity: 1;
+
+      transform:
+        translateY(
+          0
+        );
+    }
+  }
+
+  .or-card-strip {
+    width: 100%;
+
+    height: 5px;
+  }
+
+  .or-card-body {
+    padding:
+      18px
+      19px
+      20px;
+  }
+
+  /* =====================================================
+     CARD TOP
+  ===================================================== */
+
+  .or-card-top {
+    display: flex;
+
+    align-items:
+      flex-start;
+
+    justify-content:
+      space-between;
+
+    gap: 12px;
+
+    margin-bottom: 15px;
+  }
+
+  .or-card-icon-wrap {
+    width: 43px;
+    height: 43px;
+
+    flex:
+      0 0
+      43px;
+
+    border-radius: 12px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    font-size: 18px;
+  }
+
+  .or-badge {
+    max-width: 160px;
+
+    padding:
+      5px
+      11px;
+
+    border-radius: 20px;
+
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    font-size: 10px;
+
+    font-weight: 800;
+
+    line-height: 1.3;
+
+    text-align: center;
+
+    white-space: normal;
+  }
+
+  /* =====================================================
+     PRODUCT
+  ===================================================== */
+
+  .or-product-name {
+    margin-bottom: 4px;
+
+    color:
+      var(--or-text);
+
+    font-size: 16px;
+
+    font-weight: 800;
+
+    line-height: 1.4;
+
+    overflow-wrap:
+      anywhere;
+
+    word-break:
+      break-word;
+  }
+
+  .or-order-id {
+    color:
+      var(--or-muted);
+
+    font-size: 10px;
+
+    font-weight: 600;
+
+    letter-spacing:
+      0.06em;
+  }
+
+  .or-divider {
+    width: 100%;
+
+    height: 1px;
+
+    margin:
+      15px
+      0;
+
+    background:
+      var(--or-divider);
+  }
+
+  /* =====================================================
+     STATS
+  ===================================================== */
+
+  .or-stats {
+    min-width: 0;
+
+    display: flex;
+
+    align-items:
+      flex-end;
+
+    justify-content:
+      space-between;
+
+    gap: 15px;
+  }
+
+  .or-stat-block {
+    min-width: 0;
+  }
+
+  .or-stat-right {
+    text-align: right;
+  }
+
+  .or-stat-label {
+    display: block;
+
+    margin-bottom: 3px;
+
+    color:
+      var(--or-muted);
+
+    font-size: 9px;
+
+    font-weight: 700;
+
+    letter-spacing:
+      0.08em;
+
+    text-transform:
+      uppercase;
+  }
+
+  .or-stat-value {
+    color:
+      var(--or-text);
+
+    font-size: 14px;
+
+    font-weight: 700;
+
+    overflow-wrap:
+      anywhere;
+  }
+
+  .or-stat-total {
+    color: #22c55e;
+
+    font-size: 17px;
+
+    font-weight: 900;
+
+    overflow-wrap:
+      anywhere;
+  }
+
+  /* =====================================================
+     EMPTY / STATE
+  ===================================================== */
+
+  .or-empty,
+  .or-state-card {
+    grid-column:
+      1 / -1;
+
+    min-height: 270px;
+
+    padding:
+      40px
+      20px;
+
+    border:
+      1px solid
+      var(--or-border);
+
+    border-radius: 18px;
+
+    background:
+      var(--or-card);
+
+    color:
+      var(--or-muted);
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 8px;
+
+    text-align: center;
+
+    box-shadow:
+      var(--or-shadow);
+  }
+
+  .or-empty-icon {
+    width: 60px;
+    height: 60px;
+
+    margin-bottom: 4px;
+
+    border-radius: 17px;
+
+    background:
+      var(--or-card-soft);
+
+    color:
+      var(--or-muted);
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    font-size: 25px;
+  }
+
+  .or-empty h3,
+  .or-state-card h3 {
+    margin: 0;
+
+    color:
+      var(--or-text);
+
+    font-size: 16px;
+
+    font-weight: 800;
+  }
+
+  .or-empty p,
+  .or-state-card p {
+    max-width: 380px;
+
+    margin: 0;
+
+    color:
+      var(--or-muted);
+
+    font-size: 12px;
+
+    line-height: 1.6;
+  }
+
+  .or-error-card {
+    margin-bottom: 15px;
+  }
+
+  .or-retry-btn {
+    min-height: 40px;
+
+    margin-top: 7px;
+
+    padding:
+      8px
+      15px;
+
+    border: none;
+
+    border-radius: 10px;
+
+    background:
+      #2563eb;
+
+    color: #ffffff;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 7px;
+
+    font-family: inherit;
+
+    font-weight: 700;
+
+    cursor: pointer;
+  }
+
+  /* =====================================================
+     LOADER
+  ===================================================== */
+
+  .or-loader {
+    width: 27px;
+    height: 27px;
+
+    margin:
+      4px
+      0;
+
+    border:
+      3px solid
+      var(--or-border);
+
+    border-top-color:
+      #2563eb;
+
+    border-radius: 50%;
+
+    animation:
+      orSpin
+      0.75s linear infinite;
+  }
+
+  /* =====================================================
+     TABLET
+  ===================================================== */
+
+  @media (
+    max-width: 1024px
+  ) {
+    .or-page {
+      padding:
+        23px
+        20px;
+    }
+
+    .or-grid {
+      grid-template-columns:
+        repeat(
+          auto-fill,
+          minmax(
+            min(
+              100%,
+              250px
+            ),
+            1fr
+          )
+        );
+    }
+  }
+
+  /* =====================================================
+     SMALL TABLET
+  ===================================================== */
+
+  @media (
+    max-width: 768px
+  ) {
+    .or-page {
+      padding:
+        19px
+        15px;
+    }
+
+    .or-topbar {
+      margin-bottom: 21px;
+    }
+
+    .or-title {
+      font-size: 23px;
+    }
+
+    .or-refresh-btn {
+      width: 42px;
+
+      padding: 0;
+    }
+
+    .or-refresh-text {
+      display: none;
+    }
+
+    .or-grid {
+      grid-template-columns:
+        repeat(
+          auto-fill,
+          minmax(
+            min(
+              100%,
+              230px
+            ),
+            1fr
+          )
+        );
+    }
+  }
+
+  /* =====================================================
+     MOBILE
+  ===================================================== */
+
+  @media (
+    max-width: 560px
+  ) {
+    .or-page {
+      padding:
+        15px
+        12px
+        max(
+          20px,
+          env(
+            safe-area-inset-bottom
+          )
+        );
+    }
+
+    /* TOPBAR */
+
+    .or-topbar {
+      align-items:
+        flex-start;
+
+      gap: 9px;
+
+      margin-bottom: 18px;
+    }
+
+    .or-topbar-left {
+      min-width: 0;
+
+      flex: 1;
+
+      gap: 9px;
+    }
+
+    .or-heading-area {
+      min-width: 0;
+    }
+
+    .or-back-btn,
+    .or-theme-btn {
+      width: 39px;
+      height: 39px;
+
+      flex-basis: 39px;
+    }
+
+    .or-refresh-btn {
+      width: 39px;
+      height: 39px;
+
+      min-height: 39px;
+    }
+
+    .or-title {
+      font-size: 20px;
+    }
+
+    .or-count-badge {
+      min-width: 22px;
+
+      height: 22px;
+
+      font-size: 10px;
+    }
+
+    .or-subtitle {
+      max-width: 210px;
+
+      font-size: 10px;
+
+      overflow: hidden;
+
+      text-overflow:
+        ellipsis;
+
+      white-space: nowrap;
+    }
+
+    /* FILTERS */
+
+    .or-summary {
+      width:
+        calc(
+          100% + 12px
+        );
+
+      margin-right: -12px;
+
+      padding-right: 12px;
+
+      padding-bottom: 6px;
+
+      flex-wrap: nowrap;
+
+      overflow-x: auto;
+
+      -webkit-overflow-scrolling:
+        touch;
+
+      scrollbar-width: none;
+    }
+
+    .or-summary::-webkit-scrollbar {
+      display: none;
+    }
+
+    .or-summary-pill {
+      flex-shrink: 0;
+
+      min-height: 36px;
+
+      padding:
+        7px
+        10px;
+
+      font-size: 10px;
+    }
+
+    /* GRID */
+
+    .or-grid {
+      grid-template-columns:
+        1fr;
+
+      gap: 12px;
+    }
+
+    .or-card {
+      border-radius: 16px;
+    }
+
+    .or-card-body {
+      padding:
+        16px;
+    }
+
+    .or-product-name {
+      font-size: 15px;
+    }
+
+    .or-stat-total {
+      font-size: 16px;
+    }
+
+    .or-empty,
+    .or-state-card {
+      min-height: 240px;
+
+      padding:
+        32px
+        16px;
+    }
+  }
+
+  /* =====================================================
+     SMALL PHONE
+  ===================================================== */
+
+  @media (
+    max-width: 400px
+  ) {
+    .or-page {
+      padding:
+        12px
+        9px
+        18px;
+    }
+
+    .or-topbar {
+      flex-wrap: wrap;
+    }
+
+    .or-topbar-left {
+      width:
+        calc(
+          100% - 90px
+        );
+    }
+
+    .or-title {
+      font-size: 18px;
+    }
+
+    .or-subtitle {
+      max-width: 180px;
+    }
+
+    .or-card-top {
+      gap: 9px;
+    }
+
+    .or-badge {
+      max-width: 130px;
+
+      font-size: 9px;
+    }
+
+    .or-stats {
+      align-items:
+        flex-start;
+    }
+  }
+
+  /* =====================================================
+     VERY SMALL PHONE
+  ===================================================== */
+
+  @media (
+    max-width: 340px
+  ) {
+    .or-page {
+      padding:
+        10px
+        7px
+        16px;
+    }
+
+    .or-topbar {
+      position: relative;
+
+      padding-bottom: 43px;
+    }
+
+    .or-topbar-left {
+      width: 100%;
+    }
+
+    .or-topbar-actions {
+      position: absolute;
+
+      left: 48px;
+      right: 0;
+      bottom: 0;
+
+      justify-content:
+        space-between;
+    }
+
+    .or-subtitle {
+      max-width: 205px;
+    }
+
+    .or-stats {
+      flex-direction:
+        column;
+
+      align-items:
+        stretch;
+
+      gap: 10px;
+    }
+
+    .or-stat-right {
+      text-align: left;
+    }
+  }
+
+  /* =====================================================
+     SHORT / LANDSCAPE
+  ===================================================== */
+
+  @media (
+    max-height: 600px
+  ) {
+    .or-page {
+      padding-top: 12px;
+
+      padding-bottom: 14px;
+    }
+
+    .or-topbar {
+      margin-bottom: 14px;
+    }
+
+    .or-card-body {
+      padding-top: 14px;
+
+      padding-bottom: 14px;
+    }
+  }
+
+  /* =====================================================
+     TOUCH
+  ===================================================== */
+
+  @media (
+    hover: none
+  ) {
+    .or-card:hover,
+    .or-summary-pill:hover,
+    .or-back-btn:hover,
+    .or-theme-btn:hover,
+    .or-refresh-btn:hover:not(
+      :disabled
+    ) {
+      transform: none;
+    }
+  }
+
+  /* =====================================================
+     REDUCED MOTION
+  ===================================================== */
+
+  @media (
+    prefers-reduced-motion:
+      reduce
+  ) {
+    .or-page *,
+    .or-page *::before,
+    .or-page *::after {
+      animation-duration:
+        0.01ms !important;
+
+      transition-duration:
+        0.01ms !important;
+    }
+  }
+`;
