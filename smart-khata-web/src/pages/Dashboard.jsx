@@ -2,6 +2,26 @@ import { useCallback, useEffect, useState } from "react";
 
 import { useNavigate } from "react-router-dom";
 
+import {
+  FiAlertCircle,
+  FiArrowRight,
+  FiBell,
+  FiChevronRight,
+  FiMoon,
+  FiPackage,
+  FiRefreshCw,
+  FiShoppingBag,
+  FiStar,
+  FiSun,
+  FiTarget,
+  FiTruck,
+  FiUserPlus,
+  FiUsers,
+  FiZap,
+} from "react-icons/fi";
+
+import { MdOutlineInventory2 } from "react-icons/md";
+
 import api from "../api";
 
 import { getStoredUser } from "../utils/session";
@@ -33,6 +53,10 @@ const QUOTES = {
     "Great businesses are built one day at a time.",
   ],
 };
+
+// =====================================================
+// HELPERS
+// =====================================================
 
 const getPeriod = (hour) => {
   if (hour < 12) {
@@ -72,7 +96,7 @@ export default function Dashboard() {
   const user = getStoredUser() || {};
 
   // =====================================================
-  // STATE
+  // DASHBOARD STATE
   // =====================================================
 
   const [stats, setStats] = useState({
@@ -124,7 +148,7 @@ export default function Dashboard() {
     try {
       localStorage.setItem("smartkhata-theme", darkMode ? "dark" : "light");
     } catch {
-      // Ignore storage errors.
+      // Ignore storage errors
     }
   }, [darkMode]);
 
@@ -134,7 +158,7 @@ export default function Dashboard() {
 
   const fetchDashboard = useCallback(
     async (manual = false) => {
-      if (!user?.role || !user?._id) {
+      if (!user?._id || !user?.role) {
         setError("Missing user session. Please log in again.");
 
         setLoading(false);
@@ -173,7 +197,7 @@ export default function Dashboard() {
 
         setError(
           err?.response?.data?.message ||
-            "Couldn't load your dashboard data. Check your connection and try again.",
+            "Couldn't load your dashboard data. Please try again.",
         );
       } finally {
         setLoading(false);
@@ -185,7 +209,7 @@ export default function Dashboard() {
   );
 
   // =====================================================
-  // INITIAL LOAD + CLOCK
+  // INITIAL LOAD
   // =====================================================
 
   useEffect(() => {
@@ -199,7 +223,7 @@ export default function Dashboard() {
   }, [fetchDashboard]);
 
   // =====================================================
-  // UPDATE QUOTE WHEN DAY PERIOD CHANGES
+  // UPDATE QUOTE
   // =====================================================
 
   useEffect(() => {
@@ -223,7 +247,7 @@ export default function Dashboard() {
       return {
         text: "Good Morning",
 
-        icon: "ti-sun",
+        Icon: FiSun,
       };
     }
 
@@ -231,21 +255,23 @@ export default function Dashboard() {
       return {
         text: "Good Afternoon",
 
-        icon: "ti-sun-high",
+        Icon: FiSun,
       };
     }
 
     return {
       text: "Good Evening",
 
-      icon: "ti-moon",
+      Icon: FiMoon,
     };
   };
 
   const greeting = getGreeting();
 
+  const GreetingIcon = greeting.Icon;
+
   // =====================================================
-  // INITIALS
+  // USER INITIALS
   // =====================================================
 
   const initials =
@@ -259,7 +285,7 @@ export default function Dashboard() {
       .slice(0, 2) || "U";
 
   // =====================================================
-  // CARDS
+  // DASHBOARD CARDS
   // =====================================================
 
   const cards = [
@@ -268,7 +294,7 @@ export default function Dashboard() {
 
       value: stats.stock,
 
-      icon: "ti-package",
+      Icon: MdOutlineInventory2,
 
       color: "#2563eb",
 
@@ -286,7 +312,7 @@ export default function Dashboard() {
 
       value: stats.employees,
 
-      icon: "ti-users",
+      Icon: FiUsers,
 
       color: "#7c3aed",
 
@@ -304,7 +330,7 @@ export default function Dashboard() {
 
       value: stats.orders,
 
-      icon: "ti-truck",
+      Icon: FiTruck,
 
       color: "#059669",
 
@@ -322,7 +348,7 @@ export default function Dashboard() {
 
       value: stats.reviews,
 
-      icon: "ti-star",
+      Icon: FiStar,
 
       color: "#d97706",
 
@@ -346,7 +372,7 @@ export default function Dashboard() {
 
       description: "Products & inventory",
 
-      icon: "ti-package",
+      Icon: FiPackage,
 
       route: "/stock",
     },
@@ -356,7 +382,7 @@ export default function Dashboard() {
 
       description: "Track order activity",
 
-      icon: "ti-truck",
+      Icon: FiTruck,
 
       route: "/orders",
     },
@@ -366,7 +392,7 @@ export default function Dashboard() {
 
       description: "Manage your team",
 
-      icon: "ti-user-plus",
+      Icon: FiUserPlus,
 
       route: "/employees",
     },
@@ -376,7 +402,7 @@ export default function Dashboard() {
 
       description: "Customer feedback",
 
-      icon: "ti-star",
+      Icon: FiStar,
 
       route: "/reviews",
     },
@@ -430,7 +456,7 @@ export default function Dashboard() {
 
       <main className="dashboard-main">
         {/* =====================================
-            TOP BAR
+            TOPBAR
         ====================================== */}
 
         <header className="dash-topbar">
@@ -467,9 +493,11 @@ export default function Dashboard() {
             </p>
           </div>
 
-          <div className="dash-topbar-right">
-            {/* THEME */}
+          {/* =====================================
+              TOP ACTIONS
+          ====================================== */}
 
+          <div className="dash-topbar-right">
             <button
               type="button"
               className="dash-icon-btn"
@@ -479,25 +507,19 @@ export default function Dashboard() {
               }
               title={darkMode ? "Light mode" : "Dark mode"}
             >
-              <i
-                className={`ti ${darkMode ? "ti-sun" : "ti-moon"}`}
-                aria-hidden="true"
-              />
+              {darkMode ? <FiSun /> : <FiMoon />}
             </button>
-
-            {/* NOTIFICATIONS */}
 
             <button
               type="button"
               className="dash-icon-btn dash-notification-btn"
               aria-label="Notifications"
+              title="Notifications"
             >
               <span className="dash-notification-dot" />
 
-              <i className="ti ti-bell" aria-hidden="true" />
+              <FiBell />
             </button>
-
-            {/* PROFILE */}
 
             <button
               type="button"
@@ -513,10 +535,7 @@ export default function Dashboard() {
                 <span>{user?.role || "User"}</span>
               </div>
 
-              <i
-                className="ti ti-chevron-right dash-profile-arrow"
-                aria-hidden="true"
-              />
+              <FiChevronRight className="dash-profile-arrow" />
             </button>
           </div>
         </header>
@@ -544,7 +563,7 @@ export default function Dashboard() {
           <div className="dash-hero-left">
             <div className="dash-greeting">
               <div className="dash-greeting-icon">
-                <i className={`ti ${greeting.icon}`} aria-hidden="true" />
+                <GreetingIcon />
               </div>
 
               <div>
@@ -554,10 +573,12 @@ export default function Dashboard() {
               </div>
             </div>
 
+            {/* BUSINESS CHIPS */}
+
             <div className="dash-hero-chips">
               {user?.shopName && (
                 <span className="dash-chip">
-                  <i className="ti ti-building-store" />
+                  <FiShoppingBag />
 
                   {user.shopName}
                 </span>
@@ -578,6 +599,8 @@ export default function Dashboard() {
               {quote}
             </blockquote>
           </div>
+
+          {/* DATE */}
 
           <div className="dash-hero-right">
             <div className="dash-date-card">
@@ -607,7 +630,7 @@ export default function Dashboard() {
         </section>
 
         {/* =====================================
-            OVERVIEW HEADER
+            OVERVIEW HEADING
         ====================================== */}
 
         <section className="dash-section-heading">
@@ -626,10 +649,7 @@ export default function Dashboard() {
             disabled={refreshing}
             aria-busy={refreshing}
           >
-            <i
-              className={`ti ti-refresh ${refreshing ? "dash-spin" : ""}`}
-              aria-hidden="true"
-            />
+            <FiRefreshCw className={refreshing ? "dash-spin" : ""} />
 
             <span>{refreshing ? "Refreshing..." : "Refresh"}</span>
           </button>
@@ -642,7 +662,7 @@ export default function Dashboard() {
         {error && (
           <div className="dash-error" role="alert">
             <div className="dash-error-icon">
-              <i className="ti ti-alert-circle" />
+              <FiAlertCircle />
             </div>
 
             <div className="dash-error-copy">
@@ -671,51 +691,55 @@ export default function Dashboard() {
           </div>
         ) : (
           <section className="dash-stats-grid" aria-live="polite">
-            {cards.map((item) => (
-              <button
-                type="button"
-                key={item.title}
-                className="dash-stat-card"
-                style={{
-                  "--dash-accent": item.color,
+            {cards.map((item) => {
+              const CardIcon = item.Icon;
 
-                  "--dash-accent-rgb": item.rgb,
-                }}
-                onClick={() => navigate(item.route)}
-                aria-label={`${item.title}: ${item.value}. ${item.description}`}
-              >
-                <span className="dash-stat-stripe" />
+              return (
+                <button
+                  type="button"
+                  key={item.title}
+                  className="dash-stat-card"
+                  style={{
+                    "--dash-accent": item.color,
 
-                <div className="dash-stat-top">
-                  <div className="dash-stat-icon">
-                    <i className={`ti ${item.icon}`} aria-hidden="true" />
+                    "--dash-accent-rgb": item.rgb,
+                  }}
+                  onClick={() => navigate(item.route)}
+                  aria-label={`${item.title}: ${item.value}. ${item.description}`}
+                >
+                  <span className="dash-stat-stripe" />
+
+                  <div className="dash-stat-top">
+                    <div className="dash-stat-icon">
+                      <CardIcon />
+                    </div>
+
+                    <span className="dash-stat-badge">{item.badge}</span>
                   </div>
 
-                  <span className="dash-stat-badge">{item.badge}</span>
-                </div>
+                  <strong className="dash-stat-value">
+                    {formatCount(item.value)}
+                  </strong>
 
-                <strong className="dash-stat-value">
-                  {formatCount(item.value)}
-                </strong>
+                  <h3>{item.title}</h3>
 
-                <h3>{item.title}</h3>
+                  <p>{item.description}</p>
 
-                <p>{item.description}</p>
+                  <div className="dash-stat-footer">
+                    <div className="dash-stat-line">
+                      <span />
+                    </div>
 
-                <div className="dash-stat-footer">
-                  <div className="dash-stat-line">
-                    <span />
+                    <FiArrowRight />
                   </div>
-
-                  <i className="ti ti-arrow-right" aria-hidden="true" />
-                </div>
-              </button>
-            ))}
+                </button>
+              );
+            })}
           </section>
         )}
 
         {/* =====================================
-            LOWER GRID
+            BOTTOM GRID
         ====================================== */}
 
         <section className="dash-bottom-grid">
@@ -724,7 +748,7 @@ export default function Dashboard() {
           <div className="dash-panel">
             <div className="dash-panel-heading">
               <div className="dash-panel-icon dash-panel-icon-blue">
-                <i className="ti ti-bolt" />
+                <FiZap />
               </div>
 
               <div>
@@ -735,26 +759,30 @@ export default function Dashboard() {
             </div>
 
             <div className="dash-quick-grid">
-              {quickActions.map((action) => (
-                <button
-                  type="button"
-                  key={action.label}
-                  className="dash-quick-btn"
-                  onClick={() => navigate(action.route)}
-                >
-                  <div className="dash-quick-icon">
-                    <i className={`ti ${action.icon}`} />
-                  </div>
+              {quickActions.map((action) => {
+                const ActionIcon = action.Icon;
 
-                  <div>
-                    <strong>{action.label}</strong>
+                return (
+                  <button
+                    type="button"
+                    key={action.label}
+                    className="dash-quick-btn"
+                    onClick={() => navigate(action.route)}
+                  >
+                    <div className="dash-quick-icon">
+                      <ActionIcon />
+                    </div>
 
-                    <span>{action.description}</span>
-                  </div>
+                    <div className="dash-quick-copy">
+                      <strong>{action.label}</strong>
 
-                  <i className="ti ti-chevron-right dash-quick-arrow" />
-                </button>
-              ))}
+                      <span>{action.description}</span>
+                    </div>
+
+                    <FiChevronRight className="dash-quick-arrow" />
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -763,7 +791,7 @@ export default function Dashboard() {
           <div className="dash-panel">
             <div className="dash-panel-heading">
               <div className="dash-panel-icon dash-panel-icon-purple">
-                <i className="ti ti-target" />
+                <FiTarget />
               </div>
 
               <div>
@@ -793,6 +821,10 @@ export default function Dashboard() {
             </div>
           </div>
         </section>
+
+        {/* =====================================
+            FOOTER
+        ====================================== */}
 
         <footer className="dash-footer">
           Smart Khatabook • Business management made simple
