@@ -16,7 +16,6 @@ import {
   DEFAULT_LANGUAGE,
   RULES,
   FALLBACK_RESPONSE,
-  QUICK_REPLIES,
   GREETING,
   LANGUAGE_SWITCH_NOTICE,
 } from "./chatbotRules";
@@ -28,86 +27,229 @@ import "./ChatBot.css";
 // =====================================================
 
 const LANG_STORAGE_KEY = "skb_chat_lang";
-
 const THEME_STORAGE_KEY = "smartkhata-theme";
 
 // =====================================================
-// UI TRANSLATIONS
+// UI TEXT
 // =====================================================
 
 const UI_TEXT = {
   en: {
     assistant: "SmartKhataBook Assistant",
-
     subtitle: "App help • Rule-based",
-
     chooseLanguage: "Choose a language",
-
     placeholder: "Ask about stock, orders, employees...",
-
     send: "Send message",
-
     close: "Close chat",
-
     open: "Open chat",
-
     clear: "Start new conversation",
-
-    quickTitle: "You can ask:",
-
+    faq: "Frequently asked questions",
+    related: "Related questions",
+    popular: "Popular",
+    stock: "Stock",
+    orders: "Orders",
+    employees: "Employees",
+    account: "Account & Reviews",
     typing: "Assistant is typing",
-
     inputHint: "Enter to send • Shift + Enter for new line",
   },
 
   hi: {
     assistant: "SmartKhataBook सहायक",
-
     subtitle: "ऐप सहायता • नियम आधारित",
-
     chooseLanguage: "भाषा चुनें",
-
     placeholder: "स्टॉक, ऑर्डर, कर्मचारी के बारे में पूछें...",
-
     send: "संदेश भेजें",
-
     close: "चैट बंद करें",
-
     open: "चैट खोलें",
-
     clear: "नई बातचीत शुरू करें",
-
-    quickTitle: "आप पूछ सकते हैं:",
-
+    faq: "अक्सर पूछे जाने वाले सवाल",
+    related: "संबंधित सवाल",
+    popular: "लोकप्रिय",
+    stock: "स्टॉक",
+    orders: "ऑर्डर",
+    employees: "कर्मचारी",
+    account: "खाता और समीक्षा",
     typing: "सहायक लिख रहा है",
-
     inputHint: "भेजने के लिए Enter दबाएं",
   },
 
   gu: {
     assistant: "SmartKhataBook સહાયક",
-
     subtitle: "એપ મદદ • નિયમ આધારિત",
-
     chooseLanguage: "ભાષા પસંદ કરો",
-
     placeholder: "સ્ટોક, ઓર્ડર, કર્મચારી વિશે પૂછો...",
-
     send: "મેસેજ મોકલો",
-
     close: "ચેટ બંધ કરો",
-
     open: "ચેટ ખોલો",
-
     clear: "નવી વાતચીત શરૂ કરો",
-
-    quickTitle: "તમે પૂછી શકો છો:",
-
+    faq: "વારંવાર પૂછાતા પ્રશ્નો",
+    related: "સંબંધિત પ્રશ્નો",
+    popular: "લોકપ્રિય",
+    stock: "સ્ટોક",
+    orders: "ઓર્ડર",
+    employees: "કર્મચારી",
+    account: "એકાઉન્ટ અને રિવ્યુ",
     typing: "સહાયક લખી રહ્યો છે",
-
     inputHint: "મોકલવા માટે Enter દબાવો",
   },
 };
+
+// =====================================================
+// AMAZON-STYLE FAQ DATA
+// =====================================================
+
+const FAQ_GROUPS = {
+  en: {
+    popular: [
+      "How do I add stock?",
+      "How do I track an order?",
+      "How do I pay an employee?",
+      "How do I reset my password?",
+    ],
+
+    stock: [
+      "How do I add stock?",
+      "How do I edit a product?",
+      "What does low stock mean?",
+      "How do I remove a product?",
+    ],
+
+    orders: [
+      "How do I track an order?",
+      "How do I place an order?",
+      "What is a pending order?",
+      "How do I buy stock from a supplier?",
+    ],
+
+    employees: [
+      "How do I add an employee?",
+      "How do I pay an employee?",
+      "How do I check attendance?",
+      "What does Present Today mean?",
+    ],
+
+    account: [
+      "How do I reply to a review?",
+      "What is the ledger?",
+      "How do I reset my password?",
+      "How do I create an account?",
+    ],
+  },
+
+  hi: {
+    popular: [
+      "स्टॉक कैसे जोड़ें?",
+      "ऑर्डर कैसे ट्रैक करें?",
+      "कर्मचारी को भुगतान कैसे करें?",
+      "पासवर्ड कैसे रीसेट करें?",
+    ],
+
+    stock: [
+      "स्टॉक कैसे जोड़ें?",
+      "प्रोडक्ट कैसे एडिट करें?",
+      "लो स्टॉक क्या है?",
+      "प्रोडक्ट कैसे हटाएं?",
+    ],
+
+    orders: [
+      "ऑर्डर कैसे ट्रैक करें?",
+      "नया ऑर्डर कैसे दें?",
+      "पेंडिंग ऑर्डर क्या है?",
+      "सप्लायर से ऑर्डर कैसे करें?",
+    ],
+
+    employees: [
+      "कर्मचारी कैसे जोड़ें?",
+      "कर्मचारी को भुगतान कैसे करें?",
+      "अटेंडेंस कैसे देखें?",
+      "Present Today क्या है?",
+    ],
+
+    account: [
+      "रिव्यू का जवाब कैसे दें?",
+      "लेजर क्या है?",
+      "पासवर्ड कैसे रीसेट करें?",
+      "नया खाता कैसे बनाएं?",
+    ],
+  },
+
+  gu: {
+    popular: [
+      "સ્ટોક કેવી રીતે ઉમેરવો?",
+      "ઓર્ડર કેવી રીતે ટ્રેક કરવો?",
+      "કર્મચારીને ચુકવણી કેવી રીતે કરવી?",
+      "પાસવર્ડ કેવી રીતે રીસેટ કરવો?",
+    ],
+
+    stock: [
+      "સ્ટોક કેવી રીતે ઉમેરવો?",
+      "પ્રોડક્ટ કેવી રીતે એડિટ કરવી?",
+      "લો સ્ટોક શું છે?",
+      "પ્રોડક્ટ કેવી રીતે ડિલીટ કરવી?",
+    ],
+
+    orders: [
+      "ઓર્ડર કેવી રીતે ટ્રેક કરવો?",
+      "નવો ઓર્ડર કેવી રીતે આપવો?",
+      "પેન્ડિંગ ઓર્ડર શું છે?",
+      "સપ્લાયર પાસેથી ઓર્ડર કેવી રીતે કરવો?",
+    ],
+
+    employees: [
+      "કર્મચારી કેવી રીતે ઉમેરવો?",
+      "કર્મચારીને ચુકવણી કેવી રીતે કરવી?",
+      "હાજરી કેવી રીતે જોવી?",
+      "Present Today શું છે?",
+    ],
+
+    account: [
+      "રિવ્યુનો જવાબ કેવી રીતે આપવો?",
+      "લેજર શું છે?",
+      "પાસવર્ડ કેવી રીતે રીસેટ કરવો?",
+      "નવું એકાઉન્ટ કેવી રીતે બનાવવું?",
+    ],
+  },
+};
+
+// =====================================================
+// INTENT -> RELATED FAQ CATEGORY
+// =====================================================
+
+function getIntentCategory(intentId) {
+  if (!intentId) {
+    return "popular";
+  }
+
+  if (intentId.includes("stock") || intentId.includes("product")) {
+    return "stock";
+  }
+
+  if (intentId.includes("order")) {
+    return "orders";
+  }
+
+  if (
+    intentId.includes("employee") ||
+    intentId.includes("attendance") ||
+    intentId.includes("salary")
+  ) {
+    return "employees";
+  }
+
+  if (
+    intentId.includes("review") ||
+    intentId.includes("ledger") ||
+    intentId.includes("login") ||
+    intentId.includes("register") ||
+    intentId.includes("password") ||
+    intentId.includes("support")
+  ) {
+    return "account";
+  }
+
+  return "popular";
+}
 
 // =====================================================
 // HELPERS
@@ -121,7 +263,7 @@ function getStoredLanguage() {
       return saved;
     }
   } catch {
-    // Ignore localStorage issues.
+    // Ignore storage errors.
   }
 
   return DEFAULT_LANGUAGE;
@@ -147,33 +289,120 @@ function getDarkMode() {
   }
 }
 
-function normalizeText(value) {
-  return String(value || "")
+// =====================================================
+// TEXT NORMALIZATION
+// =====================================================
+
+function normalizeText(value = "") {
+  return String(value)
     .normalize("NFKC")
     .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, " ")
     .replace(/\s+/g, " ")
     .trim();
 }
 
-// =====================================================
-// REGEX
-// =====================================================
+function tokenize(value = "") {
+  const text = normalizeText(value);
 
-function escapeRegex(str) {
-  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  if (!text) {
+    return [];
+  }
+
+  return text.split(" ").filter(Boolean);
 }
 
-/*
-  No lookbehind is used here.
+// =====================================================
+// SIMPLE ENGLISH SINGULAR SUPPORT
+// =====================================================
 
-  This is friendlier across browsers while still
-  respecting Unicode letters/numbers for English,
-  Hindi and Gujarati.
-*/
-function buildKeywordRegex(keyword) {
-  const escaped = escapeRegex(normalizeText(keyword));
+function normalizeToken(token) {
+  if (/^[a-z]+$/i.test(token) && token.length > 3 && token.endsWith("s")) {
+    return token.slice(0, -1);
+  }
 
-  return new RegExp(`(^|[^\\p{L}\\p{N}])${escaped}(?=$|[^\\p{L}\\p{N}])`, "u");
+  return token;
+}
+
+function tokenMatches(a, b) {
+  return a === b || normalizeToken(a) === normalizeToken(b);
+}
+
+// =====================================================
+// WORD ORDER MATCHING
+// =====================================================
+
+function tokensAppearInOrder(keywordTokens, inputTokens) {
+  if (!keywordTokens.length || !inputTokens.length) {
+    return false;
+  }
+
+  let keywordIndex = 0;
+
+  for (const inputToken of inputTokens) {
+    const keywordToken = keywordTokens[keywordIndex];
+
+    if (tokenMatches(inputToken, keywordToken)) {
+      keywordIndex += 1;
+
+      if (keywordIndex === keywordTokens.length) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
+// =====================================================
+// KEYWORD SCORE
+// =====================================================
+
+function getKeywordScore(inputText, inputTokens, keyword) {
+  const keywordText = normalizeText(keyword);
+
+  const keywordTokens = tokenize(keyword);
+
+  if (!keywordText || !keywordTokens.length) {
+    return 0;
+  }
+
+  // Exact question/phrase.
+  if (inputText === keywordText) {
+    return 100000 + keywordText.length;
+  }
+
+  // Exact phrase inside a longer message.
+  if (` ${inputText} `.includes(` ${keywordText} `)) {
+    return 70000 + keywordTokens.length * 100 + keywordText.length;
+  }
+
+  // Single-word intents.
+  if (keywordTokens.length === 1) {
+    const found = inputTokens.some((token) =>
+      tokenMatches(token, keywordTokens[0]),
+    );
+
+    return found ? 20000 + keywordText.length : 0;
+  }
+
+  /*
+    This solves:
+
+    keyword:
+    "pay employee"
+
+    input:
+    "How do I pay an employee?"
+
+    It also works with:
+    "How can I pay my employee?"
+  */
+  if (tokensAppearInOrder(keywordTokens, inputTokens)) {
+    return 50000 + keywordTokens.length * 100 + keywordText.length;
+  }
+
+  return 0;
 }
 
 // =====================================================
@@ -183,39 +412,42 @@ function buildKeywordRegex(keyword) {
 function matchRule(input, lang) {
   const text = normalizeText(input);
 
-  const rules = RULES[lang] || RULES[DEFAULT_LANGUAGE];
+  const inputTokens = tokenize(input);
+
+  const rules = RULES[lang] || RULES[DEFAULT_LANGUAGE] || [];
 
   let bestRule = null;
-
   let bestScore = 0;
 
   for (const rule of rules) {
-    for (const keyword of rule.keywords) {
-      const normalizedKeyword = normalizeText(keyword);
+    for (const keyword of rule.keywords || []) {
+      const score = getKeywordScore(text, inputTokens, keyword);
 
-      if (buildKeywordRegex(normalizedKeyword).test(text)) {
-        /*
-          More words beat fewer words.
-          Then longer phrases win.
-        */
-        const words = normalizedKeyword.split(" ").filter(Boolean).length;
+      if (score > bestScore) {
+        bestScore = score;
 
-        const score = words * 1000 + normalizedKeyword.length;
-
-        if (score > bestScore) {
-          bestScore = score;
-
-          bestRule = rule;
-        }
+        bestRule = rule;
       }
     }
   }
 
-  return (
-    bestRule?.response ||
-    FALLBACK_RESPONSE[lang] ||
-    FALLBACK_RESPONSE[DEFAULT_LANGUAGE]
-  );
+  if (bestRule) {
+    return {
+      matched: true,
+
+      ruleId: bestRule.id,
+
+      response: bestRule.response,
+    };
+  }
+
+  return {
+    matched: false,
+
+    ruleId: null,
+
+    response: FALLBACK_RESPONSE[lang] || FALLBACK_RESPONSE[DEFAULT_LANGUAGE],
+  };
 }
 
 // =====================================================
@@ -224,22 +456,24 @@ function matchRule(input, lang) {
 
 let messageId = 0;
 
-function createMessage(sender, text) {
+function createMessage(sender, text, extra = {}) {
   messageId += 1;
 
   return {
-    id: `skb-message-${Date.now()}-${messageId}`,
+    id: `skb-${Date.now()}-${messageId}`,
 
     sender,
 
     text,
 
     createdAt: Date.now(),
+
+    ...extra,
   };
 }
 
 // =====================================================
-// FORMATTED TEXT
+// BOLD FORMATTER
 // =====================================================
 
 function FormattedText({ text }) {
@@ -248,16 +482,68 @@ function FormattedText({ text }) {
   return (
     <>
       {parts.map((part, index) => {
-        const isBold = part.startsWith("**") && part.endsWith("**");
+        const bold = part.startsWith("**") && part.endsWith("**");
 
-        if (isBold) {
-          return <strong key={index}>{part.slice(2, -2)}</strong>;
-        }
-
-        return <span key={index}>{part}</span>;
+        return bold ? (
+          <strong key={index}>{part.slice(2, -2)}</strong>
+        ) : (
+          <span key={index}>{part}</span>
+        );
       })}
     </>
   );
+}
+
+// =====================================================
+// FAQ SEARCH SUGGESTIONS
+// =====================================================
+
+function getAllQuestions(lang) {
+  const groups = FAQ_GROUPS[lang] || FAQ_GROUPS.en;
+
+  return [...new Set(Object.values(groups).flat())];
+}
+
+function getQuestionSuggestions(value, lang) {
+  const query = normalizeText(value);
+
+  if (query.length < 2) {
+    return [];
+  }
+
+  const queryTokens = tokenize(query);
+
+  return getAllQuestions(lang)
+    .map((question) => {
+      const normalized = normalizeText(question);
+
+      const questionTokens = tokenize(question);
+
+      let score = 0;
+
+      if (normalized.includes(query)) {
+        score += 1000;
+      }
+
+      for (const queryToken of queryTokens) {
+        if (
+          questionTokens.some((questionToken) =>
+            tokenMatches(queryToken, questionToken),
+          )
+        ) {
+          score += 100;
+        }
+      }
+
+      return {
+        question,
+        score,
+      };
+    })
+    .filter((item) => item.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 4)
+    .map((item) => item.question);
 }
 
 // =====================================================
@@ -265,17 +551,7 @@ function FormattedText({ text }) {
 // =====================================================
 
 export default function ChatBot() {
-  // =====================================================
-  // LANGUAGE
-  // =====================================================
-
   const [lang, setLang] = useState(() => getStoredLanguage());
-
-  const ui = UI_TEXT[lang] || UI_TEXT.en;
-
-  // =====================================================
-  // GENERAL STATE
-  // =====================================================
 
   const [open, setOpen] = useState(false);
 
@@ -287,28 +563,19 @@ export default function ChatBot() {
 
   const [darkMode, setDarkMode] = useState(() => getDarkMode());
 
-  // =====================================================
-  // MESSAGES
-  // =====================================================
+  const [faqCategory, setFaqCategory] = useState("popular");
+
+  const [lastIntentId, setLastIntentId] = useState(null);
 
   const [messages, setMessages] = useState(() => {
-    const initialLanguage = getStoredLanguage();
+    const initialLang = getStoredLanguage();
 
     return [
-      createMessage(
-        "bot",
-        GREETING[initialLanguage] || GREETING[DEFAULT_LANGUAGE],
-      ),
+      createMessage("bot", GREETING[initialLang] || GREETING[DEFAULT_LANGUAGE]),
     ];
   });
 
-  // =====================================================
-  // REFS
-  // =====================================================
-
   const langMenuRef = useRef(null);
-
-  const scrollRef = useRef(null);
 
   const bottomRef = useRef(null);
 
@@ -316,26 +583,61 @@ export default function ChatBot() {
 
   const replyTimerRef = useRef(null);
 
+  const ui = UI_TEXT[lang] || UI_TEXT.en;
+
   // =====================================================
-  // DERIVED
+  // FAQ DATA
   // =====================================================
+
+  const faqGroups = FAQ_GROUPS[lang] || FAQ_GROUPS.en;
+
+  const faqTabs = [
+    {
+      id: "popular",
+      label: ui.popular,
+    },
+
+    {
+      id: "stock",
+      label: ui.stock,
+    },
+
+    {
+      id: "orders",
+      label: ui.orders,
+    },
+
+    {
+      id: "employees",
+      label: ui.employees,
+    },
+
+    {
+      id: "account",
+      label: ui.account,
+    },
+  ];
 
   const hasUserMessages = useMemo(
     () => messages.some((message) => message.sender === "user"),
     [messages],
   );
 
-  const currentQuickReplies =
-    QUICK_REPLIES[lang] || QUICK_REPLIES[DEFAULT_LANGUAGE];
+  const relatedCategory = getIntentCategory(lastIntentId);
+
+  const relatedQuestions = faqGroups[relatedCategory] || faqGroups.popular;
+
+  const inputSuggestions = useMemo(
+    () => getQuestionSuggestions(input, lang),
+    [input, lang],
+  );
 
   // =====================================================
-  // THEME SYNC
+  // THEME
   // =====================================================
 
   useEffect(() => {
-    const syncTheme = () => {
-      setDarkMode(getDarkMode());
-    };
+    const syncTheme = () => setDarkMode(getDarkMode());
 
     syncTheme();
 
@@ -343,11 +645,6 @@ export default function ChatBot() {
 
     window.addEventListener("focus", syncTheme);
 
-    /*
-      smartkhata-theme changes in the same tab do not
-      trigger a storage event, so while the chat is
-      open we do a very light sync check.
-    */
     let timer = null;
 
     if (open) {
@@ -360,7 +657,7 @@ export default function ChatBot() {
       window.removeEventListener("focus", syncTheme);
 
       if (timer) {
-        window.clearInterval(timer);
+        clearInterval(timer);
       }
     };
   }, [open]);
@@ -374,19 +671,19 @@ export default function ChatBot() {
       return;
     }
 
-    const reducedMotion = window.matchMedia?.(
+    const reduced = window.matchMedia?.(
       "(prefers-reduced-motion: reduce)",
     )?.matches;
 
     bottomRef.current?.scrollIntoView({
-      behavior: reducedMotion ? "auto" : "smooth",
+      behavior: reduced ? "auto" : "smooth",
 
       block: "end",
     });
-  }, [messages, typing, open]);
+  }, [messages, typing, open, lastIntentId]);
 
   // =====================================================
-  // FOCUS INPUT WHEN OPENING
+  // FOCUS
   // =====================================================
 
   useEffect(() => {
@@ -394,15 +691,15 @@ export default function ChatBot() {
       return;
     }
 
-    const timer = window.setTimeout(() => {
+    const timer = setTimeout(() => {
       textareaRef.current?.focus();
-    }, 220);
+    }, 180);
 
-    return () => window.clearTimeout(timer);
+    return () => clearTimeout(timer);
   }, [open]);
 
   // =====================================================
-  // TEXTAREA AUTO HEIGHT
+  // TEXTAREA HEIGHT
   // =====================================================
 
   useEffect(() => {
@@ -414,11 +711,11 @@ export default function ChatBot() {
 
     textarea.style.height = "auto";
 
-    textarea.style.height = `${Math.min(textarea.scrollHeight, 92)}px`;
+    textarea.style.height = `${Math.min(textarea.scrollHeight, 90)}px`;
   }, [input]);
 
   // =====================================================
-  // LANGUAGE DROPDOWN OUTSIDE CLICK
+  // OUTSIDE LANGUAGE CLICK
   // =====================================================
 
   useEffect(() => {
@@ -434,13 +731,11 @@ export default function ChatBot() {
 
     document.addEventListener("pointerdown", handleOutside);
 
-    return () => {
-      document.removeEventListener("pointerdown", handleOutside);
-    };
+    return () => document.removeEventListener("pointerdown", handleOutside);
   }, [langMenuOpen]);
 
   // =====================================================
-  // ESC KEY
+  // ESC
   // =====================================================
 
   useEffect(() => {
@@ -448,25 +743,21 @@ export default function ChatBot() {
       return;
     }
 
-    const handleEscape = (event) => {
+    const handler = (event) => {
       if (event.key !== "Escape") {
         return;
       }
 
       if (langMenuOpen) {
         setLangMenuOpen(false);
-
-        return;
+      } else {
+        setOpen(false);
       }
-
-      setOpen(false);
     };
 
-    document.addEventListener("keydown", handleEscape);
+    document.addEventListener("keydown", handler);
 
-    return () => {
-      document.removeEventListener("keydown", handleEscape);
-    };
+    return () => document.removeEventListener("keydown", handler);
   }, [open, langMenuOpen]);
 
   // =====================================================
@@ -500,34 +791,46 @@ export default function ChatBot() {
 
     setTyping(true);
 
-    replyTimerRef.current = window.setTimeout(() => {
-      const reply = matchRule(trimmed, replyLanguage);
+    replyTimerRef.current = setTimeout(() => {
+      const result = matchRule(trimmed, replyLanguage);
 
-      setMessages((previous) => [...previous, createMessage("bot", reply)]);
+      setMessages((previous) => [
+        ...previous,
+
+        createMessage("bot", result.response, {
+          intentId: result.ruleId,
+        }),
+      ]);
+
+      setLastIntentId(result.ruleId);
 
       setTyping(false);
 
       replyTimerRef.current = null;
-    }, 420);
+    }, 400);
   };
 
   // =====================================================
-  // LANGUAGE
+  // LANGUAGE SWITCH
   // =====================================================
 
   const switchLang = (code) => {
     setLangMenuOpen(false);
 
-    if (code === lang || !LANGUAGES[code]) {
+    if (!LANGUAGES[code] || code === lang) {
       return;
     }
 
     setLang(code);
 
+    setFaqCategory("popular");
+
+    setLastIntentId(null);
+
     try {
       localStorage.setItem(LANG_STORAGE_KEY, code);
     } catch {
-      // Ignore storage issues.
+      // Ignore storage error.
     }
 
     setMessages((previous) => [
@@ -540,13 +843,13 @@ export default function ChatBot() {
       ),
     ]);
 
-    window.setTimeout(() => {
+    setTimeout(() => {
       textareaRef.current?.focus();
     }, 100);
   };
 
   // =====================================================
-  // CLEAR CHAT
+  // CLEAR
   // =====================================================
 
   const clearConversation = () => {
@@ -560,13 +863,13 @@ export default function ChatBot() {
 
     setInput("");
 
+    setLastIntentId(null);
+
+    setFaqCategory("popular");
+
     setMessages([
       createMessage("bot", GREETING[lang] || GREETING[DEFAULT_LANGUAGE]),
     ]);
-
-    window.setTimeout(() => {
-      textareaRef.current?.focus();
-    }, 100);
   };
 
   // =====================================================
@@ -574,11 +877,6 @@ export default function ChatBot() {
   // =====================================================
 
   const handleKeyDown = (event) => {
-    /*
-      Shift + Enter = new line
-      Enter = send
-    */
-
     if (
       event.key === "Enter" &&
       !event.shiftKey &&
@@ -591,27 +889,22 @@ export default function ChatBot() {
   };
 
   // =====================================================
-  // FORMAT TIME
+  // TIME
   // =====================================================
 
   const formatMessageTime = (timestamp) => {
-    const localeMap = {
+    const locales = {
       en: "en-IN",
-
       hi: "hi-IN",
-
       gu: "gu-IN",
     };
 
     try {
-      return new Date(timestamp).toLocaleTimeString(
-        localeMap[lang] || "en-IN",
-        {
-          hour: "2-digit",
+      return new Date(timestamp).toLocaleTimeString(locales[lang] || "en-IN", {
+        hour: "2-digit",
 
-          minute: "2-digit",
-        },
-      );
+        minute: "2-digit",
+      });
     } catch {
       return "";
     }
@@ -623,9 +916,7 @@ export default function ChatBot() {
 
   return (
     <>
-      {/* =====================================================
-          FLOATING BUTTON
-      ===================================================== */}
+      {/* FLOATING BUTTON */}
 
       <button
         type="button"
@@ -637,31 +928,24 @@ export default function ChatBot() {
         }}
         aria-label={open ? ui.close : ui.open}
         aria-expanded={open}
-        aria-controls="skb-chat-panel"
-        title={open ? ui.close : ui.open}
       >
         {open ? <FiX /> : <FiMessageCircle />}
 
         {!open && <span className="skb-chat-fab-dot" />}
       </button>
 
-      {/* =====================================================
-          CHAT PANEL
-      ===================================================== */}
+      {/* CHAT */}
 
       {open && (
         <section
           id="skb-chat-panel"
           className={`skb-chat-panel ${darkMode ? "skb-chat-panel--dark" : ""}`}
-          aria-label={ui.assistant}
         >
-          {/* =================================================
-              HEADER
-          ================================================= */}
+          {/* HEADER */}
 
           <header className="skb-chat-header">
             <div className="skb-chat-header-left">
-              <div className="skb-chat-avatar" aria-hidden="true">
+              <div className="skb-chat-avatar">
                 <FiBookOpen />
               </div>
 
@@ -676,8 +960,6 @@ export default function ChatBot() {
               </div>
             </div>
 
-            {/* HEADER ACTIONS */}
-
             <div className="skb-chat-header-actions">
               {/* LANGUAGE */}
 
@@ -686,15 +968,10 @@ export default function ChatBot() {
                   type="button"
                   className="skb-lang-trigger"
                   onClick={() => setLangMenuOpen((previous) => !previous)}
-                  aria-haspopup="listbox"
-                  aria-expanded={langMenuOpen}
-                  aria-label={ui.chooseLanguage}
                 >
                   <FiGlobe />
 
-                  <span className="skb-lang-current">
-                    {LANGUAGES[lang].label}
-                  </span>
+                  <span>{LANGUAGES[lang].label}</span>
 
                   <FiChevronDown
                     className={`skb-lang-caret ${
@@ -704,76 +981,58 @@ export default function ChatBot() {
                 </button>
 
                 {langMenuOpen && (
-                  <div
-                    className="skb-lang-dropdown"
-                    role="listbox"
-                    aria-label={ui.chooseLanguage}
-                  >
+                  <div className="skb-lang-dropdown">
                     <div className="skb-lang-dropdown-title">
                       {ui.chooseLanguage}
                     </div>
 
-                    {Object.entries(LANGUAGES).map(([code, meta]) => {
-                      const selected = lang === code;
+                    {Object.entries(LANGUAGES).map(([code, meta]) => (
+                      <button
+                        type="button"
+                        key={code}
+                        className={`skb-lang-option ${
+                          code === lang ? "skb-lang-option--selected" : ""
+                        }`}
+                        onClick={() => switchLang(code)}
+                      >
+                        <span className="skb-lang-radio">
+                          {code === lang && (
+                            <span className="skb-lang-radio-dot" />
+                          )}
+                        </span>
 
-                      return (
-                        <button
-                          type="button"
-                          key={code}
-                          role="option"
-                          aria-selected={selected}
-                          className={`skb-lang-option ${
-                            selected ? "skb-lang-option--selected" : ""
-                          }`}
-                          onClick={() => switchLang(code)}
-                        >
-                          <span className="skb-lang-radio">
-                            {selected && (
-                              <span className="skb-lang-radio-dot" />
-                            )}
+                        <span className="skb-lang-option-text">
+                          <span className="skb-lang-option-native">
+                            {meta.name}
                           </span>
 
-                          <span className="skb-lang-option-text">
-                            <span className="skb-lang-option-native">
-                              {meta.name}
-                            </span>
-
-                            <span className="skb-lang-option-code">
-                              {meta.label}
-                            </span>
+                          <span className="skb-lang-option-code">
+                            {meta.label}
                           </span>
+                        </span>
 
-                          {selected && <FiCheck className="skb-lang-check" />}
-                        </button>
-                      );
-                    })}
+                        {code === lang && (
+                          <FiCheck className="skb-lang-check" />
+                        )}
+                      </button>
+                    ))}
                   </div>
                 )}
               </div>
-
-              {/* CLEAR */}
 
               <button
                 type="button"
                 className="skb-header-icon-btn"
                 onClick={clearConversation}
-                aria-label={ui.clear}
                 title={ui.clear}
               >
                 <FiTrash2 />
               </button>
 
-              {/* CLOSE */}
-
               <button
                 type="button"
-                className="skb-header-icon-btn skb-header-close-btn"
-                onClick={() => {
-                  setOpen(false);
-
-                  setLangMenuOpen(false);
-                }}
-                aria-label={ui.close}
+                className="skb-header-icon-btn"
+                onClick={() => setOpen(false)}
                 title={ui.close}
               >
                 <FiX />
@@ -781,23 +1040,12 @@ export default function ChatBot() {
             </div>
           </header>
 
-          {/* =================================================
-              BODY
-          ================================================= */}
+          {/* BODY */}
 
-          <div
-            className="skb-chat-body"
-            ref={scrollRef}
-            aria-live="polite"
-            aria-busy={typing}
-          >
-            {/* WELCOME LABEL */}
-
+          <div className="skb-chat-body">
             <div className="skb-chat-date-divider">
               <span>SmartKhataBook</span>
             </div>
-
-            {/* MESSAGES */}
 
             {messages.map((message) => {
               const isUser = message.sender === "user";
@@ -810,7 +1058,7 @@ export default function ChatBot() {
                   }`}
                 >
                   {!isUser && (
-                    <div className="skb-msg-avatar" aria-hidden="true">
+                    <div className="skb-msg-avatar">
                       <FiBookOpen />
                     </div>
                   )}
@@ -838,58 +1086,102 @@ export default function ChatBot() {
 
             {typing && (
               <div className="skb-msg-row skb-msg-row--bot">
-                <div className="skb-msg-avatar" aria-hidden="true">
+                <div className="skb-msg-avatar">
                   <FiBookOpen />
                 </div>
 
-                <div className="skb-msg-stack">
-                  <div
-                    className="skb-msg skb-msg--bot skb-msg--typing"
-                    aria-label={ui.typing}
-                  >
-                    <span className="skb-dot" />
-
-                    <span className="skb-dot" />
-
-                    <span className="skb-dot" />
-                  </div>
+                <div className="skb-msg skb-msg--bot skb-msg--typing">
+                  <span className="skb-dot" />
+                  <span className="skb-dot" />
+                  <span className="skb-dot" />
                 </div>
               </div>
             )}
 
-            {/* QUICK REPLIES */}
+            {/* AMAZON STYLE FAQ */}
 
             {!hasUserMessages && !typing && (
-              <div className="skb-quick-section">
-                <span className="skb-quick-title">{ui.quickTitle}</span>
+              <div className="skb-faq-box">
+                <div className="skb-faq-heading">{ui.faq}</div>
 
-                <div className="skb-quick-replies">
-                  {currentQuickReplies.map((question) => (
+                <div className="skb-faq-tabs">
+                  {faqTabs.map((tab) => (
+                    <button
+                      type="button"
+                      key={tab.id}
+                      className={`skb-faq-tab ${
+                        faqCategory === tab.id ? "skb-faq-tab--active" : ""
+                      }`}
+                      onClick={() => setFaqCategory(tab.id)}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="skb-faq-list">
+                  {faqGroups[faqCategory].map((question) => (
                     <button
                       type="button"
                       key={question}
-                      className="skb-chip"
+                      className="skb-faq-question"
                       onClick={() => send(question)}
                     >
-                      {question}
+                      <span>{question}</span>
+
+                      <span className="skb-faq-arrow">›</span>
                     </button>
                   ))}
                 </div>
               </div>
             )}
 
-            <div
-              ref={bottomRef}
-              className="skb-chat-bottom-anchor"
-              aria-hidden="true"
-            />
+            {/* RELATED QUESTIONS */}
+
+            {hasUserMessages && !typing && (
+              <div className="skb-related-box">
+                <div className="skb-related-title">{ui.related}</div>
+
+                <div className="skb-related-list">
+                  {relatedQuestions.slice(0, 4).map((question) => (
+                    <button
+                      type="button"
+                      key={question}
+                      onClick={() => send(question)}
+                    >
+                      {question}
+
+                      <span>›</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div ref={bottomRef} className="skb-chat-bottom-anchor" />
           </div>
 
-          {/* =================================================
-              INPUT
-          ================================================= */}
+          {/* INPUT */}
 
           <footer className="skb-chat-input-area">
+            {/* LIVE SEARCH SUGGESTIONS */}
+
+            {inputSuggestions.length > 0 && input.trim() && (
+              <div className="skb-input-suggestions">
+                {inputSuggestions.map((question) => (
+                  <button
+                    type="button"
+                    key={question}
+                    onClick={() => send(question)}
+                  >
+                    <FiMessageCircle />
+
+                    <span>{question}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+
             <div className="skb-chat-input-row">
               <textarea
                 ref={textareaRef}
@@ -900,16 +1192,13 @@ export default function ChatBot() {
                 value={input}
                 onChange={(event) => setInput(event.target.value)}
                 onKeyDown={handleKeyDown}
-                aria-label={ui.placeholder}
               />
 
               <button
                 type="button"
                 className="skb-send-btn"
-                onClick={() => send(input)}
                 disabled={!input.trim() || typing}
-                aria-label={ui.send}
-                title={ui.send}
+                onClick={() => send(input)}
               >
                 <FiSend />
               </button>
