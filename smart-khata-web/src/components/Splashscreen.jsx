@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-
 import { createPortal } from "react-dom";
 
 // =====================================================
@@ -82,16 +81,14 @@ const PARTICLES = [
 ];
 
 // =====================================================
-// SPLASH
+// SPLASH SCREEN
 // =====================================================
 
 export default function SplashScreen({ onComplete = () => {} }) {
   const [phase, setPhase] = useState("init");
 
   const completedRef = useRef(false);
-
   const onCompleteRef = useRef(onComplete);
-
   const timersRef = useRef([]);
 
   // =====================================================
@@ -135,7 +132,7 @@ export default function SplashScreen({ onComplete = () => {} }) {
   }, []);
 
   // =====================================================
-  // COMPLETE ONCE
+  // COMPLETE
   // =====================================================
 
   const completeSplash = () => {
@@ -159,7 +156,7 @@ export default function SplashScreen({ onComplete = () => {} }) {
   };
 
   // =====================================================
-  // SPLASH TIMELINE
+  // TIMELINE
   // =====================================================
 
   useEffect(() => {
@@ -262,7 +259,7 @@ export default function SplashScreen({ onComplete = () => {} }) {
   }
 
   // =====================================================
-  // PORTAL
+  // UI
   // =====================================================
 
   return createPortal(
@@ -272,17 +269,13 @@ export default function SplashScreen({ onComplete = () => {} }) {
       aria-label="Loading Smart Khatabook"
       className={`skb-splash-root ${isExiting ? "skb-splash-exit" : ""}`}
     >
-      {/* =====================================
-          ACCESSIBILITY TEXT
-      ====================================== */}
+      {/* SCREEN READER */}
 
       <span className="skb-sr-only">
         Smart Khatabook is loading. Please wait.
       </span>
 
-      {/* =====================================
-          BACKGROUND EFFECTS
-      ====================================== */}
+      {/* BACKGROUND */}
 
       <div aria-hidden="true" className="skb-bg-orb skb-bg-orb-one" />
 
@@ -293,9 +286,7 @@ export default function SplashScreen({ onComplete = () => {} }) {
         className={`skb-main-glow ${showBrand ? "skb-main-glow-show" : ""}`}
       />
 
-      {/* =====================================
-          PARTICLES
-      ====================================== */}
+      {/* PARTICLES */}
 
       {!prefersReducedMotion &&
         PARTICLES.map((particle, index) => (
@@ -305,35 +296,26 @@ export default function SplashScreen({ onComplete = () => {} }) {
             className={`skb-particle ${showBrand ? "skb-particle-show" : ""}`}
             style={{
               "--particle-left": particle.left,
-
               "--particle-top": particle.top,
-
               "--particle-size": `${particle.size}px`,
-
               "--particle-color": particle.color,
-
               "--particle-delay": `${particle.delay}s`,
-
               "--particle-duration": `${particle.duration}s`,
             }}
           />
         ))}
 
-      {/* =====================================
-          CONTENT
-      ====================================== */}
+      {/* CONTENT */}
 
       <div className="skb-splash-content">
-        {/* ===================================
-            BOOK AREA
-        ==================================== */}
+        {/* =====================================================
+            BOOK
+        ===================================================== */}
 
         <div
           aria-hidden="true"
           className={`skb-book-wrap ${isOpen ? "skb-book-open" : ""}`}
         >
-          {/* SHADOW */}
-
           <div className="skb-book-floor-shadow" />
 
           {/* BACK COVER */}
@@ -353,7 +335,6 @@ export default function SplashScreen({ onComplete = () => {} }) {
                       className={`skb-written-line skb-line-${index % 3}`}
                       style={{
                         "--line-width": `${52 + ((index * 7) % 40)}%`,
-
                         "--line-delay": `${index * 0.075}s`,
                       }}
                     />
@@ -362,16 +343,12 @@ export default function SplashScreen({ onComplete = () => {} }) {
               </div>
             ))}
 
-            {/* RUPEE */}
-
             {showLines && <div className="skb-rupee">₹</div>}
           </div>
 
           {/* FRONT COVER */}
 
           <div className="skb-front-cover">
-            {/* OUTSIDE */}
-
             <div className="skb-cover-face skb-cover-front">
               <div className="skb-cover-logo">
                 <svg
@@ -390,8 +367,6 @@ export default function SplashScreen({ onComplete = () => {} }) {
 
               <small>Business Ledger</small>
             </div>
-
-            {/* INSIDE */}
 
             <div className="skb-cover-face skb-cover-inside">
               <div className="skb-inside-decoration">
@@ -413,9 +388,9 @@ export default function SplashScreen({ onComplete = () => {} }) {
           )}
         </div>
 
-        {/* ===================================
+        {/* =====================================================
             BRAND
-        ==================================== */}
+        ===================================================== */}
 
         <div
           className={`skb-brand-area ${showBrand ? "skb-brand-visible" : ""}`}
@@ -462,75 +437,69 @@ export default function SplashScreen({ onComplete = () => {} }) {
         </div>
       </div>
 
-      {/* =====================================
-          STYLES
-      ====================================== */}
+      {/* =====================================================
+          CSS
+      ===================================================== */}
 
       <style>{`
-        /* ==========================================
-           ROOT
-        ========================================== */
+        /* =====================================================
+           RESET
+        ===================================================== */
 
         .skb-splash-root,
         .skb-splash-root * {
           box-sizing: border-box;
         }
 
+        /* =====================================================
+           ROOT
+        ===================================================== */
+
         .skb-splash-root {
           position: fixed;
+
           inset: 0;
 
           z-index: 999999;
 
           width: 100%;
+
+          height: 100vh;
           height: 100dvh;
 
           overflow: hidden;
 
           display: flex;
+
           align-items: center;
+
           justify-content: center;
 
           padding:
             max(
               20px,
-              env(
-                safe-area-inset-top
-              )
+              env(safe-area-inset-top)
             )
             max(
               20px,
-              env(
-                safe-area-inset-right
-              )
+              env(safe-area-inset-right)
             )
             max(
               20px,
-              env(
-                safe-area-inset-bottom
-              )
+              env(safe-area-inset-bottom)
             )
             max(
               20px,
-              env(
-                safe-area-inset-left
-              )
+              env(safe-area-inset-left)
             );
 
           background:
             radial-gradient(
-              circle
-              at
-              50%
-              28%,
-              #19284d
-              0%,
-              #10192e
-              43%,
-              #0b1120
-              72%,
-              #070b14
-              100%
+              circle at 50% 28%,
+              #19284d 0%,
+              #10192e 43%,
+              #0b1120 72%,
+              #070b14 100%
             );
 
           font-family:
@@ -544,20 +513,17 @@ export default function SplashScreen({ onComplete = () => {} }) {
 
           opacity: 1;
 
-          transform:
-            scale(1);
+          transform: scale(1);
 
           transition:
-            opacity
-              0.72s
+            opacity 0.72s
               cubic-bezier(
                 0.5,
                 0,
                 0.75,
                 0
               ),
-            transform
-              0.72s
+            transform 0.72s
               cubic-bezier(
                 0.5,
                 0,
@@ -570,10 +536,10 @@ export default function SplashScreen({ onComplete = () => {} }) {
           content: "";
 
           position: absolute;
+
           inset: 0;
 
-          pointer-events:
-            none;
+          pointer-events: none;
 
           background:
             linear-gradient(
@@ -584,15 +550,13 @@ export default function SplashScreen({ onComplete = () => {} }) {
                 255,
                 0.015
               ),
-              transparent
-                30%,
+              transparent 30%,
               rgba(
                 108,
                 99,
                 255,
                 0.03
-              )
-                60%,
+              ) 60%,
               transparent
             );
         }
@@ -600,21 +564,20 @@ export default function SplashScreen({ onComplete = () => {} }) {
         .skb-splash-exit {
           opacity: 0;
 
-          transform:
-            scale(1.07);
+          transform: scale(1.07);
 
-          pointer-events:
-            none;
+          pointer-events: none;
         }
 
-        /* ==========================================
+        /* =====================================================
            SCREEN READER
-        ========================================== */
+        ===================================================== */
 
         .skb-sr-only {
           position: absolute;
 
           width: 1px;
+
           height: 1px;
 
           padding: 0;
@@ -623,23 +586,21 @@ export default function SplashScreen({ onComplete = () => {} }) {
 
           overflow: hidden;
 
-          clip:
-            rect(
-              0,
-              0,
-              0,
-              0
-            );
+          clip: rect(
+            0,
+            0,
+            0,
+            0
+          );
 
-          white-space:
-            nowrap;
+          white-space: nowrap;
 
           border: 0;
         }
 
-        /* ==========================================
+        /* =====================================================
            CONTENT
-        ========================================== */
+        ===================================================== */
 
         .skb-splash-content {
           position: relative;
@@ -652,14 +613,11 @@ export default function SplashScreen({ onComplete = () => {} }) {
 
           display: flex;
 
-          flex-direction:
-            column;
+          flex-direction: column;
 
-          align-items:
-            center;
+          align-items: center;
 
-          justify-content:
-            center;
+          justify-content: center;
 
           gap:
             clamp(
@@ -669,21 +627,18 @@ export default function SplashScreen({ onComplete = () => {} }) {
             );
         }
 
-        /* ==========================================
+        /* =====================================================
            BACKGROUND ORBS
-        ========================================== */
+        ===================================================== */
 
         .skb-bg-orb {
           position: absolute;
 
-          border-radius:
-            50%;
+          border-radius: 50%;
 
-          pointer-events:
-            none;
+          pointer-events: none;
 
-          filter:
-            blur(2px);
+          filter: blur(2px);
         }
 
         .skb-bg-orb-one {
@@ -693,8 +648,7 @@ export default function SplashScreen({ onComplete = () => {} }) {
               650px
             );
 
-          aspect-ratio:
-            1;
+          aspect-ratio: 1;
 
           left: -20%;
 
@@ -709,8 +663,7 @@ export default function SplashScreen({ onComplete = () => {} }) {
                 229,
                 0.16
               ),
-              transparent
-                68%
+              transparent 68%
             );
         }
 
@@ -721,8 +674,7 @@ export default function SplashScreen({ onComplete = () => {} }) {
               600px
             );
 
-          aspect-ratio:
-            1;
+          aspect-ratio: 1;
 
           right: -20%;
 
@@ -735,21 +687,21 @@ export default function SplashScreen({ onComplete = () => {} }) {
                 56,
                 189,
                 248,
-                0.10
+                0.1
               ),
-              transparent
-                70%
+              transparent 70%
             );
         }
 
-        /* ==========================================
+        /* =====================================================
            MAIN GLOW
-        ========================================== */
+        ===================================================== */
 
         .skb-main-glow {
           position: absolute;
 
           left: 50%;
+
           top: 43%;
 
           width:
@@ -759,14 +711,11 @@ export default function SplashScreen({ onComplete = () => {} }) {
               650px
             );
 
-          aspect-ratio:
-            1;
+          aspect-ratio: 1;
 
-          border-radius:
-            50%;
+          border-radius: 50%;
 
-          pointer-events:
-            none;
+          pointer-events: none;
 
           opacity: 0;
 
@@ -784,22 +733,18 @@ export default function SplashScreen({ onComplete = () => {} }) {
                 99,
                 255,
                 0.18
-              )
-                0%,
+              ) 0%,
               rgba(
                 72,
                 185,
                 248,
                 0.07
-              )
-                45%,
-              transparent
-                72%
+              ) 45%,
+              transparent 72%
             );
 
           transition:
-            opacity
-            0.8s ease;
+            opacity 0.8s ease;
         }
 
         .skb-main-glow-show {
@@ -812,9 +757,9 @@ export default function SplashScreen({ onComplete = () => {} }) {
             infinite;
         }
 
-        /* ==========================================
+        /* =====================================================
            PARTICLES
-        ========================================== */
+        ===================================================== */
 
         .skb-particle {
           position: absolute;
@@ -839,8 +784,7 @@ export default function SplashScreen({ onComplete = () => {} }) {
               --particle-size
             );
 
-          border-radius:
-            50%;
+          border-radius: 50%;
 
           background:
             var(
@@ -849,8 +793,7 @@ export default function SplashScreen({ onComplete = () => {} }) {
 
           opacity: 0;
 
-          pointer-events:
-            none;
+          pointer-events: none;
 
           box-shadow:
             0
@@ -861,8 +804,7 @@ export default function SplashScreen({ onComplete = () => {} }) {
             );
 
           transition:
-            opacity
-            0.8s ease;
+            opacity 0.8s ease;
         }
 
         .skb-particle-show {
@@ -880,9 +822,9 @@ export default function SplashScreen({ onComplete = () => {} }) {
             );
         }
 
-        /* ==========================================
+        /* =====================================================
            BOOK
-        ========================================== */
+        ===================================================== */
 
         .skb-book-wrap {
           --book-width:
@@ -900,6 +842,23 @@ export default function SplashScreen({ onComplete = () => {} }) {
               1.24
             );
 
+          /*
+           * Important fix:
+           * when the front cover opens to the left,
+           * the visual width becomes approximately
+           * two book widths.
+           *
+           * Moving the wrapper by half a book width
+           * keeps the COMPLETE OPEN BOOK centered.
+           */
+          --book-open-offset:
+            calc(
+              var(
+                --book-width
+              ) *
+              0.5
+            );
+
           position: relative;
 
           width:
@@ -912,8 +871,7 @@ export default function SplashScreen({ onComplete = () => {} }) {
               --book-height
             );
 
-          perspective:
-            1100px;
+          perspective: 1100px;
 
           -webkit-perspective:
             1100px;
@@ -939,24 +897,22 @@ export default function SplashScreen({ onComplete = () => {} }) {
             both;
         }
 
-        /* ==========================================
-           BOOK FLOOR SHADOW
-        ========================================== */
+        /* =====================================================
+           FLOOR SHADOW
+        ===================================================== */
 
         .skb-book-floor-shadow {
           position: absolute;
 
           left: 50%;
 
-          bottom:
-            -18%;
+          bottom: -18%;
 
           width: 125%;
 
           height: 18%;
 
-          border-radius:
-            50%;
+          border-radius: 50%;
 
           transform:
             translateX(-50%);
@@ -969,15 +925,14 @@ export default function SplashScreen({ onComplete = () => {} }) {
               0.36
             );
 
-          filter:
-            blur(14px);
+          filter: blur(14px);
 
           opacity: 0.7;
         }
 
-        /* ==========================================
+        /* =====================================================
            BACK COVER
-        ========================================== */
+        ===================================================== */
 
         .skb-book-back {
           position: absolute;
@@ -993,12 +948,9 @@ export default function SplashScreen({ onComplete = () => {} }) {
           background:
             linear-gradient(
               150deg,
-              #245fc2
-                0%,
-              #164187
-                48%,
-              #0d2c66
-                100%
+              #245fc2 0%,
+              #164187 48%,
+              #0d2c66 100%
             );
 
           box-shadow:
@@ -1022,9 +974,9 @@ export default function SplashScreen({ onComplete = () => {} }) {
             );
         }
 
-        /* ==========================================
+        /* =====================================================
            PAGES
-        ========================================== */
+        ===================================================== */
 
         .skb-pages {
           position: absolute;
@@ -1059,10 +1011,8 @@ export default function SplashScreen({ onComplete = () => {} }) {
             linear-gradient(
               90deg,
               #f5f6fa,
-              #ffffff
-                14%,
-              #ffffff
-                90%,
+              #ffffff 14%,
+              #ffffff 90%,
               #f1f3f8
             );
 
@@ -1082,8 +1032,7 @@ export default function SplashScreen({ onComplete = () => {} }) {
         .skb-page-row {
           display: flex;
 
-          align-items:
-            center;
+          align-items: center;
 
           gap:
             clamp(
@@ -1112,8 +1061,7 @@ export default function SplashScreen({ onComplete = () => {} }) {
 
           flex-shrink: 0;
 
-          background:
-            #fca5a5;
+          background: #fca5a5;
         }
 
         .skb-page-rule {
@@ -1125,11 +1073,9 @@ export default function SplashScreen({ onComplete = () => {} }) {
 
           overflow: hidden;
 
-          border-radius:
-            2px;
+          border-radius: 2px;
 
-          background:
-            #e8eaf0;
+          background: #e8eaf0;
         }
 
         .skb-written-line {
@@ -1146,14 +1092,12 @@ export default function SplashScreen({ onComplete = () => {} }) {
               --line-width
             );
 
-          border-radius:
-            2px;
+          border-radius: 2px;
 
           transform:
             scaleX(0);
 
-          transform-origin:
-            left;
+          transform-origin: left;
 
           animation:
             skbWriteLine
@@ -1197,9 +1141,9 @@ export default function SplashScreen({ onComplete = () => {} }) {
             );
         }
 
-        /* ==========================================
+        /* =====================================================
            RUPEE
-        ========================================== */
+        ===================================================== */
 
         .skb-rupee {
           position: absolute;
@@ -1218,8 +1162,7 @@ export default function SplashScreen({ onComplete = () => {} }) {
               12px
             );
 
-          color:
-            #6c63ff;
+          color: #6c63ff;
 
           font-size:
             clamp(
@@ -1245,9 +1188,9 @@ export default function SplashScreen({ onComplete = () => {} }) {
             forwards;
         }
 
-        /* ==========================================
+        /* =====================================================
            FRONT COVER
-        ========================================== */
+        ===================================================== */
 
         .skb-front-cover {
           position: absolute;
@@ -1260,14 +1203,10 @@ export default function SplashScreen({ onComplete = () => {} }) {
             left center;
 
           transform:
-            rotateY(
-              0deg
-            );
+            rotateY(0deg);
 
           -webkit-transform:
-            rotateY(
-              0deg
-            );
+            rotateY(0deg);
 
           transform-style:
             preserve-3d;
@@ -1289,14 +1228,10 @@ export default function SplashScreen({ onComplete = () => {} }) {
         .skb-book-open
         .skb-front-cover {
           transform:
-            rotateY(
-              -180deg
-            );
+            rotateY(-180deg);
 
           -webkit-transform:
-            rotateY(
-              -180deg
-            );
+            rotateY(-180deg);
         }
 
         .skb-cover-face {
@@ -1317,16 +1252,18 @@ export default function SplashScreen({ onComplete = () => {} }) {
             4px;
         }
 
+        /* =====================================================
+           FRONT FACE
+        ===================================================== */
+
         .skb-cover-front {
           display: flex;
 
-          flex-direction:
-            column;
+          flex-direction: column;
 
           align-items: center;
 
-          justify-content:
-            center;
+          justify-content: center;
 
           gap:
             clamp(
@@ -1335,8 +1272,7 @@ export default function SplashScreen({ onComplete = () => {} }) {
               10px
             );
 
-          padding:
-            14px;
+          padding: 14px;
 
           color:
             rgba(
@@ -1351,12 +1287,9 @@ export default function SplashScreen({ onComplete = () => {} }) {
           background:
             linear-gradient(
               145deg,
-              #3b82f6
-                0%,
-              #2563eb
-                42%,
-              #194aa0
-                100%
+              #3b82f6 0%,
+              #2563eb 42%,
+              #194aa0 100%
             );
 
           box-shadow:
@@ -1379,11 +1312,9 @@ export default function SplashScreen({ onComplete = () => {} }) {
 
           inset: 0;
 
-          border-radius:
-            inherit;
+          border-radius: inherit;
 
-          pointer-events:
-            none;
+          pointer-events: none;
 
           background:
             linear-gradient(
@@ -1394,10 +1325,8 @@ export default function SplashScreen({ onComplete = () => {} }) {
                 255,
                 0.13
               ),
-              transparent
-                35%,
-              transparent
-                70%,
+              transparent 35%,
+              transparent 70%,
               rgba(
                 255,
                 255,
@@ -1442,8 +1371,7 @@ export default function SplashScreen({ onComplete = () => {} }) {
           letter-spacing:
             0.08em;
 
-          text-transform:
-            uppercase;
+          text-transform: uppercase;
         }
 
         .skb-cover-front small {
@@ -1465,31 +1393,25 @@ export default function SplashScreen({ onComplete = () => {} }) {
           letter-spacing:
             0.08em;
 
-          text-transform:
-            uppercase;
+          text-transform: uppercase;
         }
 
-        /* ==========================================
+        /* =====================================================
            INSIDE COVER
-        ========================================== */
+        ===================================================== */
 
         .skb-cover-inside {
           transform:
-            rotateY(
-              180deg
-            );
+            rotateY(180deg);
 
           -webkit-transform:
-            rotateY(
-              180deg
-            );
+            rotateY(180deg);
 
           display: flex;
 
           align-items: center;
 
-          justify-content:
-            center;
+          justify-content: center;
 
           background:
             linear-gradient(
@@ -1504,8 +1426,7 @@ export default function SplashScreen({ onComplete = () => {} }) {
 
           display: flex;
 
-          flex-direction:
-            column;
+          flex-direction: column;
 
           gap: 7px;
 
@@ -1515,24 +1436,24 @@ export default function SplashScreen({ onComplete = () => {} }) {
         .skb-inside-decoration span {
           height: 2px;
 
-          border-radius:
-            20px;
+          border-radius: 20px;
 
-          background:
-            #b8c0d9;
+          background: #b8c0d9;
         }
 
-        .skb-inside-decoration span:nth-child(2) {
+        .skb-inside-decoration
+        span:nth-child(2) {
           width: 72%;
         }
 
-        .skb-inside-decoration span:nth-child(3) {
+        .skb-inside-decoration
+        span:nth-child(3) {
           width: 42%;
         }
 
-        /* ==========================================
+        /* =====================================================
            PAGE CURL
-        ========================================== */
+        ===================================================== */
 
         .skb-page-curl {
           position: absolute;
@@ -1540,6 +1461,7 @@ export default function SplashScreen({ onComplete = () => {} }) {
           right: -6px;
 
           top: 10%;
+
           bottom: 10%;
 
           width: 6px;
@@ -1563,9 +1485,9 @@ export default function SplashScreen({ onComplete = () => {} }) {
             );
         }
 
-        /* ==========================================
+        /* =====================================================
            PENCIL
-        ========================================== */
+        ===================================================== */
 
         .skb-pencil {
           position: absolute;
@@ -1593,8 +1515,7 @@ export default function SplashScreen({ onComplete = () => {} }) {
               25px
             );
 
-          transform-origin:
-            center;
+          transform-origin: center;
 
           opacity: 0;
 
@@ -1605,21 +1526,31 @@ export default function SplashScreen({ onComplete = () => {} }) {
             forwards;
         }
 
-        /* ==========================================
+        /* =====================================================
            BRAND AREA
-        ========================================== */
+        ===================================================== */
 
         .skb-brand-area {
           width: 100%;
+
+          max-width: 520px;
+
+          margin-inline: auto;
+
+          display: flex;
+
+          flex-direction: column;
+
+          align-items: center;
+
+          justify-content: center;
 
           text-align: center;
 
           opacity: 0;
 
           transform:
-            translateY(
-              24px
-            );
+            translateY(24px);
 
           transition:
             opacity
@@ -1639,12 +1570,12 @@ export default function SplashScreen({ onComplete = () => {} }) {
           opacity: 1;
 
           transform:
-            translateY(
-              0
-            );
+            translateY(0);
         }
 
         .skb-brand-title {
+          width: 100%;
+
           margin:
             0
             0
@@ -1652,16 +1583,15 @@ export default function SplashScreen({ onComplete = () => {} }) {
 
           display: flex;
 
-          justify-content:
-            center;
+          align-items: center;
+
+          justify-content: center;
 
           flex-wrap: nowrap;
 
-          perspective:
-            300px;
+          perspective: 300px;
 
-          color:
-            #ffffff;
+          color: #ffffff;
 
           font-size:
             clamp(
@@ -1702,9 +1632,9 @@ export default function SplashScreen({ onComplete = () => {} }) {
             forwards;
         }
 
-        /* ==========================================
+        /* =====================================================
            TAGLINE
-        ========================================== */
+        ===================================================== */
 
         .skb-tagline {
           margin:
@@ -1714,8 +1644,7 @@ export default function SplashScreen({ onComplete = () => {} }) {
 
           display: flex;
 
-          justify-content:
-            center;
+          justify-content: center;
 
           align-items: center;
 
@@ -1726,12 +1655,11 @@ export default function SplashScreen({ onComplete = () => {} }) {
               10px
             );
 
-          color:
-            #8b83ff;
+          color: #8b83ff;
 
           font-size:
             clamp(
-              0.60rem,
+              0.6rem,
               2.3vw,
               0.72rem
             );
@@ -1741,8 +1669,7 @@ export default function SplashScreen({ onComplete = () => {} }) {
           letter-spacing:
             0.16em;
 
-          text-transform:
-            uppercase;
+          text-transform: uppercase;
 
           opacity: 0;
 
@@ -1764,9 +1691,9 @@ export default function SplashScreen({ onComplete = () => {} }) {
             );
         }
 
-        /* ==========================================
+        /* =====================================================
            LOADING
-        ========================================== */
+        ===================================================== */
 
         .skb-loading-track {
           position: relative;
@@ -1786,8 +1713,7 @@ export default function SplashScreen({ onComplete = () => {} }) {
 
           overflow: hidden;
 
-          border-radius:
-            20px;
+          border-radius: 20px;
 
           background:
             rgba(
@@ -1807,8 +1733,7 @@ export default function SplashScreen({ onComplete = () => {} }) {
 
           overflow: hidden;
 
-          border-radius:
-            20px;
+          border-radius: 20px;
 
           background:
             linear-gradient(
@@ -1820,8 +1745,7 @@ export default function SplashScreen({ onComplete = () => {} }) {
           transform:
             scaleX(0);
 
-          transform-origin:
-            left;
+          transform-origin: left;
         }
 
         .skb-loading-fill-active {
@@ -1890,9 +1814,9 @@ export default function SplashScreen({ onComplete = () => {} }) {
             0.04em;
         }
 
-        /* ==========================================
-           KEYFRAMES
-        ========================================== */
+        /* =====================================================
+           WRITE LINE
+        ===================================================== */
 
         @keyframes skbWriteLine {
           from {
@@ -1905,6 +1829,10 @@ export default function SplashScreen({ onComplete = () => {} }) {
               scaleX(1);
           }
         }
+
+        /* =====================================================
+           RUPEE
+        ===================================================== */
 
         @keyframes skbRupeeIn {
           from {
@@ -1924,6 +1852,10 @@ export default function SplashScreen({ onComplete = () => {} }) {
           }
         }
 
+        /* =====================================================
+           PENCIL
+        ===================================================== */
+
         @keyframes skbPencilWrite {
           0% {
             opacity: 0;
@@ -1933,9 +1865,7 @@ export default function SplashScreen({ onComplete = () => {} }) {
                 0,
                 0
               )
-              rotate(
-                45deg
-              );
+              rotate(45deg);
           }
 
           15% {
@@ -1948,9 +1878,7 @@ export default function SplashScreen({ onComplete = () => {} }) {
                 -14px,
                 8px
               )
-              rotate(
-                40deg
-              );
+              rotate(40deg);
           }
 
           85% {
@@ -1965,11 +1893,13 @@ export default function SplashScreen({ onComplete = () => {} }) {
                 -26px,
                 16px
               )
-              rotate(
-                45deg
-              );
+              rotate(45deg);
           }
         }
+
+        /* =====================================================
+           LOADING BAR
+        ===================================================== */
 
         @keyframes skbLoadBar {
           from {
@@ -1986,18 +1916,18 @@ export default function SplashScreen({ onComplete = () => {} }) {
         @keyframes skbShimmer {
           from {
             transform:
-              translateX(
-                -110%
-              );
+              translateX(-110%);
           }
 
           to {
             transform:
-              translateX(
-                260%
-              );
+              translateX(260%);
           }
         }
+
+        /* =====================================================
+           GLOW
+        ===================================================== */
 
         @keyframes skbGlowPulse {
           0%,
@@ -2020,72 +1950,77 @@ export default function SplashScreen({ onComplete = () => {} }) {
           }
         }
 
+        /* =====================================================
+           BRAND LETTER
+        ===================================================== */
+
         @keyframes skbLetterUp {
           from {
             opacity: 0;
 
             transform:
-              translateY(
-                16px
-              )
-              rotateX(
-                60deg
-              );
+              translateY(16px)
+              rotateX(60deg);
           }
 
           to {
             opacity: 1;
 
             transform:
-              translateY(
-                0
-              )
-              rotateX(
-                0
-              );
+              translateY(0)
+              rotateX(0);
           }
         }
+
+        /* =====================================================
+           BOOK CENTERING FIX
+        ===================================================== */
 
         @keyframes skbBookSettle {
           0% {
             transform:
-              translateY(
-                -7px
+              translateX(
+                var(
+                  --book-open-offset
+                )
               )
-              scale(
-                0.96
-              );
+              translateY(-7px)
+              scale(0.96);
           }
 
           60% {
             transform:
-              translateY(
-                2px
+              translateX(
+                var(
+                  --book-open-offset
+                )
               )
-              scale(
-                1.015
-              );
+              translateY(2px)
+              scale(1.015);
           }
 
           100% {
             transform:
-              translateY(
-                0
+              translateX(
+                var(
+                  --book-open-offset
+                )
               )
-              scale(
-                1
-              );
+              translateY(0)
+              scale(1);
           }
         }
+
+        /* =====================================================
+           TAGLINE
+        ===================================================== */
 
         @keyframes skbTaglineReveal {
           from {
             opacity: 0;
 
             transform:
-              translateY(
-                6px
-              );
+              translateY(6px);
 
             letter-spacing:
               0.28em;
@@ -2095,14 +2030,16 @@ export default function SplashScreen({ onComplete = () => {} }) {
             opacity: 1;
 
             transform:
-              translateY(
-                0
-              );
+              translateY(0);
 
             letter-spacing:
               0.16em;
           }
         }
+
+        /* =====================================================
+           PARTICLES
+        ===================================================== */
 
         @keyframes skbFloatParticle {
           0%,
@@ -2123,9 +2060,9 @@ export default function SplashScreen({ onComplete = () => {} }) {
           }
         }
 
-        /* ==========================================
+        /* =====================================================
            MOBILE
-        ========================================== */
+        ===================================================== */
 
         @media (
           max-width: 600px
@@ -2148,6 +2085,10 @@ export default function SplashScreen({ onComplete = () => {} }) {
           }
 
           .skb-splash-content {
+            width: 100%;
+
+            max-width: 100%;
+
             gap:
               clamp(
                 18px,
@@ -2159,9 +2100,30 @@ export default function SplashScreen({ onComplete = () => {} }) {
           .skb-book-wrap {
             --book-width:
               clamp(
-                120px,
-                39vw,
-                150px
+                116px,
+                36vw,
+                145px
+              );
+          }
+
+          .skb-brand-area {
+            width: 100%;
+
+            max-width: 100%;
+
+            padding-inline: 8px;
+          }
+
+          .skb-brand-title {
+            width: 100%;
+
+            justify-content: center;
+
+            font-size:
+              clamp(
+                1.5rem,
+                7vw,
+                2rem
               );
           }
 
@@ -2174,81 +2136,25 @@ export default function SplashScreen({ onComplete = () => {} }) {
           }
         }
 
-        /* ==========================================
+        /* =====================================================
            SMALL MOBILE
-        ========================================== */
+        ===================================================== */
 
         @media (
           max-width: 380px
         ) {
-          .skb-book-wrap {
-            --book-width:
-              clamp(
-                112px,
-                40vw,
-                138px
-              );
-          }
+          .skb-splash-root {
+            padding-left: 12px;
 
-          .skb-brand-title {
-            font-size:
-              clamp(
-                1.45rem,
-                7vw,
-                1.75rem
-              );
-          }
-
-          .skb-tagline {
-            margin-bottom:
-              16px;
-          }
-
-          .skb-particle:nth-of-type(n+7) {
-            display: none;
-          }
-        }
-
-        /* ==========================================
-           SHORT SCREENS / LANDSCAPE
-        ========================================== */
-
-        @media (
-          max-height: 620px
-        ) {
-          .skb-splash-content {
-            flex-direction:
-              row;
-
-            max-width:
-              760px;
-
-            gap:
-              clamp(
-                28px,
-                7vw,
-                70px
-              );
+            padding-right: 12px;
           }
 
           .skb-book-wrap {
             --book-width:
               clamp(
-                95px,
-                21vh,
+                106px,
+                36vw,
                 130px
-              );
-
-            flex-shrink: 0;
-          }
-
-          .skb-brand-area {
-            width: auto;
-
-            min-width:
-              min(
-                310px,
-                46vw
               );
           }
 
@@ -2256,45 +2162,196 @@ export default function SplashScreen({ onComplete = () => {} }) {
             font-size:
               clamp(
                 1.35rem,
-                4vw,
-                2rem
+                7vw,
+                1.7rem
               );
+
+            letter-spacing:
+              -0.045em;
+          }
+
+          .skb-tagline {
+            margin-bottom: 16px;
+
+            font-size: 0.58rem;
+
+            gap: 5px;
+
+            letter-spacing:
+              0.13em;
+          }
+
+          .skb-particle:nth-of-type(n + 7) {
+            display: none;
           }
         }
 
-        /* ==========================================
+        /* =====================================================
+           VERY SMALL WIDTH
+        ===================================================== */
+
+        @media (
+          max-width: 320px
+        ) {
+          .skb-splash-root {
+            padding-left: 8px;
+
+            padding-right: 8px;
+          }
+
+          .skb-book-wrap {
+            --book-width:
+              clamp(
+                98px,
+                34vw,
+                114px
+              );
+          }
+
+          .skb-brand-area {
+            padding-inline: 4px;
+          }
+
+          .skb-brand-title {
+            font-size: 1.27rem;
+
+            letter-spacing:
+              -0.055em;
+          }
+
+          .skb-tagline {
+            font-size: 0.53rem;
+
+            letter-spacing:
+              0.1em;
+          }
+        }
+
+        /* =====================================================
+           SHORT / LANDSCAPE
+        ===================================================== */
+
+        @media (
+          max-height: 620px
+        ) {
+          .skb-splash-root {
+            align-items: center;
+          }
+
+          .skb-splash-content {
+            /*
+             * Important:
+             * do NOT move brand to the side.
+             * Keep Smart Khatabook directly
+             * underneath the book.
+             */
+            flex-direction: column;
+
+            max-width: 680px;
+
+            gap:
+              clamp(
+                13px,
+                3vh,
+                20px
+              );
+          }
+
+          .skb-book-wrap {
+            --book-width:
+              clamp(
+                88px,
+                19vh,
+                116px
+              );
+
+            flex-shrink: 0;
+          }
+
+          .skb-brand-area {
+            width: 100%;
+
+            max-width: 500px;
+
+            min-width: 0;
+          }
+
+          .skb-brand-title {
+            font-size:
+              clamp(
+                1.2rem,
+                4vw,
+                1.7rem
+              );
+
+            justify-content: center;
+          }
+
+          .skb-tagline {
+            margin-bottom: 11px;
+          }
+
+          .skb-loading-label {
+            margin-top: 7px;
+          }
+        }
+
+        /* =====================================================
            VERY SHORT SCREEN
-        ========================================== */
+        ===================================================== */
 
         @media (
           max-height: 430px
         ) {
           .skb-splash-root {
-            padding: 10px;
+            padding: 8px;
           }
 
           .skb-splash-content {
-            gap: 25px;
+            gap: 10px;
           }
 
           .skb-book-wrap {
-            --book-width:
-              95px;
+            --book-width: 82px;
+          }
+
+          .skb-brand-title {
+            margin-bottom: 5px;
+
+            font-size: 1.2rem;
+          }
+
+          .skb-tagline {
+            margin-bottom: 8px;
+
+            font-size: 0.52rem;
           }
 
           .skb-loading-label {
             display: none;
           }
 
-          .skb-tagline {
-            margin-bottom:
-              12px;
+          .skb-loading-track {
+            height: 3px;
           }
         }
 
-        /* ==========================================
+        /* =====================================================
+           TOUCH DEVICES
+        ===================================================== */
+
+        @media (
+          hover: none
+        ) {
+          .skb-splash-root {
+            -webkit-tap-highlight-color:
+              transparent;
+          }
+        }
+
+        /* =====================================================
            REDUCED MOTION
-        ========================================== */
+        ===================================================== */
 
         @media (
           prefers-reduced-motion:

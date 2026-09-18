@@ -1,19 +1,106 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+
+import {
+  FiActivity,
+  FiAlertCircle,
+  FiBookOpen,
+  FiBox,
+  FiBriefcase,
+  FiCheckCircle,
+  FiClock,
+  FiFileText,
+  FiGrid,
+  FiMoon,
+  FiPackage,
+  FiPrinter,
+  FiRefreshCw,
+  FiShoppingBag,
+  FiShoppingCart,
+  FiStar,
+  FiSun,
+  FiUser,
+  FiCreditCard,
+  FiXCircle,
+} from "react-icons/fi";
 
 import Sidebar from "../components/Sidebar";
 
 import api from "../api";
 
+import { getStoredUser } from "../utils/session";
+
 import "./Report.css";
 
-import { getStoredUser } from "../utils/session";
+// =====================================================
+// HELPERS
+// =====================================================
+
+const safeNumber = (value) => {
+  const number = Number(value || 0);
+
+  return Number.isFinite(number) ? number : 0;
+};
+
+const clampPercentage = (value) => {
+  return Math.min(100, Math.max(0, Number(value) || 0));
+};
+
+// =====================================================
+// SMALL COMPONENTS
+// =====================================================
+
+function SummaryCard({ tone, Icon, label, value, helper }) {
+  return (
+    <article className={`report-summary-card report-summary-${tone}`}>
+      <div className="report-summary-top">
+        <div className="report-summary-icon">
+          <Icon />
+        </div>
+
+        <span className="report-summary-dot" />
+      </div>
+
+      <div className="report-summary-content">
+        <span className="report-summary-label">{label}</span>
+
+        <strong className="report-summary-value">{value}</strong>
+
+        <p>{helper}</p>
+      </div>
+    </article>
+  );
+}
+
+function StatusTile({ label, value, tone = "default" }) {
+  return (
+    <div className={`report-order-tile report-order-${tone}`}>
+      <div className="report-order-tile-top">
+        <span>{label}</span>
+
+        <span className="report-order-indicator" />
+      </div>
+
+      <strong>{safeNumber(value).toLocaleString("en-IN")}</strong>
+    </div>
+  );
+}
+
+function DetailRow({ label, value, className = "" }) {
+  return (
+    <div className="report-detail-row">
+      <span>{label}</span>
+
+      <strong className={className}>{value}</strong>
+    </div>
+  );
+}
 
 // =====================================================
 // REPORT
 // =====================================================
 
 export default function Report() {
-  const user = getStoredUser();
+  const user = getStoredUser() || {};
 
   const userId = user?._id;
 
@@ -59,12 +146,12 @@ export default function Report() {
     try {
       localStorage.setItem("smartkhata-theme", darkMode ? "dark" : "light");
     } catch {
-      // Ignore localStorage errors
+      // Ignore storage errors.
     }
   }, [darkMode]);
 
   // =====================================================
-  // FETCH REPORT
+  // FETCH
   // =====================================================
 
   const fetchReport = useCallback(
@@ -122,15 +209,11 @@ export default function Report() {
   }, [fetchReport]);
 
   // =====================================================
-  // HELPERS
+  // FORMATTERS
   // =====================================================
 
   const formatCurrency = (amount = 0) => {
-    const value = Number(amount || 0);
-
-    if (!Number.isFinite(value)) {
-      return "₹0";
-    }
+    const value = safeNumber(amount);
 
     return new Intl.NumberFormat("en-IN", {
       style: "currency",
@@ -146,13 +229,13 @@ export default function Report() {
       return "-";
     }
 
-    const parsedDate = new Date(value);
+    const date = new Date(value);
 
-    if (Number.isNaN(parsedDate.getTime())) {
+    if (Number.isNaN(date.getTime())) {
       return "-";
     }
 
-    return parsedDate.toLocaleDateString("en-IN", {
+    return date.toLocaleDateString("en-IN", {
       day: "2-digit",
 
       month: "short",
@@ -162,7 +245,7 @@ export default function Report() {
   };
 
   const formatStatus = (status = "") => {
-    const statusMap = {
+    const map = {
       pending: "Pending",
 
       approved: "Approved",
@@ -190,7 +273,7 @@ export default function Report() {
       paid: "Paid",
     };
 
-    return statusMap[status] || status || "-";
+    return map[status] || status || "-";
   };
 
   const getStatusClass = (status) => {
@@ -215,12 +298,59 @@ export default function Report() {
     return "report-status report-status-info";
   };
 
-  const handlePrint = () => {
-    window.print();
-  };
+  // =====================================================
+  // DATA
+  // =====================================================
+
+  const orders = report?.orders || {};
+
+  const payments = report?.payments || {};
+
+  const stock = report?.stock || {};
+
+  const reviews = report?.reviews || {};
+
+  const ledger = report?.ledger || {};
+
+  const recentOrders = Array.isArray(report?.recentOrders)
+    ? report.recentOrders
+    : [];
+
+  const isRetailer =
+    String(userRole || "")
+      .trim()
+      .toLowerCase() === "retailer";
 
   // =====================================================
-  // SAFE ROLE
+  // PROGRESS
+  // =====================================================
+
+  const paymentProgress = useMemo(() => {
+    const total = safeNumber(payments.totalOrderValue);
+
+    const paid = safeNumber(payments.totalPaidAmount);
+
+    if (total <= 0) {
+      return 0;
+    }
+
+    return clampPercentage(Math.round((paid / total) * 100));
+  }, [payments]);
+
+  const stockAvailability = useMemo(() => {
+    const total = safeNumber(stock.totalProducts);
+
+    const out = safeNumber(stock.outOfStockProducts);
+
+    if (total <= 0) {
+      return 0;
+    }
+
+    return clampPercentage(Math.round(((total - out) / total) * 100));
+  }, [stock]);
+
+  // =====================================================
+  // CLASSES
   // =====================================================
 
   const sidebarRole = userRole || "";
@@ -239,7 +369,7 @@ export default function Report() {
         <main className="report-main">
           <div className="report-loading">
             <div className="report-loading-icon">
-              <i className="ti ti-chart-bar" />
+              <FiActivity />
             </div>
 
             <div className="report-spinner" />
@@ -265,7 +395,7 @@ export default function Report() {
         <main className="report-main">
           <div className="report-error">
             <div className="report-error-icon">
-              <i className="ti ti-alert-circle" />
+              <FiAlertCircle />
             </div>
 
             <h2>Unable to load report</h2>
@@ -277,9 +407,7 @@ export default function Report() {
               onClick={() => fetchReport(true)}
               disabled={refreshing}
             >
-              <i
-                className={`ti ti-refresh ${refreshing ? "report-spin" : ""}`}
-              />
+              <FiRefreshCw className={refreshing ? "report-spin" : ""} />
 
               {refreshing ? "Trying..." : "Try Again"}
             </button>
@@ -288,26 +416,6 @@ export default function Report() {
       </div>
     );
   }
-
-  // =====================================================
-  // SAFE REPORT DATA
-  // =====================================================
-
-  const orders = report?.orders || {};
-
-  const payments = report?.payments || {};
-
-  const stock = report?.stock || {};
-
-  const reviews = report?.reviews || {};
-
-  const ledger = report?.ledger || {};
-
-  const recentOrders = Array.isArray(report?.recentOrders)
-    ? report.recentOrders
-    : [];
-
-  const isRetailer = userRole?.toLowerCase() === "retailer";
 
   // =====================================================
   // UI
@@ -328,12 +436,12 @@ export default function Report() {
 
             <h1>Business Report</h1>
 
-            <p>Complete overview of your business performance and activity.</p>
+            <p>
+              Financial, inventory, orders and business activity in one place.
+            </p>
           </div>
 
           <div className="report-header-actions no-print">
-            {/* DARK MODE */}
-
             <button
               type="button"
               className="report-theme-btn"
@@ -343,14 +451,12 @@ export default function Report() {
                 darkMode ? "Switch to light mode" : "Switch to dark mode"
               }
             >
-              <i className={darkMode ? "ti ti-sun" : "ti ti-moon"} />
+              {darkMode ? <FiSun /> : <FiMoon />}
 
               <span className="report-theme-text">
                 {darkMode ? "Light" : "Dark"}
               </span>
             </button>
-
-            {/* REFRESH */}
 
             <button
               type="button"
@@ -358,39 +464,35 @@ export default function Report() {
               onClick={() => fetchReport(true)}
               disabled={refreshing}
             >
-              <i
-                className={`ti ti-refresh ${refreshing ? "report-spin" : ""}`}
-              />
+              <FiRefreshCw className={refreshing ? "report-spin" : ""} />
 
               <span>{refreshing ? "Refreshing..." : "Refresh"}</span>
             </button>
 
-            {/* PRINT */}
-
             <button
               type="button"
               className="report-print-btn"
-              onClick={handlePrint}
+              onClick={() => window.print()}
             >
-              <i className="ti ti-printer" />
+              <FiPrinter />
 
-              <span>Print Report</span>
+              <span>Print</span>
             </button>
           </div>
         </header>
 
         {/* =====================================
-            BUSINESS CARD
+            BUSINESS HERO
         ====================================== */}
 
         <section className="report-business-card">
-          <div className="report-business-decoration report-decoration-one" />
+          <div className="report-business-glow report-business-glow-one" />
 
-          <div className="report-business-decoration report-decoration-two" />
+          <div className="report-business-glow report-business-glow-two" />
 
-          <div className="report-business-left">
+          <div className="report-business-main">
             <div className="report-business-icon">
-              <i className="ti ti-building-store" />
+              <FiShoppingBag />
             </div>
 
             <div className="report-business-info">
@@ -400,20 +502,20 @@ export default function Report() {
 
               <div className="report-business-meta">
                 <span>
-                  <i className="ti ti-user" />
+                  <FiUser />
 
                   {user?.name || "User"}
                 </span>
 
                 <span>
-                  <i className="ti ti-briefcase" />
+                  <FiBriefcase />
 
                   {userRole || "-"}
                 </span>
 
                 {user?.businessType && (
                   <span>
-                    <i className="ti ti-category" />
+                    <FiGrid />
 
                     {user.businessType}
                   </span>
@@ -422,75 +524,59 @@ export default function Report() {
             </div>
           </div>
 
-          <div className="report-date">
-            <span>REPORT DATE</span>
+          <div className="report-date-card">
+            <FiFileText />
 
-            <strong>{formatDate(new Date())}</strong>
+            <div>
+              <span>REPORT DATE</span>
+
+              <strong>{formatDate(new Date())}</strong>
+            </div>
           </div>
         </section>
 
         {/* =====================================
-            FINANCIAL SUMMARY
+            SUMMARY
         ====================================== */}
 
         <section className="report-summary-grid">
-          <div className="report-summary-card report-summary-blue">
-            <div className="report-summary-icon">
-              <i className="ti ti-wallet" />
-            </div>
+          <SummaryCard
+            tone="blue"
+            Icon={FiCreditCard}
+            label={isRetailer ? "Total Purchase Value" : "Total Sales Value"}
+            value={formatCurrency(payments.totalOrderValue)}
+            helper={`${safeNumber(orders.total).toLocaleString(
+              "en-IN",
+            )} total orders`}
+          />
 
-            <div>
-              <span>
-                {isRetailer ? "Total Purchase Value" : "Total Sales Value"}
-              </span>
+          <SummaryCard
+            tone="green"
+            Icon={FiCheckCircle}
+            label="Total Paid"
+            value={formatCurrency(payments.totalPaidAmount)}
+            helper={`${safeNumber(payments.paidOrders).toLocaleString(
+              "en-IN",
+            )} fully paid orders`}
+          />
 
-              <h2>{formatCurrency(payments.totalOrderValue)}</h2>
+          <SummaryCard
+            tone="orange"
+            Icon={FiClock}
+            label={isRetailer ? "Amount To Pay" : "Amount To Receive"}
+            value={formatCurrency(payments.totalPendingAmount)}
+            helper="Pending settlement"
+          />
 
-              <p>Across {orders.total || 0} orders</p>
-            </div>
-          </div>
-
-          <div className="report-summary-card report-summary-green">
-            <div className="report-summary-icon">
-              <i className="ti ti-circle-check" />
-            </div>
-
-            <div>
-              <span>Total Paid</span>
-
-              <h2>{formatCurrency(payments.totalPaidAmount)}</h2>
-
-              <p>{payments.paidOrders || 0} fully paid orders</p>
-            </div>
-          </div>
-
-          <div className="report-summary-card report-summary-orange">
-            <div className="report-summary-icon">
-              <i className="ti ti-clock" />
-            </div>
-
-            <div>
-              <span>{isRetailer ? "Amount To Pay" : "Amount To Receive"}</span>
-
-              <h2>{formatCurrency(payments.totalPendingAmount)}</h2>
-
-              <p>Pending settlement</p>
-            </div>
-          </div>
-
-          <div className="report-summary-card report-summary-purple">
-            <div className="report-summary-icon">
-              <i className="ti ti-package" />
-            </div>
-
-            <div>
-              <span>Stock Value</span>
-
-              <h2>{formatCurrency(stock.sellingValue)}</h2>
-
-              <p>{stock.totalProducts || 0} products</p>
-            </div>
-          </div>
+          <SummaryCard
+            tone="purple"
+            Icon={FiPackage}
+            label="Stock Value"
+            value={formatCurrency(stock.sellingValue)}
+            helper={`${safeNumber(stock.totalProducts).toLocaleString(
+              "en-IN",
+            )} products`}
+          />
         </section>
 
         {/* =====================================
@@ -508,58 +594,46 @@ export default function Report() {
             </div>
 
             <div className="report-section-icon">
-              <i className="ti ti-shopping-cart" />
+              <FiShoppingCart />
             </div>
           </div>
 
           <div className="report-order-grid">
-            <div className="report-mini-card">
-              <span>Total Orders</span>
+            <StatusTile label="Total Orders" value={orders.total} />
 
-              <strong>{orders.total || 0}</strong>
-            </div>
+            <StatusTile label="Pending" value={orders.pending} tone="warning" />
 
-            <div className="report-mini-card report-mini-warning">
-              <span>Pending</span>
+            <StatusTile label="Approved" value={orders.approved} tone="info" />
 
-              <strong>{orders.pending || 0}</strong>
-            </div>
+            <StatusTile
+              label="Processing"
+              value={orders.processing}
+              tone="purple"
+            />
 
-            <div className="report-mini-card report-mini-info">
-              <span>Approved</span>
+            <StatusTile
+              label="On The Way"
+              value={orders.onTheWay}
+              tone="blue"
+            />
 
-              <strong>{orders.approved || 0}</strong>
-            </div>
+            <StatusTile
+              label="Delivered"
+              value={orders.delivered}
+              tone="success"
+            />
 
-            <div className="report-mini-card report-mini-purple">
-              <span>Processing</span>
+            <StatusTile
+              label="Completed"
+              value={orders.completed}
+              tone="success"
+            />
 
-              <strong>{orders.processing || 0}</strong>
-            </div>
-
-            <div className="report-mini-card report-mini-blue">
-              <span>On The Way</span>
-
-              <strong>{orders.onTheWay || 0}</strong>
-            </div>
-
-            <div className="report-mini-card report-mini-success">
-              <span>Delivered</span>
-
-              <strong>{orders.delivered || 0}</strong>
-            </div>
-
-            <div className="report-mini-card report-mini-success">
-              <span>Completed</span>
-
-              <strong>{orders.completed || 0}</strong>
-            </div>
-
-            <div className="report-mini-card report-mini-danger">
-              <span>Rejected</span>
-
-              <strong>{orders.rejected || 0}</strong>
-            </div>
+            <StatusTile
+              label="Rejected"
+              value={orders.rejected}
+              tone="danger"
+            />
           </div>
         </section>
 
@@ -570,81 +644,98 @@ export default function Report() {
         <div className="report-two-column">
           {/* PAYMENT */}
 
-          <section className="report-section">
+          <section className="report-section report-detail-section">
             <div className="report-section-header">
               <div>
                 <span className="report-section-label">FINANCE</span>
 
                 <h2>Payment Summary</h2>
 
-                <p>Payment performance</p>
+                <p>Current payment position</p>
               </div>
 
               <div className="report-section-icon report-green-icon">
-                <i className="ti ti-currency-rupee" />
+                <span className="report-rupee-icon">₹</span>
               </div>
             </div>
 
+            <div className="report-progress-card">
+              <div className="report-progress-heading">
+                <div>
+                  <span>Payment completion</span>
+
+                  <strong>{paymentProgress}%</strong>
+                </div>
+
+                <FiActivity />
+              </div>
+
+              <div className="report-progress-track">
+                <span
+                  style={{
+                    width: `${paymentProgress}%`,
+                  }}
+                />
+              </div>
+
+              <p>
+                {formatCurrency(payments.totalPaidAmount)} paid from{" "}
+                {formatCurrency(payments.totalOrderValue)}
+              </p>
+            </div>
+
             <div className="report-detail-list">
-              <div className="report-detail-row">
-                <span>Total Order Value</span>
+              <DetailRow
+                label="Total Order Value"
+                value={formatCurrency(payments.totalOrderValue)}
+              />
 
-                <strong>{formatCurrency(payments.totalOrderValue)}</strong>
-              </div>
+              <DetailRow
+                label="Amount Paid"
+                value={formatCurrency(payments.totalPaidAmount)}
+                className="report-green"
+              />
 
-              <div className="report-detail-row">
-                <span>Amount Paid</span>
+              <DetailRow
+                label={isRetailer ? "Amount To Pay" : "Amount To Receive"}
+                value={formatCurrency(payments.totalPendingAmount)}
+                className="report-orange"
+              />
 
-                <strong className="report-green">
-                  {formatCurrency(payments.totalPaidAmount)}
-                </strong>
-              </div>
+              <DetailRow
+                label="Advance Paid"
+                value={formatCurrency(payments.totalAdvancePaid)}
+              />
 
-              <div className="report-detail-row">
-                <span>
-                  {isRetailer ? "Amount To Pay" : "Amount To Receive"}
-                </span>
+              <DetailRow
+                label="Fully Paid Amount"
+                value={formatCurrency(payments.fullyPaidAmount)}
+              />
 
-                <strong className="report-orange">
-                  {formatCurrency(payments.totalPendingAmount)}
-                </strong>
-              </div>
+              <DetailRow
+                label="Paid Orders"
+                value={safeNumber(payments.paidOrders).toLocaleString("en-IN")}
+              />
 
-              <div className="report-detail-row">
-                <span>Advance Paid</span>
+              <DetailRow
+                label="Partially Paid"
+                value={safeNumber(payments.partiallyPaidOrders).toLocaleString(
+                  "en-IN",
+                )}
+              />
 
-                <strong>{formatCurrency(payments.totalAdvancePaid)}</strong>
-              </div>
-
-              <div className="report-detail-row">
-                <span>Fully Paid Amount</span>
-
-                <strong>{formatCurrency(payments.fullyPaidAmount)}</strong>
-              </div>
-
-              <div className="report-detail-row">
-                <span>Paid Orders</span>
-
-                <strong>{payments.paidOrders || 0}</strong>
-              </div>
-
-              <div className="report-detail-row">
-                <span>Partially Paid</span>
-
-                <strong>{payments.partiallyPaidOrders || 0}</strong>
-              </div>
-
-              <div className="report-detail-row">
-                <span>Unpaid Orders</span>
-
-                <strong>{payments.unpaidOrders || 0}</strong>
-              </div>
+              <DetailRow
+                label="Unpaid Orders"
+                value={safeNumber(payments.unpaidOrders).toLocaleString(
+                  "en-IN",
+                )}
+              />
             </div>
           </section>
 
           {/* INVENTORY */}
 
-          <section className="report-section">
+          <section className="report-section report-detail-section">
             <div className="report-section-header">
               <div>
                 <span className="report-section-label">INVENTORY</span>
@@ -655,58 +746,79 @@ export default function Report() {
               </div>
 
               <div className="report-section-icon report-orange-icon">
-                <i className="ti ti-box" />
+                <FiBox />
               </div>
             </div>
 
+            <div className="report-progress-card report-stock-progress">
+              <div className="report-progress-heading">
+                <div>
+                  <span>Product availability</span>
+
+                  <strong>{stockAvailability}%</strong>
+                </div>
+
+                <FiPackage />
+              </div>
+
+              <div className="report-progress-track">
+                <span
+                  style={{
+                    width: `${stockAvailability}%`,
+                  }}
+                />
+              </div>
+
+              <p>
+                {safeNumber(stock.outOfStockProducts).toLocaleString("en-IN")}{" "}
+                products currently out of stock
+              </p>
+            </div>
+
             <div className="report-detail-list">
-              <div className="report-detail-row">
-                <span>Total Products</span>
+              <DetailRow
+                label="Total Products"
+                value={safeNumber(stock.totalProducts).toLocaleString("en-IN")}
+              />
 
-                <strong>{stock.totalProducts || 0}</strong>
-              </div>
+              <DetailRow
+                label="Total Stock Quantity"
+                value={safeNumber(stock.totalStockQuantity).toLocaleString(
+                  "en-IN",
+                )}
+              />
 
-              <div className="report-detail-row">
-                <span>Total Stock Quantity</span>
+              <DetailRow
+                label="Low Stock Products"
+                value={safeNumber(stock.lowStockProducts).toLocaleString(
+                  "en-IN",
+                )}
+                className="report-orange"
+              />
 
-                <strong>{stock.totalStockQuantity || 0}</strong>
-              </div>
+              <DetailRow
+                label="Out Of Stock"
+                value={safeNumber(stock.outOfStockProducts).toLocaleString(
+                  "en-IN",
+                )}
+                className="report-red"
+              />
 
-              <div className="report-detail-row">
-                <span>Low Stock Products</span>
+              <DetailRow
+                label="Purchase Value"
+                value={formatCurrency(stock.purchaseValue)}
+              />
 
-                <strong className="report-orange">
-                  {stock.lowStockProducts || 0}
-                </strong>
-              </div>
+              <DetailRow
+                label="Selling Value"
+                value={formatCurrency(stock.sellingValue)}
+              />
 
-              <div className="report-detail-row">
-                <span>Out Of Stock</span>
-
-                <strong className="report-red">
-                  {stock.outOfStockProducts || 0}
-                </strong>
-              </div>
-
-              <div className="report-detail-row">
-                <span>Purchase Value</span>
-
-                <strong>{formatCurrency(stock.purchaseValue)}</strong>
-              </div>
-
-              <div className="report-detail-row">
-                <span>Selling Value</span>
-
-                <strong>{formatCurrency(stock.sellingValue)}</strong>
-              </div>
-
-              <div className="report-detail-row">
-                <span>Estimated Stock Profit</span>
-
-                <strong className="report-green">
-                  {formatCurrency(stock.estimatedProfit)}
-                </strong>
-              </div>
+              <DetailRow
+                label="Estimated Stock Profit"
+                value={formatCurrency(stock.estimatedProfit)}
+                className="report-green"
+              />
             </div>
           </section>
         </div>
@@ -715,35 +827,38 @@ export default function Report() {
             REVIEWS + LEDGER
         ====================================== */}
 
-        <div className="report-two-column">
-          <section className="report-section report-small-section">
-            <div className="report-stat-icon report-yellow-icon">
-              <i className="ti ti-star" />
+        <div className="report-insight-grid">
+          <section className="report-insight-card report-review-card">
+            <div className="report-insight-icon">
+              <FiStar />
             </div>
 
-            <div>
+            <div className="report-insight-copy">
               <span>REVIEWS</span>
 
-              <h2>{reviews.total || 0}</h2>
+              <strong>
+                {safeNumber(reviews.total).toLocaleString("en-IN")}
+              </strong>
 
               <p>
-                Average Rating:{" "}
-                <strong>{reviews.averageRating || 0} / 5</strong>
+                Average rating <b>{safeNumber(reviews.averageRating)} / 5</b>
               </p>
             </div>
           </section>
 
-          <section className="report-section report-small-section">
-            <div className="report-stat-icon report-ledger-icon">
-              <i className="ti ti-book" />
+          <section className="report-insight-card report-ledger-card">
+            <div className="report-insight-icon">
+              <FiBookOpen />
             </div>
 
-            <div>
+            <div className="report-insight-copy">
               <span>LEDGER ENTRIES</span>
 
-              <h2>{ledger.totalEntries || 0}</h2>
+              <strong>
+                {safeNumber(ledger.totalEntries).toLocaleString("en-IN")}
+              </strong>
 
-              <p>Total ledger transactions recorded</p>
+              <p>Total recorded ledger entries</p>
             </div>
           </section>
         </div>
@@ -763,14 +878,14 @@ export default function Report() {
             </div>
 
             <div className="report-section-icon">
-              <i className="ti ti-history" />
+              <FiClock  />
             </div>
           </div>
 
           {recentOrders.length === 0 ? (
             <div className="report-empty">
               <div className="report-empty-icon">
-                <i className="ti ti-file-off" />
+                <FiFileText />
               </div>
 
               <h3>No orders found</h3>
@@ -792,7 +907,7 @@ export default function Report() {
 
                     <th>Quantity</th>
 
-                    <th>Order Status</th>
+                    <th>Order</th>
 
                     <th>Payment</th>
 
@@ -801,8 +916,8 @@ export default function Report() {
                 </thead>
 
                 <tbody>
-                  {recentOrders.map((order) => (
-                    <tr key={order._id}>
+                  {recentOrders.map((order, index) => (
+                    <tr key={order._id || `${order.invoiceNumber}-${index}`}>
                       <td data-label="Invoice">
                         <span className="report-invoice">
                           {order.invoiceNumber || "-"}
@@ -820,7 +935,8 @@ export default function Report() {
                       <td data-label="Product">{order.productName || "-"}</td>
 
                       <td data-label="Quantity">
-                        {order.quantity || 0} {order.unit || ""}
+                        {safeNumber(order.quantity).toLocaleString("en-IN")}{" "}
+                        {order.unit || ""}
                       </td>
 
                       <td data-label="Order Status">
@@ -846,15 +962,12 @@ export default function Report() {
           )}
         </section>
 
-        {/* =====================================
-            FOOTER
-        ====================================== */}
-
         <footer className="report-footer">
-          <p>
-            Smart Khatabook Business Report • Generated on{" "}
-            {formatDate(new Date())}
-          </p>
+          <FiFileText />
+
+          <span>
+            Smart Khatabook Business Report • {formatDate(new Date())}
+          </span>
         </footer>
       </main>
     </div>
