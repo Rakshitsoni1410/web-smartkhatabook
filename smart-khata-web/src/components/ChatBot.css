@@ -1755,3 +1755,444 @@
       auto !important;
   }
 }
+/* =========================================================
+   AMAZON-STYLE FAQ
+   ========================================================= */
+
+.skb-faq-box {
+  margin:
+    8px
+    0
+    4px
+    31px;
+
+  overflow: hidden;
+
+  border:
+    1px solid
+    var(--chat-border);
+
+  border-radius: 14px;
+
+  background:
+    var(--chat-panel);
+}
+
+.skb-faq-heading {
+  padding:
+    11px
+    12px
+    8px;
+
+  color:
+    var(--chat-text);
+
+  font-size: 10px;
+
+  font-weight: 900;
+}
+
+/* =========================================================
+   FAQ TABS
+   ========================================================= */
+
+.skb-faq-tabs {
+  padding:
+    0
+    10px
+    9px;
+
+  display: flex;
+
+  gap: 5px;
+
+  overflow-x: auto;
+
+  scrollbar-width: none;
+}
+
+.skb-faq-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.skb-faq-tab {
+  flex-shrink: 0;
+
+  min-height: 28px;
+
+  padding:
+    5px
+    9px;
+
+  border:
+    1px solid
+    var(--chat-border);
+
+  border-radius: 20px;
+
+  background:
+    var(--chat-soft);
+
+  color:
+    var(--chat-muted);
+
+  font-family: inherit;
+
+  font-size: 8px;
+
+  font-weight: 800;
+
+  cursor: pointer;
+}
+
+.skb-faq-tab--active {
+  border-color:
+    rgba(
+      99,
+      102,
+      241,
+      0.32
+    );
+
+  background:
+    var(--chat-primary-soft);
+
+  color:
+    var(--chat-primary);
+}
+
+/* =========================================================
+   FAQ QUESTIONS
+   ========================================================= */
+
+.skb-faq-list {
+  border-top:
+    1px solid
+    var(--chat-border-soft);
+}
+
+.skb-faq-question {
+  width: 100%;
+
+  min-height: 43px;
+
+  padding:
+    9px
+    12px;
+
+  border: none;
+
+  border-bottom:
+    1px solid
+    var(--chat-border-soft);
+
+  background:
+    transparent;
+
+  color:
+    var(--chat-text-2);
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content:
+    space-between;
+
+  gap: 10px;
+
+  font-family: inherit;
+
+  font-size: 9px;
+
+  font-weight: 600;
+
+  line-height: 1.4;
+
+  text-align: left;
+
+  cursor: pointer;
+
+  transition:
+    background 0.15s ease;
+}
+
+.skb-faq-question:last-child {
+  border-bottom: none;
+}
+
+.skb-faq-question:hover {
+  background:
+    var(--chat-hover);
+}
+
+.skb-faq-arrow {
+  flex-shrink: 0;
+
+  color:
+    var(--chat-primary);
+
+  font-size: 18px;
+
+  line-height: 1;
+}
+
+/* =========================================================
+   RELATED QUESTIONS
+   ========================================================= */
+
+.skb-related-box {
+  margin:
+    8px
+    0
+    4px
+    31px;
+}
+
+.skb-related-title {
+  margin-bottom: 6px;
+
+  color:
+    var(--chat-muted);
+
+  font-size: 8px;
+
+  font-weight: 900;
+}
+
+.skb-related-list {
+  display: flex;
+
+  flex-direction: column;
+
+  overflow: hidden;
+
+  border:
+    1px solid
+    var(--chat-border);
+
+  border-radius: 12px;
+
+  background:
+    var(--chat-panel);
+}
+
+.skb-related-list button {
+  width: 100%;
+
+  min-height: 38px;
+
+  padding:
+    8px
+    11px;
+
+  border: none;
+
+  border-bottom:
+    1px solid
+    var(--chat-border-soft);
+
+  background:
+    transparent;
+
+  color:
+    var(--chat-text-2);
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content:
+    space-between;
+
+  gap: 10px;
+
+  font-family: inherit;
+
+  font-size: 8.5px;
+
+  font-weight: 600;
+
+  line-height: 1.4;
+
+  text-align: left;
+
+  cursor: pointer;
+
+  transition:
+    background 0.15s ease;
+}
+
+.skb-related-list
+button:last-child {
+  border-bottom: none;
+}
+
+.skb-related-list
+button:hover {
+  background:
+    var(--chat-hover);
+}
+
+.skb-related-list
+button span {
+  flex-shrink: 0;
+
+  color:
+    var(--chat-primary);
+
+  font-size: 17px;
+}
+
+/* =========================================================
+   INPUT AUTO-SUGGESTIONS
+   ========================================================= */
+
+.skb-chat-input-area {
+  position: relative;
+}
+
+.skb-input-suggestions {
+  position: absolute;
+
+  left: 10px;
+  right: 10px;
+
+  bottom:
+    calc(
+      100% +
+      5px
+    );
+
+  z-index: 50;
+
+  overflow: hidden;
+
+  border:
+    1px solid
+    var(--chat-border);
+
+  border-radius: 12px;
+
+  background:
+    var(--chat-dropdown);
+
+  box-shadow:
+    0
+    -8px
+    30px
+    rgba(
+      15,
+      23,
+      42,
+      0.13
+    );
+}
+
+.skb-input-suggestions
+button {
+  width: 100%;
+
+  min-height: 40px;
+
+  padding:
+    8px
+    11px;
+
+  border: none;
+
+  border-bottom:
+    1px solid
+    var(--chat-border-soft);
+
+  background:
+    transparent;
+
+  color:
+    var(--chat-text-2);
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 8px;
+
+  font-family: inherit;
+
+  font-size: 9px;
+
+  font-weight: 600;
+
+  line-height: 1.4;
+
+  text-align: left;
+
+  cursor: pointer;
+}
+
+.skb-input-suggestions
+button:last-child {
+  border-bottom: none;
+}
+
+.skb-input-suggestions
+button:hover {
+  background:
+    var(--chat-hover);
+}
+
+.skb-input-suggestions svg {
+  width: 13px;
+  height: 13px;
+
+  flex-shrink: 0;
+
+  color:
+    var(--chat-primary);
+}
+
+/* =========================================================
+   MOBILE FAQ
+   ========================================================= */
+
+@media (
+  max-width: 520px
+) {
+  .skb-faq-box,
+  .skb-related-box {
+    margin-left: 29px;
+  }
+
+  .skb-faq-heading {
+    font-size: 9px;
+  }
+
+  .skb-faq-question {
+    font-size: 8.5px;
+  }
+
+  .skb-related-list button {
+    font-size: 8.5px;
+  }
+}
+
+/* =========================================================
+   VERY SMALL MOBILE
+   ========================================================= */
+
+@media (
+  max-width: 360px
+) {
+  .skb-faq-box,
+  .skb-related-box {
+    margin-left: 27px;
+  }
+
+  .skb-faq-tab {
+    padding:
+      5px
+      7px;
+
+    font-size: 7px;
+  }
+}
