@@ -9,7 +9,11 @@ export default defineConfig({
     VitePWA({
       registerType: "autoUpdate",
 
-      includeAssets: ["favicon.ico", "favicon-48.png", "apple-touch-icon.png"],
+      includeAssets: [
+        "favicon.ico",
+        "favicon-48.png",
+        "apple-touch-icon.png",
+      ],
 
       manifest: {
         id: "/",
@@ -33,7 +37,11 @@ export default defineConfig({
 
         orientation: "portrait-primary",
 
-        categories: ["business", "finance", "productivity"],
+        categories: [
+          "business",
+          "finance",
+          "productivity",
+        ],
 
         icons: [
           {
@@ -62,7 +70,68 @@ export default defineConfig({
       workbox: {
         cleanupOutdatedCaches: true,
 
+        skipWaiting: true,
+
+        clientsClaim: true,
+
         navigateFallback: "/index.html",
+
+        globPatterns: [
+          "**/*.{js,css,html,ico,png,svg,webp,woff,woff2}",
+        ],
+
+        runtimeCaching: [
+          {
+            urlPattern: ({ request }) =>
+              request.destination === "document",
+
+            handler: "NetworkFirst",
+
+            options: {
+              cacheName: "skb-pages",
+
+              networkTimeoutSeconds: 5,
+
+              expiration: {
+                maxEntries: 20,
+                maxAgeSeconds: 60 * 60 * 24,
+              },
+            },
+          },
+
+          {
+            urlPattern: ({ request }) =>
+              request.destination === "style" ||
+              request.destination === "script",
+
+            handler: "StaleWhileRevalidate",
+
+            options: {
+              cacheName: "skb-static-assets",
+
+              expiration: {
+                maxEntries: 60,
+                maxAgeSeconds: 60 * 60 * 24 * 7,
+              },
+            },
+          },
+
+          {
+            urlPattern: ({ request }) =>
+              request.destination === "image",
+
+            handler: "CacheFirst",
+
+            options: {
+              cacheName: "skb-images",
+
+              expiration: {
+                maxEntries: 80,
+                maxAgeSeconds: 60 * 60 * 24 * 30,
+              },
+            },
+          },
+        ],
       },
 
       devOptions: {
