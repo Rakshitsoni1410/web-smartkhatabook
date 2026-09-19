@@ -16,7 +16,7 @@ import {
 import api from "../api";
 
 import OnboardingTour from "../components/OnboardingTour";
-
+import InstallAppButton from "../components/InstallAppButton";
 import "./Login.css";
 
 // =====================================================
@@ -479,7 +479,11 @@ export default function Login() {
             </button>
           </div>
 
-          {/* FOOTER */}
+          {/* INSTALL APP */}
+
+          <InstallAppButton />
+
+          {/* SECURITY */}
 
           <div className="login-security-note">
             <FiLock />

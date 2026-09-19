@@ -1541,3 +1541,690 @@
       0.01ms !important;
   }
 }
+/* =========================================================
+   INSTALL APP
+   ========================================================= */
+
+.login-install-area {
+  width: 100%;
+
+  margin-top: 17px;
+}
+
+/* =========================================================
+   OR DIVIDER
+   ========================================================= */
+
+.login-install-divider {
+  margin-bottom: 13px;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 10px;
+}
+
+.login-install-divider::before,
+.login-install-divider::after {
+  content: "";
+
+  height: 1px;
+
+  flex: 1;
+
+  background:
+    var(--login-border);
+}
+
+.login-install-divider span {
+  flex-shrink: 0;
+
+  color:
+    var(--login-muted);
+
+  font-size: 8px;
+
+  font-weight: 800;
+
+  letter-spacing:
+    0.09em;
+}
+
+/* =========================================================
+   BUTTON
+   ========================================================= */
+
+.login-install-btn {
+  width: 100%;
+
+  min-height: 46px;
+
+  padding:
+    10px
+    15px;
+
+  border:
+    1.5px solid
+    var(--login-border);
+
+  border-radius: 11px;
+
+  background:
+    var(--login-card-soft);
+
+  color:
+    var(--login-text-2);
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 8px;
+
+  font-family: inherit;
+
+  font-size: 12px;
+
+  font-weight: 800;
+
+  cursor: pointer;
+
+  transition:
+    transform 0.16s ease,
+    border-color 0.16s ease,
+    background 0.16s ease,
+    box-shadow 0.16s ease;
+}
+
+.login-install-btn svg {
+  width: 16px;
+
+  height: 16px;
+
+  flex-shrink: 0;
+
+  color:
+    var(--login-primary);
+}
+
+.login-install-btn:hover:not(:disabled) {
+  transform:
+    translateY(-2px);
+
+  border-color:
+    var(--login-primary);
+
+  background:
+    var(--login-card);
+
+  box-shadow:
+    0 7px 20px
+    rgba(
+      37,
+      99,
+      235,
+      0.1
+    );
+}
+
+.login-install-btn:active:not(:disabled) {
+  transform:
+    translateY(0);
+}
+
+/* =========================================================
+   INSTALLED
+   ========================================================= */
+
+.login-install-btn-installed {
+  border-color:
+    rgba(
+      22,
+      163,
+      74,
+      0.3
+    );
+
+  background:
+    rgba(
+      22,
+      163,
+      74,
+      0.08
+    );
+
+  color:
+    #16a34a;
+}
+
+.login-install-btn-installed svg {
+  color:
+    #16a34a;
+}
+
+.login-install-btn:disabled {
+  cursor: default;
+
+  opacity: 1;
+}
+
+/* =========================================================
+   CAPTION
+   ========================================================= */
+
+.login-install-caption {
+  margin:
+    7px
+    0
+    0;
+
+  color:
+    var(--login-muted);
+
+  font-size: 8px;
+
+  line-height: 1.45;
+
+  text-align: center;
+}
+
+/* =========================================================
+   INSTALL MODAL OVERLAY
+   ========================================================= */
+
+.login-install-overlay {
+  position: fixed;
+
+  inset: 0;
+
+  z-index: 999999;
+
+  padding:
+    max(
+      18px,
+      env(
+        safe-area-inset-top
+      )
+    )
+    max(
+      18px,
+      env(
+        safe-area-inset-right
+      )
+    )
+    max(
+      18px,
+      env(
+        safe-area-inset-bottom
+      )
+    )
+    max(
+      18px,
+      env(
+        safe-area-inset-left
+      )
+    );
+
+  background:
+    rgba(
+      2,
+      6,
+      23,
+      0.68
+    );
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  backdrop-filter:
+    blur(7px);
+
+  -webkit-backdrop-filter:
+    blur(7px);
+
+  animation:
+    loginInstallOverlayIn
+    0.18s
+    ease;
+}
+
+@keyframes loginInstallOverlayIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+/* =========================================================
+   INSTALL MODAL
+   ========================================================= */
+
+.login-install-modal {
+  position: relative;
+
+  width:
+    min(
+      100%,
+      390px
+    );
+
+  max-height:
+    calc(
+      100dvh -
+      36px
+    );
+
+  overflow-y: auto;
+
+  padding:
+    27px
+    24px
+    23px;
+
+  border:
+    1px solid
+    var(--login-border);
+
+  border-radius: 20px;
+
+  background:
+    var(--login-card);
+
+  color:
+    var(--login-text);
+
+  box-shadow:
+    0
+    28px
+    80px
+    rgba(
+      0,
+      0,
+      0,
+      0.3
+    );
+
+  animation:
+    loginInstallModalIn
+    0.22s
+    cubic-bezier(
+      0.2,
+      0.8,
+      0.2,
+      1
+    );
+}
+
+@keyframes loginInstallModalIn {
+  from {
+    opacity: 0;
+
+    transform:
+      translateY(12px)
+      scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+
+    transform:
+      translateY(0)
+      scale(1);
+  }
+}
+
+/* =========================================================
+   CLOSE
+   ========================================================= */
+
+.login-install-close {
+  position: absolute;
+
+  top: 12px;
+
+  right: 12px;
+
+  width: 34px;
+
+  height: 34px;
+
+  padding: 0;
+
+  border:
+    1px solid
+    var(--login-border);
+
+  border-radius: 10px;
+
+  background:
+    var(--login-card-soft);
+
+  color:
+    var(--login-text-2);
+
+  display: grid;
+
+  place-items: center;
+
+  cursor: pointer;
+}
+
+.login-install-close svg {
+  width: 16px;
+
+  height: 16px;
+}
+
+/* =========================================================
+   MODAL ICON
+   ========================================================= */
+
+.login-install-modal-icon {
+  width: 52px;
+
+  height: 52px;
+
+  margin-bottom: 16px;
+
+  border-radius: 14px;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(
+        37,
+        99,
+        235,
+        0.13
+      ),
+      rgba(
+        99,
+        102,
+        241,
+        0.1
+      )
+    );
+
+  color:
+    var(--login-primary);
+
+  display: grid;
+
+  place-items: center;
+}
+
+.login-install-modal-icon svg {
+  width: 23px;
+
+  height: 23px;
+}
+
+/* =========================================================
+   MODAL TEXT
+   ========================================================= */
+
+.login-install-modal h3 {
+  margin:
+    0
+    0
+    7px;
+
+  color:
+    var(--login-text);
+
+  font-size: 19px;
+
+  font-weight: 800;
+
+  letter-spacing:
+    -0.025em;
+}
+
+.login-install-modal
+> p {
+  margin:
+    0
+    0
+    20px;
+
+  color:
+    var(--login-muted);
+
+  font-size: 11px;
+
+  line-height: 1.65;
+}
+
+/* =========================================================
+   STEPS
+   ========================================================= */
+
+.login-install-steps {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 11px;
+}
+
+.login-install-steps
+> div {
+  padding:
+    11px
+    12px;
+
+  border:
+    1px solid
+    var(--login-border);
+
+  border-radius: 12px;
+
+  background:
+    var(--login-card-soft);
+
+  display: flex;
+
+  align-items: flex-start;
+
+  gap: 10px;
+}
+
+.login-install-steps
+> div
+> span {
+  width: 25px;
+
+  height: 25px;
+
+  flex:
+    0 0
+    25px;
+
+  border-radius: 50%;
+
+  background:
+    linear-gradient(
+      135deg,
+      var(
+        --login-primary
+      ),
+      #2563eb
+    );
+
+  color: #ffffff;
+
+  display: grid;
+
+  place-items: center;
+
+  font-size: 9px;
+
+  font-weight: 800;
+}
+
+.login-install-steps p {
+  margin: 3px 0 0;
+
+  color:
+    var(--login-text-2);
+
+  font-size: 10px;
+
+  line-height: 1.55;
+}
+
+.login-install-steps strong {
+  color:
+    var(--login-text);
+
+  font-weight: 800;
+}
+
+/* =========================================================
+   DONE
+   ========================================================= */
+
+.login-install-done {
+  width: 100%;
+
+  min-height: 43px;
+
+  margin-top: 18px;
+
+  border: none;
+
+  border-radius: 11px;
+
+  background:
+    linear-gradient(
+      135deg,
+      var(
+        --login-primary
+      ),
+      #2563eb
+    );
+
+  color: #ffffff;
+
+  font-family: inherit;
+
+  font-size: 11px;
+
+  font-weight: 800;
+
+  cursor: pointer;
+}
+
+/* =========================================================
+   MOBILE INSTALL
+   ========================================================= */
+
+@media (
+  max-width: 500px
+) {
+  .login-install-area {
+    margin-top: 18px;
+  }
+
+  .login-install-btn {
+    min-height: 49px;
+
+    font-size: 12px;
+  }
+
+  .login-install-overlay {
+    align-items: flex-end;
+
+    padding:
+      10px
+      10px
+      max(
+        10px,
+        env(
+          safe-area-inset-bottom
+        )
+      );
+  }
+
+  .login-install-modal {
+    width: 100%;
+
+    max-height:
+      calc(
+        100dvh -
+        20px
+      );
+
+    padding:
+      25px
+      19px
+      20px;
+
+    border-radius:
+      20px
+      20px
+      14px
+      14px;
+  }
+}
+
+/* =========================================================
+   SMALL MOBILE
+   ========================================================= */
+
+@media (
+  max-width: 350px
+) {
+  .login-install-modal {
+    padding-left: 15px;
+
+    padding-right: 15px;
+  }
+
+  .login-install-steps
+  > div {
+    padding:
+      9px
+      10px;
+  }
+}
+
+/* =========================================================
+   TOUCH
+   ========================================================= */
+
+@media (
+  hover: none
+) {
+  .login-install-btn:hover:not(:disabled) {
+    transform: none;
+  }
+}
+
+/* =========================================================
+   REDUCED MOTION
+   ========================================================= */
+
+@media (
+  prefers-reduced-motion:
+    reduce
+) {
+  .login-install-overlay,
+  .login-install-modal,
+  .login-install-btn {
+    animation-duration:
+      0.01ms !important;
+
+    transition-duration:
+      0.01ms !important;
+  }
+}
