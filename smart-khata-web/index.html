@@ -1,69 +1,171 @@
-<!DOCTYPE html>
+<!doctype html>
 
-<html lang="en">
+<html lang="en-IN">
 
 <head>
+  <!-- =====================================================
+         BASIC DOCUMENT
+    ====================================================== -->
 
   <meta charset="UTF-8" />
 
-  <!-- LOGO -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 
-  <link rel="icon"  href="/logos.svg" />
-
-  <!-- MOBILE -->
-
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-  <!-- SEO -->
+  <!-- =====================================================
+         PRIMARY SEO
+    ====================================================== -->
 
   <title>
-    SmartKhataBooks | AI Powered ERP Platform
+    SmartKhataBook – Digital Khata, Inventory, Ledger & Business Management
   </title>
 
-  <meta name="title" content="SmartKhataBooks" />
-
   <meta name="description"
-    content="SmartKhataBooks is an AI powered ERP platform for retailers and wholesalers with inventory, ledger, payments, analytics and smart business management." />
+    content="SmartKhataBook is a digital business management platform for retailers and wholesalers. Manage inventory, stock, orders, employees, ledger, billing, reports and customer reviews from one place." />
 
-  <meta name="keywords"
-    content="ERP, SmartKhataBooks, Ledger, Inventory, Retail ERP, Wholesaler ERP, Business Management, AI ERP" />
+  <meta name="author" content="SmartKhataBook" />
 
-  <meta name="author" content="SmartKhataBooks" />
+  <meta name="application-name" content="SmartKhataBook" />
 
-  <meta name="robots" content="index, follow" />
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
 
-  <!-- THEME -->
+  <meta name="googlebot" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+
+  <!-- =====================================================
+         CANONICAL
+    ====================================================== -->
+
+  <link rel="canonical" href="https://smartkhatabooks.netlify.app/" />
+
+  <!-- =====================================================
+         FAVICONS
+
+         Put these files inside /public:
+         favicon.ico
+         favicon-48.png
+         apple-touch-icon.png
+    ====================================================== -->
+
+  <link rel="icon" href="/favicon.ico" sizes="any" />
+
+  <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48.png" />
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+
+  <!-- =====================================================
+         THEME / MOBILE
+    ====================================================== -->
 
   <meta name="theme-color" content="#4f46e5" />
 
-  <!-- OPEN GRAPH -->
+  <meta name="color-scheme" content="light dark" />
+
+  <meta name="format-detection" content="telephone=no" />
+
+  <!-- =====================================================
+         OPEN GRAPH
+    ====================================================== -->
 
   <meta property="og:type" content="website" />
 
-  <meta property="og:title" content="SmartKhataBooks" />
+  <meta property="og:site_name" content="SmartKhataBook" />
 
-  <meta property="og:description" content="AI Powered ERP Platform for Retailers & Wholesalers." />
+  <meta property="og:locale" content="en_IN" />
 
-  <meta property="og:image" content="/logo.png" />
+  <meta property="og:title" content="SmartKhataBook – Digital Khata & Business Management" />
 
-  <!-- TWITTER -->
+  <meta property="og:description"
+    content="Manage stock, inventory, orders, employees, digital ledger, billing, reports and customer reviews with SmartKhataBook." />
+
+  <meta property="og:url" content="https://smartkhatabooks.netlify.app/" />
+
+  <meta property="og:image" content="https://smartkhatabooks.netlify.app/og-image.png" />
+
+  <meta property="og:image:secure_url" content="https://smartkhatabooks.netlify.app/og-image.png" />
+
+  <meta property="og:image:type" content="image/png" />
+
+  <meta property="og:image:width" content="1200" />
+
+  <meta property="og:image:height" content="630" />
+
+  <meta property="og:image:alt" content="SmartKhataBook digital business management platform" />
+
+  <!-- =====================================================
+         TWITTER / X
+    ====================================================== -->
 
   <meta name="twitter:card" content="summary_large_image" />
 
-  <meta name="twitter:title" content="SmartKhataBooks" />
+  <meta name="twitter:title" content="SmartKhataBook – Digital Khata & Business Management" />
 
-  <meta name="twitter:description" content="AI Powered ERP Platform for smart business management." />
+  <meta name="twitter:description"
+    content="Inventory, orders, employees, ledger, billing and business reports for retailers and wholesalers." />
 
-  <meta name="twitter:image" content="/logo.png" />
+  <meta name="twitter:image" content="https://smartkhatabooks.netlify.app/og-image.png" />
 
+  <meta name="twitter:image:alt" content="SmartKhataBook business management platform" />
+
+  <!-- =====================================================
+         WEBSITE STRUCTURED DATA
+    ====================================================== -->
+
+  <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "@id": "https://smartkhatabooks.netlify.app/#website",
+        "url": "https://smartkhatabooks.netlify.app/",
+        "name": "SmartKhataBook",
+        "alternateName": [
+          "Smart Khata Book",
+          "SmartKhatabook",
+          "SmartKhataBooks"
+        ],
+        "description": "Digital business management platform for retailers and wholesalers."
+      }
+    </script>
+
+  <!-- =====================================================
+         ORGANIZATION STRUCTURED DATA
+    ====================================================== -->
+
+  <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "@id": "https://smartkhatabooks.netlify.app/#organization",
+        "name": "SmartKhataBook",
+        "alternateName": "Smart Khata Book",
+        "url": "https://smartkhatabooks.netlify.app/",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://smartkhatabooks.netlify.app/logo-512.png",
+          "width": 512,
+          "height": 512
+        },
+        "description": "SmartKhataBook provides digital inventory, ledger, order, employee, billing and business management tools for retailers and wholesalers."
+      }
+    </script>
+
+  <!-- =====================================================
+         CONNECTION HINTS
+    ====================================================== -->
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 </head>
 
 <body>
+  <noscript>
+    SmartKhataBook requires JavaScript to run. SmartKhataBook helps
+    retailers and wholesalers manage inventory, stock, orders, employees,
+    ledger, billing and business reports.
+  </noscript>
 
   <div id="root"></div>
 
   <script type="module" src="/src/main.jsx"></script>
-
 </body>
 
 </html>
