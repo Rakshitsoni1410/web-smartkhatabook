@@ -36,19 +36,19 @@ Smart Khata includes secure authentication and session handling.
 
 Features:
 
-* User Registration
-* User Login
-* Phone / Email Login Support
-* Retailer Login
-* Wholesaler Login
-* Customer Role Support
-* JWT Authentication
-* Protected Routes
-* Role-Based Access
-* Forgot Password
-* Reset Password
-* Automatic Logout on Expired Session
-* Single Active Session Support
+- User Registration
+- User Login
+- Phone / Email Login Support
+- Retailer Login
+- Wholesaler Login
+- Customer Role Support
+- JWT Authentication
+- Protected Routes
+- Role-Based Access
+- Forgot Password
+- Reset Password
+- Automatic Logout on Expired Session
+- Single Active Session Support
 
 ### Single Session Login
 
@@ -74,9 +74,9 @@ Laptop Automatically Logs Out
 
 The application supports:
 
-* Retailer
-* Wholesaler
-* Customer
+- Retailer
+- Wholesaler
+- Customer
 
 Different screens and actions are available depending on the logged-in user's role.
 
@@ -88,14 +88,14 @@ The dashboard provides an overview of business activity.
 
 Features include:
 
-* Business Summary
-* Product Statistics
-* Order Summary
-* Inventory Information
-* Employee Information
-* Recent Activity
-* Business Cards
-* Clean Responsive UI
+- Business Summary
+- Product Statistics
+- Order Summary
+- Inventory Information
+- Employee Information
+- Recent Activity
+- Business Cards
+- Clean Responsive UI
 
 ---
 
@@ -105,17 +105,17 @@ Wholesalers can manage their products and stock.
 
 Features:
 
-* Add Product
-* Edit Product
-* Delete Product
-* View Products
-* Search Products
-* Product Categories
-* Selling Price
-* Stock Quantity
-* Stock Availability
-* Low Stock Information
-* Inventory Management
+- Add Product
+- Edit Product
+- Delete Product
+- View Products
+- Search Products
+- Product Categories
+- Selling Price
+- Stock Quantity
+- Stock Availability
+- Low Stock Information
+- Inventory Management
 
 ---
 
@@ -143,17 +143,17 @@ Completed
 
 Supported frontend actions include:
 
-* Place Order
-* View All Orders
-* Filter Orders by Status
-* View Order Details
-* Approve Order
-* Reject Order
-* Mark Order On The Way
-* Mark Order Delivered
-* Request Advance Payment
-* Request Final Payment
-* Complete Payment
+- Place Order
+- View All Orders
+- Filter Orders by Status
+- View Order Details
+- Approve Order
+- Reject Order
+- Mark Order On The Way
+- Mark Order Delivered
+- Request Advance Payment
+- Request Final Payment
+- Complete Payment
 
 ---
 
@@ -185,12 +185,12 @@ The frontend displays the selected order and wholesaler information.
 
 Selection can consider:
 
-* Product Availability
-* Required Quantity
-* Selling Price
-* Stock
-* Rating
-* Reviews
+- Product Availability
+- Required Quantity
+- Selling Price
+- Stock
+- Rating
+- Reviews
 
 ---
 
@@ -202,9 +202,9 @@ No real money is transferred.
 
 Supported demo payment methods:
 
-* UPI
-* Card
-* Net Banking
+- UPI
+- Card
+- Net Banking
 
 Example flow:
 
@@ -238,11 +238,11 @@ The payment gateway is for **testing and academic demonstration only**.
 
 Users should never enter real:
 
-* UPI PIN
-* CVV
-* Bank Password
-* Real Card Credentials
-* Real Banking Information
+- UPI PIN
+- CVV
+- Bank Password
+- Real Card Credentials
+- Real Banking Information
 
 The frontend clearly displays **TEST MODE / Demo Payment Gateway**.
 
@@ -268,10 +268,10 @@ Order Moves to Processing
 
 The frontend shows:
 
-* Advance Percentage
-* Advance Amount
-* Remaining Amount
-* Payment Status
+- Advance Percentage
+- Advance Amount
+- Remaining Amount
+- Payment Status
 
 ---
 
@@ -301,13 +301,13 @@ Demo payment information can be stored with the order.
 
 Payment information includes:
 
-* Transaction ID
-* Payment Method
-* Payment Type
-* Amount
-* Payment Status
-* Payment Date
-* Mock Payment Flag
+- Transaction ID
+- Payment Method
+- Payment Type
+- Amount
+- Payment Status
+- Payment Date
+- Mock Payment Flag
 
 Example:
 
@@ -371,15 +371,15 @@ Retailers only see bills that have been sent by the wholesaler.
 
 Retailer billing includes:
 
-* Invoice Number
-* Wholesaler Name
-* Product
-* Quantity
-* Amount
-* Order Status
-* Payment Status
-* Bill Date
-* Download Bill
+- Invoice Number
+- Wholesaler Name
+- Product
+- Quantity
+- Amount
+- Order Status
+- Payment Status
+- Bill Date
+- Download Bill
 
 Example:
 
@@ -402,24 +402,24 @@ The frontend includes a bill generation component.
 
 Users can:
 
-* Generate Bill
-* Preview Bill
-* Print Bill
-* Save Bill as PDF using browser print
-* Download/View Invoice Information
+- Generate Bill
+- Preview Bill
+- Print Bill
+- Save Bill as PDF using browser print
+- Download/View Invoice Information
 
 Invoice data includes:
 
-* Business Name
-* Customer Name
-* Invoice Number
-* Product
-* Quantity
-* Price Per Unit
-* Total
-* Payment Status
-* Order Status
-* Date
+- Business Name
+- Customer Name
+- Invoice Number
+- Product
+- Quantity
+- Price Per Unit
+- Total
+- Payment Status
+- Order Status
+- Date
 
 ---
 
@@ -429,13 +429,13 @@ Smart Khata includes digital ledger screens.
 
 Ledger functionality can display:
 
-* Debit Entries
-* Credit Entries
-* Orders
-* Advance Payments
-* Final Payments
-* Transaction Notes
-* Business Parties
+- Debit Entries
+- Credit Entries
+- Orders
+- Advance Payments
+- Final Payments
+- Transaction Notes
+- Business Parties
 
 This allows retailers and wholesalers to track financial activity.
 
@@ -447,14 +447,14 @@ The frontend includes employee-management functionality.
 
 Features include:
 
-* Add Employee
-* View Employees
-* Edit Employee
-* Delete Employee
-* Employee Details
-* Salary Information
-* Pending Salary Tracking
-* Employee Payment Information
+- Add Employee
+- View Employees
+- Edit Employee
+- Delete Employee
+- Employee Details
+- Salary Information
+- Pending Salary Tracking
+- Employee Payment Information
 
 ---
 
@@ -464,10 +464,10 @@ Smart Khata includes review functionality.
 
 Users can:
 
-* Add Reviews
-* View Reviews
-* View Ratings
-* Review Business Interactions
+- Add Reviews
+- View Reviews
+- View Ratings
+- Review Business Interactions
 
 ---
 
@@ -477,13 +477,13 @@ The application includes a dedicated Reports section.
 
 Reports can display:
 
-* Orders
-* Recent Orders
-* Payment Status
-* Stock Information
-* Reviews
-* Ledger Activity
-* Business Performance Information
+- Orders
+- Recent Orders
+- Payment Status
+- Stock Information
+- Reviews
+- Ledger Activity
+- Business Performance Information
 
 Route:
 
@@ -499,11 +499,11 @@ Smart Khata includes a customer portal.
 
 Customer functionality can include:
 
-* Customer Account Information
-* Ledger Information
-* Transaction History
-* Business Data
-* Customer-Specific Records
+- Customer Account Information
+- Ledger Information
+- Transaction History
+- Business Data
+- Customer-Specific Records
 
 ---
 
@@ -513,14 +513,14 @@ The application uses visual states and toast messages for user feedback.
 
 Examples:
 
-* Payment Successful
-* Payment Failed
-* Order Updated
-* Bill Sent
-* Advance Requested
-* Final Payment Requested
-* Authentication Error
-* Session Expired
+- Payment Successful
+- Payment Failed
+- Order Updated
+- Bill Sent
+- Advance Requested
+- Final Payment Requested
+- Authentication Error
+- Session Expired
 
 ---
 
@@ -528,15 +528,15 @@ Examples:
 
 Frontend security features include:
 
-* JWT Token Storage
-* Automatic Token Attachment to API Requests
-* Protected Routes
-* Role Checks
-* Automatic Logout on `401`
-* Session Expiry Detection
-* Old Session Logout
-* Login Security Integration
-* Centralized Axios API Configuration
+- JWT Token Storage
+- Automatic Token Attachment to API Requests
+- Protected Routes
+- Role Checks
+- Automatic Logout on `401`
+- Session Expiry Detection
+- Old Session Logout
+- Login Security Integration
+- Centralized Axios API Configuration
 
 ---
 
@@ -554,8 +554,7 @@ Example:
 
 ```js
 const api = axios.create({
-  baseURL:
-    "https://backend-of-smartkhata-book-vkcv.vercel.app",
+  baseURL: "https://backend-of-smartkhata-book-vkcv.vercel.app",
 });
 ```
 
@@ -582,15 +581,15 @@ Authentication tokens are automatically attached to requests.
 
 The frontend communicates with a backend built using:
 
-* Node.js
-* Express.js
-* MongoDB
-* Mongoose
-* JWT
-* bcrypt
-* Redis / Upstash
-* Cloudinary
-* Vercel
+- Node.js
+- Express.js
+- MongoDB
+- Mongoose
+- JWT
+- bcrypt
+- Redis / Upstash
+- Cloudinary
+- Vercel
 
 ---
 
@@ -751,10 +750,10 @@ Ledger / Billing / Reports Updated
 
 The Smart Khata web interface is designed to work across:
 
-* Desktop
-* Laptop
-* Tablet
-* Mobile Browser
+- Desktop
+- Laptop
+- Tablet
+- Mobile Browser
 
 Pages such as Billing, Orders, Payment Gateway, and Dashboard include responsive layouts.
 
@@ -770,13 +769,13 @@ https://github.com/Rakshitsoni1410/smartkhatabook
 
 The mobile application can be expanded to include:
 
-* Dashboard
-* Orders
-* Stock
-* Billing
-* Notifications
-* Ledger
-* Customer Portal
+- Dashboard
+- Orders
+- Stock
+- Billing
+- Notifications
+- Ledger
+- Customer Portal
 
 ---
 
@@ -784,20 +783,20 @@ The mobile application can be expanded to include:
 
 Potential future improvements include:
 
-* Real Payment Gateway Integration
-* Push Notifications
-* Real-Time Order Updates
-* WebSocket Notifications
-* GST Invoice Support
-* Advanced PDF Billing
-* Advanced Analytics
-* AI Demand Prediction
-* Multi-Language Support
-* Dark Mode
-* Multi-Shop Support
-* Admin Dashboard
-* Automated Payment Reminders
-* Advanced Business Insights
+- Real Payment Gateway Integration
+- Push Notifications
+- Real-Time Order Updates
+- WebSocket Notifications
+- GST Invoice Support
+- Advanced PDF Billing
+- Advanced Analytics
+- AI Demand Prediction
+- Multi-Language Support
+- Dark Mode
+- Multi-Shop Support
+- Admin Dashboard
+- Automated Payment Reminders
+- Advanced Business Insights
 
 ---
 
@@ -849,15 +848,15 @@ https://github.com/Rakshitsoni1410/smartkhatabook
 
 # ❤️ Built With
 
-* React.js
-* JavaScript
-* CSS
-* Axios
-* React Router
-* React Icons
-* Node.js
-* Express.js
-* MongoDB
+- React.js
+- JavaScript
+- CSS
+- Axios
+- React Router
+- React Icons
+- Node.js
+- Express.js
+- MongoDB
 
 ---
 
