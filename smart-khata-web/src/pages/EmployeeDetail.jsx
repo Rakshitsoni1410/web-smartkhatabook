@@ -56,6 +56,28 @@ const formatDate = (value) => {
 };
 
 // =====================================================
+// ATTENDANCE DATE HELPER
+// =====================================================
+
+const getDateKey = (value) => {
+  if (!value) {
+    return "";
+  }
+
+  const date = value instanceof Date ? value : new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+
+  return [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, "0"),
+    String(date.getDate()).padStart(2, "0"),
+  ].join("-");
+};
+
+// =====================================================
 // COMPONENT
 // =====================================================
 
@@ -144,9 +166,38 @@ export default function EmployeeDetail() {
   // ATTENDANCE
   // =====================================================
 
-  const attendance = Array.isArray(employee.attendance)
+  const rawAttendance = Array.isArray(employee.attendance)
     ? employee.attendance
     : [];
+
+  /*
+    Old data may already contain duplicate rows for the
+    same calendar day. For display and totals, keep only
+    the newest record for each day.
+  */
+  const attendanceByDay = new Map();
+
+  rawAttendance.forEach((item) => {
+    const dayKey = getDateKey(item?.date);
+
+    if (!dayKey) {
+      return;
+    }
+
+    const existing = attendanceByDay.get(dayKey);
+
+    const currentTime = new Date(item?.date).getTime();
+
+    const existingTime = existing ? new Date(existing?.date).getTime() : 0;
+
+    if (!existing || currentTime >= existingTime) {
+      attendanceByDay.set(dayKey, item);
+    }
+  });
+
+  const attendance = Array.from(attendanceByDay.values()).sort(
+    (a, b) => new Date(a?.date).getTime() - new Date(b?.date).getTime(),
+  );
 
   const presentCount = attendance.filter(
     (item) => item.status === "Present",
@@ -160,7 +211,13 @@ export default function EmployeeDetail() {
     (item) => !["Present", "Absent"].includes(item.status),
   ).length;
 
-  const latestAttendance = attendance[attendance.length - 1]?.status;
+  const todayKey = getDateKey(new Date());
+
+  const todayAttendance = attendance.find(
+    (item) => getDateKey(item?.date) === todayKey,
+  );
+
+  const latestAttendance = todayAttendance?.status || null;
 
   const initial = String(employee.name || "E")
     .trim()
@@ -250,13 +307,17 @@ export default function EmployeeDetail() {
                 className={
                   latestAttendance === "Present"
                     ? "ed-today-present"
-                    : "ed-today-absent"
+                    : latestAttendance === "Absent"
+                      ? "ed-today-absent"
+                      : "ed-today-neutral"
                 }
               >
                 {latestAttendance === "Present" ? (
                   <FiCheckCircle />
-                ) : (
+                ) : latestAttendance === "Absent" ? (
                   <FiXCircle />
+                ) : (
+                  <FiClock />
                 )}
                 Today: {latestAttendance || "Not Marked"}
               </span>
@@ -917,6 +978,12 @@ const styles = `
   .ed-today-absent {
     background:
       rgba(239,68,68,.17);
+  }
+
+  .ed-profile-meta
+  .ed-today-neutral {
+    background:
+      rgba(148,163,184,.17);
   }
 
   /* =========================================

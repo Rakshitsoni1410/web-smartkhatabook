@@ -1,12 +1,6 @@
-import {
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import { useEffect, useMemo, useState } from "react";
 
-import {
-  useNavigate,
-} from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 import {
   FiArrowLeft,
@@ -23,12 +17,9 @@ import {
   FiX,
 } from "react-icons/fi";
 
-import {
-  FaRupeeSign,
-} from "react-icons/fa";
+import { FaRupeeSign } from "react-icons/fa";
 
 import api from "../api";
-
 
 import "./Employee.css";
 // =====================================================
@@ -54,6 +45,50 @@ const formatMoney = (value) => {
 };
 
 // =====================================================
+// ATTENDANCE DATE HELPERS
+// =====================================================
+
+const getDateKey = (value) => {
+  if (!value) {
+    return "";
+  }
+
+  const date = value instanceof Date ? value : new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+
+  const year = date.getFullYear();
+
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+};
+
+const getTodayAttendance = (employee) => {
+  const attendance = Array.isArray(employee?.attendance)
+    ? employee.attendance
+    : [];
+
+  const todayKey = getDateKey(new Date());
+
+  // Search newest-to-oldest so old duplicate data
+  // still shows the latest saved status for today.
+  for (let index = attendance.length - 1; index >= 0; index -= 1) {
+    const item = attendance[index];
+
+    if (getDateKey(item?.date) === todayKey) {
+      return item;
+    }
+  }
+
+  return null;
+};
+
+// =====================================================
 // COMPONENT
 // =====================================================
 
@@ -64,57 +99,42 @@ export default function Employees() {
   // MAIN STATE
   // =====================================================
 
-  const [employees, setEmployees] =
-    useState([]);
+  const [employees, setEmployees] = useState([]);
 
-  const [search, setSearch] =
-    useState("");
+  const [search, setSearch] = useState("");
 
-  const [loading, setLoading] =
-    useState(true);
+  const [loading, setLoading] = useState(true);
 
-  const [error, setError] =
-    useState("");
+  const [error, setError] = useState("");
 
-  const [saving, setSaving] =
-    useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const [attendanceBusyId, setAttendanceBusyId] = useState(null);
 
   // =====================================================
   // ADD / EDIT MODAL
   // =====================================================
 
-  const [showModal, setShowModal] =
-    useState(false);
+  const [showModal, setShowModal] = useState(false);
 
-  const [editId, setEditId] =
-    useState(null);
+  const [editId, setEditId] = useState(null);
 
-  const [formData, setFormData] =
-    useState({
-      name: "",
-      phone: "",
-      category: "",
-      salary: "",
-    });
+  const [formData, setFormData] = useState({
+    name: "",
+    phone: "",
+    category: "",
+    salary: "",
+  });
 
   // =====================================================
   // PAYMENT MODAL
   // =====================================================
 
-  const [
-    showPaymentModal,
-    setShowPaymentModal,
-  ] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
-  const [
-    selectedEmployee,
-    setSelectedEmployee,
-  ] = useState(null);
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
 
-  const [
-    paymentData,
-    setPaymentData,
-  ] = useState({
+  const [paymentData, setPaymentData] = useState({
     amount: "",
     method: "Cash",
     note: "",
@@ -124,54 +144,37 @@ export default function Employees() {
   // DELETE MODAL
   // =====================================================
 
-  const [
-    showDeleteModal,
-    setShowDeleteModal,
-  ] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-  const [
-    deleteTarget,
-    setDeleteTarget,
-  ] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   // =====================================================
   // DARK MODE
   // =====================================================
 
-  const [darkMode, setDarkMode] =
-    useState(() => {
-      try {
-        const saved =
-          localStorage.getItem(
-            "smartkhata-theme"
-          );
+  const [darkMode, setDarkMode] = useState(() => {
+    try {
+      const saved = localStorage.getItem("smartkhata-theme");
 
-        if (saved === "dark") {
-          return true;
-        }
+      if (saved === "dark") {
+        return true;
+      }
 
-        if (saved === "light") {
-          return false;
-        }
-
-        return (
-          window.matchMedia?.(
-            "(prefers-color-scheme: dark)"
-          ).matches || false
-        );
-      } catch {
+      if (saved === "light") {
         return false;
       }
-    });
+
+      return (
+        window.matchMedia?.("(prefers-color-scheme: dark)").matches || false
+      );
+    } catch {
+      return false;
+    }
+  });
 
   useEffect(() => {
     try {
-      localStorage.setItem(
-        "smartkhata-theme",
-        darkMode
-          ? "dark"
-          : "light"
-      );
+      localStorage.setItem("smartkhata-theme", darkMode ? "dark" : "light");
     } catch {
       // ignore storage errors
     }
@@ -181,38 +184,25 @@ export default function Employees() {
   // FETCH EMPLOYEES
   // =====================================================
 
-  const fetchEmployees =
-    async () => {
-      try {
-        setLoading(true);
+  const fetchEmployees = async () => {
+    try {
+      setLoading(true);
 
-        setError("");
+      setError("");
 
-        const res =
-          await api.get(API);
+      const res = await api.get(API);
 
-        setEmployees(
-          Array.isArray(
-            res.data?.employees
-          )
-            ? res.data.employees
-            : []
-        );
-      } catch (err) {
-        console.error(
-          "EMPLOYEE FETCH ERROR:",
-          err
-        );
+      setEmployees(
+        Array.isArray(res.data?.employees) ? res.data.employees : [],
+      );
+    } catch (err) {
+      console.error("EMPLOYEE FETCH ERROR:", err);
 
-        setError(
-          err?.response?.data
-            ?.message ||
-            "Unable to load employees."
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
+      setError(err?.response?.data?.message || "Unable to load employees.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     fetchEmployees();
@@ -222,106 +212,64 @@ export default function Employees() {
   // FILTER
   // =====================================================
 
-  const filteredEmployees =
-    useMemo(() => {
-      const query =
-        search
-          .trim()
-          .toLowerCase();
+  const filteredEmployees = useMemo(() => {
+    const query = search.trim().toLowerCase();
 
-      if (!query) {
-        return employees;
-      }
+    if (!query) {
+      return employees;
+    }
 
-      return employees.filter(
-        (emp) =>
-          String(
-            emp?.name || ""
-          )
-            .toLowerCase()
-            .includes(query) ||
-          String(
-            emp?.phone || ""
-          )
-            .toLowerCase()
-            .includes(query) ||
-          String(
-            emp?.category || ""
-          )
-            .toLowerCase()
-            .includes(query)
-      );
-    }, [
-      employees,
-      search,
-    ]);
+    return employees.filter(
+      (emp) =>
+        String(emp?.name || "")
+          .toLowerCase()
+          .includes(query) ||
+        String(emp?.phone || "")
+          .toLowerCase()
+          .includes(query) ||
+        String(emp?.category || "")
+          .toLowerCase()
+          .includes(query),
+    );
+  }, [employees, search]);
 
   // =====================================================
   // SUMMARY
   // =====================================================
 
-  const summary =
-    useMemo(() => {
-      let totalSalary = 0;
-      let totalPaid = 0;
-      let present = 0;
+  const summary = useMemo(() => {
+    let totalSalary = 0;
+    let totalPaid = 0;
+    let present = 0;
 
-      employees.forEach(
-        (emp) => {
-          totalSalary +=
-            Number(
-              emp?.salary || 0
-            );
+    employees.forEach((emp) => {
+      totalSalary += Number(emp?.salary || 0);
 
-          const paid =
-            emp?.payments?.reduce(
-              (
-                total,
-                payment
-              ) =>
-                total +
-                Number(
-                  payment?.amount ||
-                    0
-                ),
-              0
-            ) || 0;
+      const paid =
+        emp?.payments?.reduce(
+          (total, payment) => total + Number(payment?.amount || 0),
+          0,
+        ) || 0;
 
-          totalPaid += paid;
+      totalPaid += paid;
 
-          const attendance =
-            emp?.attendance || [];
+      const todayAttendance = getTodayAttendance(emp);
 
-          const latest =
-            attendance[
-              attendance.length -
-                1
-            ]?.status;
+      if (todayAttendance?.status === "Present") {
+        present += 1;
+      }
+    });
 
-          if (
-            latest ===
-            "Present"
-          ) {
-            present += 1;
-          }
-        }
-      );
+    return {
+      totalSalary,
 
-      return {
-        totalSalary,
+      totalPaid,
 
-        totalPaid,
+      pendingSalary: Math.max(totalSalary - totalPaid, 0),
 
-        pendingSalary:
-          Math.max(
-            totalSalary -
-              totalPaid,
-            0
-          ),
-
-        present,
-      };
-    }, [employees]);
+      present,
+    };
+  }, [employees]);
 
   // =====================================================
   // ADD EMPLOYEE
@@ -348,17 +296,13 @@ export default function Employees() {
     setEditId(emp._id);
 
     setFormData({
-      name:
-        emp?.name || "",
+      name: emp?.name || "",
 
-      phone:
-        emp?.phone || "",
+      phone: emp?.phone || "",
 
-      category:
-        emp?.category || "",
+      category: emp?.category || "",
 
-      salary:
-        emp?.salary || "",
+      salary: emp?.salary || "",
     });
 
     setShowModal(true);
@@ -368,132 +312,94 @@ export default function Employees() {
   // FORM CHANGE
   // =====================================================
 
-  const handleChange = (
-    event
-  ) => {
-    const {
-      name,
-      value,
-    } = event.target;
+  const handleChange = (event) => {
+    const { name, value } = event.target;
 
-    setFormData(
-      (previous) => ({
-        ...previous,
+    setFormData((previous) => ({
+      ...previous,
 
-        [name]: value,
-      })
-    );
+      [name]: value,
+    }));
   };
 
   // =====================================================
   // SAVE EMPLOYEE
   // =====================================================
 
-  const handleSubmit =
-    async () => {
-      const name =
-        formData.name.trim();
+  const handleSubmit = async () => {
+    const name = formData.name.trim();
 
-      const phone =
-        formData.phone.trim();
+    const phone = formData.phone.trim();
 
-      const category =
-        formData.category.trim();
+    const category = formData.category.trim();
 
-      const salary =
-        Number(
-          formData.salary
-        );
+    const salary = Number(formData.salary);
 
-      if (
-        !name ||
-        !phone ||
-        !category ||
-        !Number.isFinite(
-          salary
-        ) ||
-        salary <= 0
-      ) {
-        alert(
-          "Please enter valid employee details."
-        );
+    if (
+      !name ||
+      !phone ||
+      !category ||
+      !Number.isFinite(salary) ||
+      salary <= 0
+    ) {
+      alert("Please enter valid employee details.");
 
-        return;
-      }
+      return;
+    }
 
-      try {
-        setSaving(true);
+    try {
+      setSaving(true);
 
-        const payload = {
-          name,
-          phone,
-          category,
-          salary,
-        };
+      const payload = {
+        name,
+        phone,
+        category,
+        salary,
+      };
 
-        if (editId) {
-          await api.put(
-            `${API}/update/${editId}`,
-            payload
-          );
-        } else {
-          await api.post(
-            `${API}/add`,
-            {
-              ...payload,
+      if (editId) {
+        await api.put(`${API}/update/${editId}`, payload);
+      } else {
+        await api.post(`${API}/add`, {
+          ...payload,
 
-              payments: [],
+          payments: [],
 
-              attendance: [],
+          attendance: [],
 
-              status:
-                "Active",
-            }
-          );
-        }
-
-        await fetchEmployees();
-
-        setShowModal(false);
-
-        setEditId(null);
-
-        setFormData({
-          name: "",
-          phone: "",
-          category: "",
-          salary: "",
+          status: "Active",
         });
-      } catch (err) {
-        console.error(
-          "EMPLOYEE SAVE ERROR:",
-          err
-        );
-
-        alert(
-          err?.response?.data
-            ?.message ||
-            "Failed to save employee."
-        );
-      } finally {
-        setSaving(false);
       }
-    };
+
+      await fetchEmployees();
+
+      setShowModal(false);
+
+      setEditId(null);
+
+      setFormData({
+        name: "",
+        phone: "",
+        category: "",
+        salary: "",
+      });
+    } catch (err) {
+      console.error("EMPLOYEE SAVE ERROR:", err);
+
+      alert(err?.response?.data?.message || "Failed to save employee.");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   // =====================================================
   // DELETE
   // =====================================================
 
-  const requestDelete = (
-    employee
-  ) => {
-    setDeleteTarget(
-      employee
-    );
+  const requestDelete = (employee) => {
+    setDeleteTarget(employee);
 
-    setShowDeleteModal(
-      true
-    );
+    setShowDeleteModal(true);
   };
 
   const cancelDelete = () => {
@@ -501,103 +407,84 @@ export default function Employees() {
       return;
     }
 
-    setShowDeleteModal(
-      false
-    );
+    setShowDeleteModal(false);
 
     setDeleteTarget(null);
   };
 
-  const confirmDelete =
-    async () => {
-      if (
-        !deleteTarget?._id
-      ) {
-        return;
-      }
+  const confirmDelete = async () => {
+    if (!deleteTarget?._id) {
+      return;
+    }
 
-      try {
-        setSaving(true);
+    try {
+      setSaving(true);
 
-        await api.delete(
-          `${API}/delete/${deleteTarget._id}`
-        );
+      await api.delete(`${API}/delete/${deleteTarget._id}`);
 
-        await fetchEmployees();
+      await fetchEmployees();
 
-        setShowDeleteModal(
-          false
-        );
+      setShowDeleteModal(false);
 
-        setDeleteTarget(null);
-      } catch (err) {
-        console.error(
-          "EMPLOYEE DELETE ERROR:",
-          err
-        );
+      setDeleteTarget(null);
+    } catch (err) {
+      console.error("EMPLOYEE DELETE ERROR:", err);
 
-        alert(
-          err?.response?.data
-            ?.message ||
-            "Failed to delete employee."
-        );
-      } finally {
-        setSaving(false);
-      }
-    };
+      alert(err?.response?.data?.message || "Failed to delete employee.");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   // =====================================================
   // ATTENDANCE
   // =====================================================
 
-  const handleAttendance =
-    async (
-      id,
-      currentStatus
-    ) => {
-      try {
-        const newStatus =
-          currentStatus ===
-          "Present"
-            ? "Absent"
-            : "Present";
+  const handleAttendance = async (employee, status) => {
+    if (!employee?._id || attendanceBusyId) {
+      return;
+    }
 
-        await api.post(
-          `${API}/attendance/${id}`,
-          {
-            status:
-              newStatus,
+    if (!["Present", "Absent"].includes(status)) {
+      return;
+    }
 
-            date:
-              new Date().toISOString(),
-          }
-        );
+    const todayAttendance = getTodayAttendance(employee);
 
-        await fetchEmployees();
-      } catch (err) {
-        console.error(
-          "ATTENDANCE ERROR:",
-          err
-        );
+    // One attendance submission per employee per day.
+    if (todayAttendance) {
+      alert(
+        `Attendance is already marked ${todayAttendance.status || "for today"}.`,
+      );
 
-        alert(
-          err?.response?.data
-            ?.message ||
-            "Unable to update attendance."
-        );
-      }
-    };
+      return;
+    }
+
+    try {
+      setAttendanceBusyId(employee._id);
+
+      await api.post(`${API}/attendance/${employee._id}`, {
+        status,
+
+        date: new Date().toISOString(),
+      });
+
+      await fetchEmployees();
+    } catch (err) {
+      console.error("ATTENDANCE ERROR:", err);
+
+      alert(err?.response?.data?.message || "Unable to update attendance.");
+    } finally {
+      setAttendanceBusyId(null);
+    }
+  };
 
   // =====================================================
   // OPEN PAYMENT
   // =====================================================
 
-  const openPaymentModal = (
-    employee
-  ) => {
-    setSelectedEmployee(
-      employee
-    );
+  const openPaymentModal = (employee) => {
+    setSelectedEmployee(employee);
 
     setPaymentData({
       amount: "",
@@ -605,96 +492,61 @@ export default function Employees() {
       note: "",
     });
 
-    setShowPaymentModal(
-      true
-    );
+    setShowPaymentModal(true);
   };
 
   // =====================================================
   // SALARY PAYMENT
   // =====================================================
 
-  const handleSalaryPayment =
-    async () => {
-      const amount =
-        Number(
-          paymentData.amount
-        );
+  const handleSalaryPayment = async () => {
+    const amount = Number(paymentData.amount);
 
-      if (
-        !selectedEmployee?._id
-      ) {
-        return;
-      }
+    if (!selectedEmployee?._id) {
+      return;
+    }
 
-      if (
-        !Number.isFinite(
-          amount
-        ) ||
-        amount <= 0
-      ) {
-        alert(
-          "Enter a valid amount."
-        );
+    if (!Number.isFinite(amount) || amount <= 0) {
+      alert("Enter a valid amount.");
 
-        return;
-      }
+      return;
+    }
 
-      try {
-        setSaving(true);
+    try {
+      setSaving(true);
 
-        await api.post(
-          `${API}/payment/${selectedEmployee._id}`,
-          {
-            ...paymentData,
+      await api.post(`${API}/payment/${selectedEmployee._id}`, {
+        ...paymentData,
 
-            amount,
-          }
-        );
+        amount,
+      });
 
-        await fetchEmployees();
+      await fetchEmployees();
 
-        setShowPaymentModal(
-          false
-        );
+      setShowPaymentModal(false);
 
-        setSelectedEmployee(
-          null
-        );
+      setSelectedEmployee(null);
 
-        setPaymentData({
-          amount: "",
-          method: "Cash",
-          note: "",
-        });
-      } catch (err) {
-        console.error(
-          "SALARY PAYMENT ERROR:",
-          err
-        );
+      setPaymentData({
+        amount: "",
+        method: "Cash",
+        note: "",
+      });
+    } catch (err) {
+      console.error("SALARY PAYMENT ERROR:", err);
 
-        alert(
-          err?.response?.data
-            ?.message ||
-            "Salary payment failed."
-        );
-      } finally {
-        setSaving(false);
-      }
-    };
+      alert(err?.response?.data?.message || "Salary payment failed.");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   // =====================================================
   // UI
   // =====================================================
 
   return (
-    <div
-      className={`emp-page ${
-        darkMode
-          ? "emp-dark"
-          : ""
-      }`}
-    >
+    <div className={`emp-page ${darkMode ? "emp-dark" : ""}`}>
       {/* =================================================
           HERO
       ================================================== */}
@@ -708,11 +560,7 @@ export default function Employees() {
           <button
             type="button"
             className="emp-back-btn"
-            onClick={() =>
-              navigate(
-                "/dashboard"
-              )
-            }
+            onClick={() => navigate("/dashboard")}
             aria-label="Back to dashboard"
           >
             <FiArrowLeft />
@@ -724,15 +572,9 @@ export default function Employees() {
             </div>
 
             <div>
-              <h1>
-                Employee Management
-              </h1>
+              <h1>Employee Management</h1>
 
-              <p>
-                Manage your team,
-                salaries and daily
-                attendance
-              </p>
+              <p>Manage your team, salaries and daily attendance</p>
             </div>
           </div>
         </div>
@@ -741,44 +583,19 @@ export default function Employees() {
           <button
             type="button"
             className="emp-theme-btn"
-            onClick={() =>
-              setDarkMode(
-                (
-                  previous
-                ) =>
-                  !previous
-              )
-            }
+            onClick={() => setDarkMode((previous) => !previous)}
             aria-label={
-              darkMode
-                ? "Switch to light mode"
-                : "Switch to dark mode"
+              darkMode ? "Switch to light mode" : "Switch to dark mode"
             }
-            title={
-              darkMode
-                ? "Light mode"
-                : "Dark mode"
-            }
+            title={darkMode ? "Light mode" : "Dark mode"}
           >
-            {darkMode ? (
-              <FiSun />
-            ) : (
-              <FiMoon />
-            )}
+            {darkMode ? <FiSun /> : <FiMoon />}
           </button>
 
-          <button
-            type="button"
-            className="emp-add-btn"
-            onClick={
-              openAddModal
-            }
-          >
+          <button type="button" className="emp-add-btn" onClick={openAddModal}>
             <FiPlus />
 
-            <span>
-              Add Employee
-            </span>
+            <span>Add Employee</span>
           </button>
         </div>
       </header>
@@ -794,15 +611,9 @@ export default function Employees() {
           </div>
 
           <div>
-            <span>
-              Total Employees
-            </span>
+            <span>Total Employees</span>
 
-            <strong>
-              {
-                employees.length
-              }
-            </strong>
+            <strong>{employees.length}</strong>
           </div>
         </div>
 
@@ -812,15 +623,9 @@ export default function Employees() {
           </div>
 
           <div>
-            <span>
-              Total Salary
-            </span>
+            <span>Total Salary</span>
 
-            <strong>
-              {formatMoney(
-                summary.totalSalary
-              )}
-            </strong>
+            <strong>{formatMoney(summary.totalSalary)}</strong>
           </div>
         </div>
 
@@ -830,15 +635,9 @@ export default function Employees() {
           </div>
 
           <div>
-            <span>
-              Pending Salary
-            </span>
+            <span>Pending Salary</span>
 
-            <strong>
-              {formatMoney(
-                summary.pendingSalary
-              )}
-            </strong>
+            <strong>{formatMoney(summary.pendingSalary)}</strong>
           </div>
         </div>
 
@@ -848,15 +647,9 @@ export default function Employees() {
           </div>
 
           <div>
-            <span>
-              Present Today
-            </span>
+            <span>Present Today</span>
 
-            <strong>
-              {
-                summary.present
-              }
-            </strong>
+            <strong>{summary.present}</strong>
           </div>
         </div>
       </section>
@@ -873,23 +666,14 @@ export default function Employees() {
             type="search"
             placeholder="Search by name, phone or role..."
             value={search}
-            onChange={(
-              event
-            ) =>
-              setSearch(
-                event.target
-                  .value
-              )
-            }
+            onChange={(event) => setSearch(event.target.value)}
           />
 
           {search && (
             <button
               type="button"
               className="emp-search-clear"
-              onClick={() =>
-                setSearch("")
-              }
+              onClick={() => setSearch("")}
               aria-label="Clear search"
             >
               <FiX />
@@ -899,15 +683,8 @@ export default function Employees() {
 
         <div className="emp-count">
           <FiUsers />
-
-          {
-            filteredEmployees.length
-          }{" "}
-          employee
-          {filteredEmployees.length ===
-          1
-            ? ""
-            : "s"}
+          {filteredEmployees.length} employee
+          {filteredEmployees.length === 1 ? "" : "s"}
         </div>
       </section>
 
@@ -919,9 +696,7 @@ export default function Employees() {
         <div className="emp-state-card">
           <div className="emp-loader" />
 
-          <p>
-            Loading employees...
-          </p>
+          <p>Loading employees...</p>
         </div>
       )}
 
@@ -929,373 +704,255 @@ export default function Employees() {
           ERROR
       ================================================== */}
 
-      {!loading &&
-        error && (
-          <div className="emp-state-card emp-error-state">
-            <FiXCircle
-              size={32}
-            />
+      {!loading && error && (
+        <div className="emp-state-card emp-error-state">
+          <FiXCircle size={32} />
 
-            <h3>
-              Unable to load
-              employees
-            </h3>
+          <h3>Unable to load employees</h3>
 
-            <p>
-              {error}
-            </p>
+          <p>{error}</p>
 
-            <button
-              type="button"
-              onClick={
-                fetchEmployees
-              }
-            >
-              Try Again
-            </button>
-          </div>
-        )}
+          <button type="button" onClick={fetchEmployees}>
+            Try Again
+          </button>
+        </div>
+      )}
 
       {/* =================================================
           NO RESULTS
       ================================================== */}
 
-      {!loading &&
-        !error &&
-        filteredEmployees.length ===
-          0 && (
-          <div className="emp-state-card">
-            <FiUsers
-              size={35}
-            />
+      {!loading && !error && filteredEmployees.length === 0 && (
+        <div className="emp-state-card">
+          <FiUsers size={35} />
 
-            <h3>
-              {search
-                ? "No matching employees"
-                : "No employees yet"}
-            </h3>
+          <h3>{search ? "No matching employees" : "No employees yet"}</h3>
 
-            <p>
-              {search
-                ? "Try another name, phone number or role."
-                : "Add your first employee to start managing your team."}
-            </p>
+          <p>
+            {search
+              ? "Try another name, phone number or role."
+              : "Add your first employee to start managing your team."}
+          </p>
 
-            {!search && (
-              <button
-                type="button"
-                onClick={
-                  openAddModal
-                }
-              >
-                <FiPlus />
-
-                Add Employee
-              </button>
-            )}
-          </div>
-        )}
+          {!search && (
+            <button type="button" onClick={openAddModal}>
+              <FiPlus />
+              Add Employee
+            </button>
+          )}
+        </div>
+      )}
 
       {/* =================================================
           EMPLOYEE GRID
       ================================================== */}
 
-      {!loading &&
-        !error &&
-        filteredEmployees.length >
-          0 && (
-          <section className="emp-grid">
-            {filteredEmployees.map(
-              (emp) => {
-                const paid =
-                  emp?.payments?.reduce(
-                    (
-                      sum,
-                      payment
-                    ) =>
-                      sum +
-                      Number(
-                        payment?.amount ||
-                          0
-                      ),
-                    0
-                  ) || 0;
+      {!loading && !error && filteredEmployees.length > 0 && (
+        <section className="emp-grid">
+          {filteredEmployees.map((emp) => {
+            const paid =
+              emp?.payments?.reduce(
+                (sum, payment) => sum + Number(payment?.amount || 0),
+                0,
+              ) || 0;
 
-                const salary =
-                  Number(
-                    emp?.salary ||
-                      0
-                  );
+            const salary = Number(emp?.salary || 0);
 
-                const rawProgress =
-                  salary > 0
-                    ? (paid /
-                        salary) *
-                      100
-                    : 0;
+            const rawProgress = salary > 0 ? (paid / salary) * 100 : 0;
 
-                const progress =
-                  Math.min(
-                    Math.max(
-                      rawProgress,
-                      0
-                    ),
-                    100
-                  );
+            const progress = Math.min(Math.max(rawProgress, 0), 100);
 
-                const attendance =
-                  emp?.attendance ||
-                  [];
+            const todayAttendance = getTodayAttendance(emp);
 
-                const latestAttendance =
-                  attendance[
-                    attendance.length -
-                      1
-                  ]?.status;
+            const todayStatus = todayAttendance?.status || null;
 
-                const isPresent =
-                  latestAttendance ===
-                  "Present";
+            const isPresent = todayStatus === "Present";
 
-                const initial =
-                  String(
-                    emp?.name ||
-                      "E"
-                  )
-                    .trim()
-                    .charAt(0)
-                    .toUpperCase();
+            const isAbsent = todayStatus === "Absent";
 
-                return (
-                  <article
-                    className="emp-card"
-                    key={
-                      emp._id
+            const attendanceMarkedToday = Boolean(todayAttendance);
+
+            const attendanceBusy = attendanceBusyId === emp._id;
+
+            const initial = String(emp?.name || "E")
+              .trim()
+              .charAt(0)
+              .toUpperCase();
+
+            return (
+              <article className="emp-card" key={emp._id}>
+                {/* TOP */}
+
+                <div className="emp-card-top">
+                  <div className="emp-avatar">{initial}</div>
+
+                  <div className="emp-card-badges">
+                    <span
+                      className={`emp-work-badge ${
+                        emp.status === "Active" ? "emp-active" : "emp-leave"
+                      }`}
+                    >
+                      <span />
+
+                      {emp.status || "Active"}
+                    </span>
+
+                    <span
+                      className={`emp-attendance-chip ${
+                        isPresent ? "emp-present" : isAbsent ? "emp-absent" : ""
+                      }`}
+                    >
+                      {todayStatus || "Not Marked"}
+                    </span>
+                  </div>
+                </div>
+
+                {/* INFO */}
+
+                <div className="emp-info">
+                  <h2>{emp.name || "Unnamed Employee"}</h2>
+
+                  <p>{emp.phone || "No phone number"}</p>
+
+                  <span className="emp-role">{emp.category || "Employee"}</span>
+                </div>
+
+                {/* SALARY */}
+
+                <div className="emp-salary">
+                  <div className="emp-salary-heading">
+                    <span>Salary Progress</span>
+
+                    <strong>{Math.round(progress)}%</strong>
+                  </div>
+
+                  <div className="emp-progress">
+                    <div
+                      className="emp-progress-fill"
+                      style={{
+                        width: `${progress}%`,
+                      }}
+                    />
+                  </div>
+
+                  <div className="emp-salary-numbers">
+                    <div>
+                      <span>Paid</span>
+
+                      <strong className="emp-paid-value">
+                        {formatMoney(paid)}
+                      </strong>
+                    </div>
+
+                    <div>
+                      <span>Salary</span>
+
+                      <strong>{formatMoney(salary)}</strong>
+                    </div>
+                  </div>
+                </div>
+
+                {/* ACTIONS */}
+
+                <div className="emp-card-actions">
+                  <button
+                    type="button"
+                    className="emp-action emp-view"
+                    onClick={() =>
+                      navigate("/employee-detail", {
+                        state: emp,
+                      })
                     }
+                    title="View employee"
                   >
-                    {/* TOP */}
+                    <FiEye />
 
-                    <div className="emp-card-top">
-                      <div className="emp-avatar">
-                        {
-                          initial
-                        }
-                      </div>
+                    <span>View</span>
+                  </button>
 
-                      <div className="emp-card-badges">
-                        <span
-                          className={`emp-work-badge ${
-                            emp.status ===
-                            "Active"
-                              ? "emp-active"
-                              : "emp-leave"
-                          }`}
-                        >
-                          <span />
+                  <button
+                    type="button"
+                    className="emp-action emp-edit"
+                    onClick={() => handleEdit(emp)}
+                    title="Edit employee"
+                  >
+                    <FiEdit2 />
 
-                          {emp.status ||
-                            "Active"}
-                        </span>
+                    <span>Edit</span>
+                  </button>
 
-                        <span
-                          className={`emp-attendance-chip ${
-                            isPresent
-                              ? "emp-present"
-                              : "emp-absent"
-                          }`}
-                        >
-                          {isPresent
-                            ? "Present"
-                            : "Absent"}
-                        </span>
-                      </div>
-                    </div>
+                  <button
+                    type="button"
+                    className="emp-action emp-pay"
+                    onClick={() => openPaymentModal(emp)}
+                    title="Pay salary"
+                  >
+                    <FaRupeeSign />
 
-                    {/* INFO */}
+                    <span>Pay</span>
+                  </button>
 
-                    <div className="emp-info">
-                      <h2>
-                        {emp.name ||
-                          "Unnamed Employee"}
-                      </h2>
+                  {attendanceMarkedToday ? (
+                    <button
+                      type="button"
+                      className={`emp-action ${
+                        isPresent
+                          ? "emp-attendance-present"
+                          : "emp-attendance-absent"
+                      }`}
+                      disabled
+                      title="Attendance already marked for today"
+                    >
+                      {isPresent ? <FiCheckCircle /> : <FiXCircle />}
 
-                      <p>
-                        {emp.phone ||
-                          "No phone number"}
-                      </p>
-
-                      <span className="emp-role">
-                        {emp.category ||
-                          "Employee"}
+                      <span>
+                        {isPresent ? "Present Today" : "Absent Today"}
                       </span>
-                    </div>
-
-                    {/* SALARY */}
-
-                    <div className="emp-salary">
-                      <div className="emp-salary-heading">
-                        <span>
-                          Salary Progress
-                        </span>
-
-                        <strong>
-                          {Math.round(
-                            progress
-                          )}
-                          %
-                        </strong>
-                      </div>
-
-                      <div className="emp-progress">
-                        <div
-                          className="emp-progress-fill"
-                          style={{
-                            width:
-                              `${progress}%`,
-                          }}
-                        />
-                      </div>
-
-                      <div className="emp-salary-numbers">
-                        <div>
-                          <span>
-                            Paid
-                          </span>
-
-                          <strong className="emp-paid-value">
-                            {formatMoney(
-                              paid
-                            )}
-                          </strong>
-                        </div>
-
-                        <div>
-                          <span>
-                            Salary
-                          </span>
-
-                          <strong>
-                            {formatMoney(
-                              salary
-                            )}
-                          </strong>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* ACTIONS */}
-
-                    <div className="emp-card-actions">
+                    </button>
+                  ) : (
+                    <>
                       <button
                         type="button"
-                        className="emp-action emp-view"
-                        onClick={() =>
-                          navigate(
-                            "/employee-detail",
-                            {
-                              state:
-                                emp,
-                            }
-                          )
-                        }
-                        title="View employee"
+                        className="emp-action emp-attendance-present"
+                        onClick={() => handleAttendance(emp, "Present")}
+                        disabled={attendanceBusy}
+                        title="Mark present for today"
                       >
-                        <FiEye />
+                        <FiCheckCircle />
 
-                        <span>
-                          View
-                        </span>
+                        <span>{attendanceBusy ? "Saving..." : "Present"}</span>
                       </button>
 
                       <button
                         type="button"
-                        className="emp-action emp-edit"
-                        onClick={() =>
-                          handleEdit(
-                            emp
-                          )
-                        }
-                        title="Edit employee"
+                        className="emp-action emp-attendance-absent"
+                        onClick={() => handleAttendance(emp, "Absent")}
+                        disabled={attendanceBusy}
+                        title="Mark absent for today"
                       >
-                        <FiEdit2 />
+                        <FiXCircle />
 
-                        <span>
-                          Edit
-                        </span>
+                        <span>{attendanceBusy ? "Saving..." : "Absent"}</span>
                       </button>
+                    </>
+                  )}
 
-                      <button
-                        type="button"
-                        className="emp-action emp-pay"
-                        onClick={() =>
-                          openPaymentModal(
-                            emp
-                          )
-                        }
-                        title="Pay salary"
-                      >
-                        <FaRupeeSign />
+                  <button
+                    type="button"
+                    className="emp-action emp-delete"
+                    onClick={() => requestDelete(emp)}
+                    title="Delete employee"
+                  >
+                    <FiTrash2 />
 
-                        <span>
-                          Pay
-                        </span>
-                      </button>
-
-                      <button
-                        type="button"
-                        className={`emp-action ${
-                          isPresent
-                            ? "emp-attendance-present"
-                            : "emp-attendance-absent"
-                        }`}
-                        onClick={() =>
-                          handleAttendance(
-                            emp._id,
-                            latestAttendance
-                          )
-                        }
-                        title={
-                          isPresent
-                            ? "Mark absent"
-                            : "Mark present"
-                        }
-                      >
-                        {isPresent ? (
-                          <FiCheckCircle />
-                        ) : (
-                          <FiXCircle />
-                        )}
-
-                        <span>
-                          {isPresent
-                            ? "Present"
-                            : "Absent"}
-                        </span>
-                      </button>
-
-                      <button
-                        type="button"
-                        className="emp-action emp-delete"
-                        onClick={() =>
-                          requestDelete(
-                            emp
-                          )
-                        }
-                        title="Delete employee"
-                      >
-                        <FiTrash2 />
-
-                        <span>
-                          Delete
-                        </span>
-                      </button>
-                    </div>
-                  </article>
-                );
-              }
-            )}
-          </section>
-        )}
+                    <span>Delete</span>
+                  </button>
+                </div>
+              </article>
+            );
+          })}
+        </section>
+      )}
 
       {/* =================================================
           ADD / EDIT MODAL
@@ -1306,46 +963,28 @@ export default function Employees() {
           className="emp-modal-overlay"
           onClick={() => {
             if (!saving) {
-              setShowModal(
-                false
-              );
+              setShowModal(false);
             }
           }}
         >
           <div
             className="emp-modal"
-            onClick={(
-              event
-            ) =>
-              event.stopPropagation()
-            }
+            onClick={(event) => event.stopPropagation()}
           >
             <button
               type="button"
               className="emp-modal-close"
-              onClick={() =>
-                setShowModal(
-                  false
-                )
-              }
+              onClick={() => setShowModal(false)}
               disabled={saving}
             >
               <FiX />
             </button>
 
             <div className="emp-modal-icon">
-              {editId ? (
-                <FiEdit2 />
-              ) : (
-                <FiPlus />
-              )}
+              {editId ? <FiEdit2 /> : <FiPlus />}
             </div>
 
-            <h2>
-              {editId
-                ? "Edit Employee"
-                : "Add Employee"}
-            </h2>
+            <h2>{editId ? "Edit Employee" : "Add Employee"}</h2>
 
             <p className="emp-modal-subtitle">
               {editId
@@ -1356,85 +995,53 @@ export default function Employees() {
             <div className="emp-form">
               <label>
                 Employee Name
-
                 <input
                   type="text"
                   name="name"
                   placeholder="Enter employee name"
-                  value={
-                    formData.name
-                  }
-                  onChange={
-                    handleChange
-                  }
+                  value={formData.name}
+                  onChange={handleChange}
                 />
               </label>
 
               <label>
                 Phone Number
-
                 <input
                   type="text"
                   name="phone"
                   placeholder="Enter phone number"
-                  value={
-                    formData.phone
-                  }
-                  onChange={
-                    handleChange
-                  }
+                  value={formData.phone}
+                  onChange={handleChange}
                 />
               </label>
 
               <label>
                 Role
-
                 <select
                   name="category"
-                  value={
-                    formData.category
-                  }
-                  onChange={
-                    handleChange
-                  }
+                  value={formData.category}
+                  onChange={handleChange}
                 >
-                  <option value="">
-                    Select Role
-                  </option>
+                  <option value="">Select Role</option>
 
-                  <option value="Salesman">
-                    Salesman
-                  </option>
+                  <option value="Salesman">Salesman</option>
 
-                  <option value="Cashier">
-                    Cashier
-                  </option>
+                  <option value="Cashier">Cashier</option>
 
-                  <option value="Manager">
-                    Manager
-                  </option>
+                  <option value="Manager">Manager</option>
 
-                  <option value="Delivery Boy">
-                    Delivery Boy
-                  </option>
+                  <option value="Delivery Boy">Delivery Boy</option>
 
-                  <option value="Accountant">
-                    Accountant
-                  </option>
+                  <option value="Accountant">Accountant</option>
 
-                  <option value="Helper">
-                    Helper
-                  </option>
+                  <option value="Helper">Helper</option>
 
-                  <option value="Other">
-                    Other
-                  </option>
+                  <option value="Other">Other</option>
                 </select>
               </label>
 
               <label>
                 Monthly Salary
-
                 <div className="emp-money-input">
                   <FaRupeeSign />
 
@@ -1443,12 +1050,8 @@ export default function Employees() {
                     name="salary"
                     min="0"
                     placeholder="Enter salary"
-                    value={
-                      formData.salary
-                    }
-                    onChange={
-                      handleChange
-                    }
+                    value={formData.salary}
+                    onChange={handleChange}
                   />
                 </div>
               </label>
@@ -1458,11 +1061,7 @@ export default function Employees() {
               <button
                 type="button"
                 className="emp-modal-cancel"
-                onClick={() =>
-                  setShowModal(
-                    false
-                  )
-                }
+                onClick={() => setShowModal(false)}
                 disabled={saving}
               >
                 Cancel
@@ -1471,9 +1070,7 @@ export default function Employees() {
               <button
                 type="button"
                 className="emp-modal-primary"
-                onClick={
-                  handleSubmit
-                }
+                onClick={handleSubmit}
                 disabled={saving}
               >
                 {saving
@@ -1491,273 +1088,178 @@ export default function Employees() {
           PAYMENT MODAL
       ================================================== */}
 
-      {showPaymentModal &&
-        selectedEmployee && (
+      {showPaymentModal && selectedEmployee && (
+        <div
+          className="emp-modal-overlay"
+          onClick={() => {
+            if (!saving) {
+              setShowPaymentModal(false);
+            }
+          }}
+        >
           <div
-            className="emp-modal-overlay"
-            onClick={() => {
-              if (!saving) {
-                setShowPaymentModal(
-                  false
-                );
-              }
-            }}
+            className="emp-modal"
+            onClick={(event) => event.stopPropagation()}
           >
-            <div
-              className="emp-modal"
-              onClick={(
-                event
-              ) =>
-                event.stopPropagation()
-              }
+            <button
+              type="button"
+              className="emp-modal-close"
+              onClick={() => setShowPaymentModal(false)}
+              disabled={saving}
             >
-              <button
-                type="button"
-                className="emp-modal-close"
-                onClick={() =>
-                  setShowPaymentModal(
-                    false
-                  )
-                }
-                disabled={saving}
-              >
-                <FiX />
-              </button>
+              <FiX />
+            </button>
 
-              <div className="emp-modal-icon emp-payment-icon">
-                <FaRupeeSign />
-              </div>
+            <div className="emp-modal-icon emp-payment-icon">
+              <FaRupeeSign />
+            </div>
 
-              <h2>
-                Pay Salary
-              </h2>
+            <h2>Pay Salary</h2>
 
-              <p className="emp-modal-subtitle">
-                Record salary payment
-                for{" "}
-                <strong>
-                  {
-                    selectedEmployee.name
-                  }
-                </strong>
-                .
-              </p>
+            <p className="emp-modal-subtitle">
+              Record salary payment for <strong>{selectedEmployee.name}</strong>
+              .
+            </p>
 
-              <div className="emp-form">
-                <label>
-                  Amount
-
-                  <div className="emp-money-input">
-                    <FaRupeeSign />
-
-                    <input
-                      type="number"
-                      min="0"
-                      placeholder="Enter amount"
-                      value={
-                        paymentData.amount
-                      }
-                      onChange={(
-                        event
-                      ) =>
-                        setPaymentData(
-                          (
-                            previous
-                          ) => ({
-                            ...previous,
-
-                            amount:
-                              event
-                                .target
-                                .value,
-                          })
-                        )
-                      }
-                    />
-                  </div>
-                </label>
-
-                <label>
-                  Payment Method
-
-                  <select
-                    value={
-                      paymentData.method
-                    }
-                    onChange={(
-                      event
-                    ) =>
-                      setPaymentData(
-                        (
-                          previous
-                        ) => ({
-                          ...previous,
-
-                          method:
-                            event
-                              .target
-                              .value,
-                        })
-                      )
-                    }
-                  >
-                    <option value="Cash">
-                      Cash
-                    </option>
-
-                    <option value="UPI">
-                      UPI
-                    </option>
-
-                    <option value="Bank Transfer">
-                      Bank Transfer
-                    </option>
-                  </select>
-                </label>
-
-                <label>
-                  Note
-
-                  <input
-                    type="text"
-                    placeholder="Optional note"
-                    value={
-                      paymentData.note
-                    }
-                    onChange={(
-                      event
-                    ) =>
-                      setPaymentData(
-                        (
-                          previous
-                        ) => ({
-                          ...previous,
-
-                          note:
-                            event
-                              .target
-                              .value,
-                        })
-                      )
-                    }
-                  />
-                </label>
-              </div>
-
-              <div className="emp-modal-actions">
-                <button
-                  type="button"
-                  className="emp-modal-cancel"
-                  onClick={() =>
-                    setShowPaymentModal(
-                      false
-                    )
-                  }
-                  disabled={saving}
-                >
-                  Cancel
-                </button>
-
-                <button
-                  type="button"
-                  className="emp-modal-primary emp-payment-primary"
-                  onClick={
-                    handleSalaryPayment
-                  }
-                  disabled={saving}
-                >
+            <div className="emp-form">
+              <label>
+                Amount
+                <div className="emp-money-input">
                   <FaRupeeSign />
 
-                  {saving
-                    ? "Processing..."
-                    : "Pay Salary"}
-                </button>
-              </div>
+                  <input
+                    type="number"
+                    min="0"
+                    placeholder="Enter amount"
+                    value={paymentData.amount}
+                    onChange={(event) =>
+                      setPaymentData((previous) => ({
+                        ...previous,
+
+                        amount: event.target.value,
+                      }))
+                    }
+                  />
+                </div>
+              </label>
+
+              <label>
+                Payment Method
+                <select
+                  value={paymentData.method}
+                  onChange={(event) =>
+                    setPaymentData((previous) => ({
+                      ...previous,
+
+                      method: event.target.value,
+                    }))
+                  }
+                >
+                  <option value="Cash">Cash</option>
+
+                  <option value="UPI">UPI</option>
+
+                  <option value="Bank Transfer">Bank Transfer</option>
+                </select>
+              </label>
+
+              <label>
+                Note
+                <input
+                  type="text"
+                  placeholder="Optional note"
+                  value={paymentData.note}
+                  onChange={(event) =>
+                    setPaymentData((previous) => ({
+                      ...previous,
+
+                      note: event.target.value,
+                    }))
+                  }
+                />
+              </label>
+            </div>
+
+            <div className="emp-modal-actions">
+              <button
+                type="button"
+                className="emp-modal-cancel"
+                onClick={() => setShowPaymentModal(false)}
+                disabled={saving}
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                className="emp-modal-primary emp-payment-primary"
+                onClick={handleSalaryPayment}
+                disabled={saving}
+              >
+                <FaRupeeSign />
+
+                {saving ? "Processing..." : "Pay Salary"}
+              </button>
             </div>
           </div>
-        )}
+        </div>
+      )}
 
       {/* =================================================
           DELETE MODAL
       ================================================== */}
 
-      {showDeleteModal &&
-        deleteTarget && (
+      {showDeleteModal && deleteTarget && (
+        <div className="emp-modal-overlay" onClick={cancelDelete}>
           <div
-            className="emp-modal-overlay"
-            onClick={
-              cancelDelete
-            }
+            className="emp-modal emp-delete-modal"
+            onClick={(event) => event.stopPropagation()}
           >
-            <div
-              className="emp-modal emp-delete-modal"
-              onClick={(
-                event
-              ) =>
-                event.stopPropagation()
-              }
+            <button
+              type="button"
+              className="emp-modal-close"
+              onClick={cancelDelete}
+              disabled={saving}
             >
+              <FiX />
+            </button>
+
+            <div className="emp-modal-icon emp-delete-icon">
+              <FiTrash2 />
+            </div>
+
+            <h2>Delete Employee?</h2>
+
+            <p className="emp-modal-subtitle">
+              Are you sure you want to delete{" "}
+              <strong>{deleteTarget.name}</strong>? This action cannot be
+              undone.
+            </p>
+
+            <div className="emp-modal-actions">
               <button
                 type="button"
-                className="emp-modal-close"
-                onClick={
-                  cancelDelete
-                }
+                className="emp-modal-cancel"
+                onClick={cancelDelete}
                 disabled={saving}
               >
-                <FiX />
+                Cancel
               </button>
 
-              <div className="emp-modal-icon emp-delete-icon">
+              <button
+                type="button"
+                className="emp-delete-confirm"
+                onClick={confirmDelete}
+                disabled={saving}
+              >
                 <FiTrash2 />
-              </div>
 
-              <h2>
-                Delete Employee?
-              </h2>
-
-              <p className="emp-modal-subtitle">
-                Are you sure you
-                want to delete{" "}
-                <strong>
-                  {
-                    deleteTarget.name
-                  }
-                </strong>
-                ? This action cannot
-                be undone.
-              </p>
-
-              <div className="emp-modal-actions">
-                <button
-                  type="button"
-                  className="emp-modal-cancel"
-                  onClick={
-                    cancelDelete
-                  }
-                  disabled={saving}
-                >
-                  Cancel
-                </button>
-
-                <button
-                  type="button"
-                  className="emp-delete-confirm"
-                  onClick={
-                    confirmDelete
-                  }
-                  disabled={saving}
-                >
-                  <FiTrash2 />
-
-                  {saving
-                    ? "Deleting..."
-                    : "Yes, Delete"}
-                </button>
-              </div>
+                {saving ? "Deleting..." : "Yes, Delete"}
+              </button>
             </div>
           </div>
-        )}
+        </div>
+      )}
     </div>
   );
 }
