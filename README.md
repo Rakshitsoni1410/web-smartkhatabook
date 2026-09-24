@@ -1,618 +1,104 @@
 # Smart Khata Book 🌐
 
-**Smart Khata Book** is a modern business management web application designed for **Retailers**, **Wholesalers**, and business users.
+**Smart Khata Book** is a modern MERN-stack business-management web application built for **Retailers**, **Wholesalers**, and **Customers**.
 
-The web frontend is built using **React.js** and connects with the Smart Khata backend API to provide order management, inventory, billing, ledger tracking, employee management, reports, reviews, customer portal access, authentication, and demo payment workflows.
+The web frontend is built with **React.js + Vite** and connects to the Smart Khata backend API for authentication, inventory management, smart supplier selection, order management, demo payments, billing, digital ledger tracking, employee management, attendance, in-app notifications, reports, reviews, and customer-facing business data.
 
----
-
-# 🌐 Live Project
-
-https://smartkhatabooks.netlify.app/
+> **Academic note:** All payment flows in this project are mock/demo workflows. No real money is transferred.
 
 ---
 
-# 🚀 Project Repositories
+## 🌐 Live Project
 
-## 🌐 Web Frontend Repository
-
-https://github.com/Rakshitsoni1410/web-smartkhatabook
-
-## ⚙️ Backend Repository
-
-https://github.com/Rakshitsoni1410/backend-of-smartkhata-book
-
-## 📱 Flutter / Mobile Repository
-
-https://github.com/Rakshitsoni1410/smartkhatabook
+| Resource    | Link                                               |
+| ----------- | -------------------------------------------------- |
+| Web App     | https://smartkhatabooks.netlify.app/               |
+| Backend API | https://backend-of-smartkhata-book-vkcv.vercel.app |
 
 ---
 
-# ✨ Main Features
+## 🚀 Repositories
 
-## 🔐 Authentication
+| Repository       | Link                                                          |
+| ---------------- | ------------------------------------------------------------- |
+| Web Frontend     | https://github.com/Rakshitsoni1410/web-smartkhatabook         |
+| Backend          | https://github.com/Rakshitsoni1410/backend-of-smartkhata-book |
+| Flutter / Mobile | https://github.com/Rakshitsoni1410/smartkhatabook             |
 
-Smart Khata includes secure authentication and session handling.
+---
 
-Features:
+## ⚙️ Installation
 
-- User Registration
-- User Login
-- Phone / Email Login Support
-- Retailer Login
-- Wholesaler Login
-- Customer Role Support
-- JWT Authentication
-- Protected Routes
-- Role-Based Access
-- Forgot Password
-- Reset Password
-- Automatic Logout on Expired Session
-- Single Active Session Support
+```bash
+# 1. Clone the repository
+git clone https://github.com/Rakshitsoni1410/web-smartkhatabook.git
 
-### Single Session Login
+# 2. Enter the project directory
+cd web-smartkhatabook
 
-If the same user logs in on another device, the old session becomes invalid.
+# 3. Install dependencies
+npm install
 
-Example:
+# 4. Start the development server
+npm run dev
+```
 
-```text
-Laptop Login
-     ↓
-Mobile Login with Same Account
-     ↓
-Mobile Becomes Active Session
-     ↓
-Laptop Session Invalid
-     ↓
-Laptop Automatically Logs Out
+Development server runs at:
+
+```
+http://localhost:5173
+```
+
+### Production Build
+
+```bash
+npm run build
+# Output → dist/
 ```
 
 ---
 
-# 👥 User Roles
+## 🛠️ Tech Stack
 
-The application supports:
-
-- Retailer
-- Wholesaler
-- Customer
-
-Different screens and actions are available depending on the logged-in user's role.
-
----
-
-# 📊 Dashboard
-
-The dashboard provides an overview of business activity.
-
-Features include:
-
-- Business Summary
-- Product Statistics
-- Order Summary
-- Inventory Information
-- Employee Information
-- Recent Activity
-- Business Cards
-- Clean Responsive UI
+| Technology       | Usage                       |
+| ---------------- | --------------------------- |
+| React.js         | Frontend Library            |
+| Vite             | Development & Build Tool    |
+| React Router DOM | Navigation & Routing        |
+| Axios            | Backend API Requests        |
+| CSS3             | Styling                     |
+| React Icons      | UI Icons                    |
+| Local Storage    | Session & Theme Persistence |
+| PWA              | Installable Web Experience  |
+| Netlify          | Frontend Deployment         |
 
 ---
 
-# 📦 Product & Inventory Management
+## 📁 Project Structure
 
-Wholesalers can manage their products and stock.
-
-Features:
-
-- Add Product
-- Edit Product
-- Delete Product
-- View Products
-- Search Products
-- Product Categories
-- Selling Price
-- Stock Quantity
-- Stock Availability
-- Low Stock Information
-- Inventory Management
-
----
-
-# 🛒 Order Management
-
-Retailers can place orders and wholesalers can manage the order lifecycle.
-
-Order flow:
-
-```text
-Pending
-   ↓
-Approved
-   ↓
-Advance Pending
-   ↓
-Processing
-   ↓
-On The Way
-   ↓
-Delivered
-   ↓
-Completed
 ```
-
-Supported frontend actions include:
-
-- Place Order
-- View All Orders
-- Filter Orders by Status
-- View Order Details
-- Approve Order
-- Reject Order
-- Mark Order On The Way
-- Mark Order Delivered
-- Request Advance Payment
-- Request Final Payment
-- Complete Payment
-
----
-
-# 🔎 Order Filters
-
-The Orders page allows users to filter orders by category/status.
-
-Examples:
-
-```text
-All Orders
-Pending
-Approved
-Advance Pending
-Processing
-On The Way
-Delivered
-Completed
-Rejected
-```
-
----
-
-# 🤝 Smart Wholesaler Selection
-
-When a retailer places an order, the backend automatically finds an appropriate wholesaler.
-
-The frontend displays the selected order and wholesaler information.
-
-Selection can consider:
-
-- Product Availability
-- Required Quantity
-- Selling Price
-- Stock
-- Rating
-- Reviews
-
----
-
-# 💳 Demo Payment Gateway
-
-Smart Khata includes a **fake/demo payment gateway** for project demonstration.
-
-No real money is transferred.
-
-Supported demo payment methods:
-
-- UPI
-- Card
-- Net Banking
-
-Example flow:
-
-```text
-Retailer Clicks Pay Advance
-        ↓
-Smart Khata Pay Opens
-        ↓
-Select Payment Method
-        ↓
-Pay Demo Amount
-        ↓
-Processing
-        ↓
-Payment Successful
-        ↓
-Transaction ID Generated
-```
-
-The gateway generates demo transaction IDs such as:
-
-```text
-SKPAY-MABC123-XYZ89
-```
-
----
-
-# ⚠️ Demo Payment Disclaimer
-
-The payment gateway is for **testing and academic demonstration only**.
-
-Users should never enter real:
-
-- UPI PIN
-- CVV
-- Bank Password
-- Real Card Credentials
-- Real Banking Information
-
-The frontend clearly displays **TEST MODE / Demo Payment Gateway**.
-
----
-
-# 💰 Advance Payment
-
-Wholesalers can request an advance payment.
-
-Flow:
-
-```text
-Wholesaler Requests Advance
-        ↓
-Retailer Receives Request
-        ↓
-Retailer Opens Demo Payment Gateway
-        ↓
-Payment Successful
-        ↓
-Order Moves to Processing
-```
-
-The frontend shows:
-
-- Advance Percentage
-- Advance Amount
-- Remaining Amount
-- Payment Status
-
----
-
-# 💵 Final Payment
-
-After delivery, the wholesaler can request the remaining payment.
-
-Flow:
-
-```text
-Order Delivered
-        ↓
-Final Payment Requested
-        ↓
-Retailer Opens Demo Gateway
-        ↓
-Payment Successful
-        ↓
-Order Completed
-```
-
----
-
-# 🧾 Payment History
-
-Demo payment information can be stored with the order.
-
-Payment information includes:
-
-- Transaction ID
-- Payment Method
-- Payment Type
-- Amount
-- Payment Status
-- Payment Date
-- Mock Payment Flag
-
-Example:
-
-```text
-Advance Payment
-Transaction: SKPAY-ABC123
-Method: UPI
-Amount: ₹2,500
-
-Final Payment
-Transaction: SKPAY-XYZ789
-Method: Card
-Amount: ₹7,500
-```
-
----
-
-# 🧾 Billing & Invoice Management
-
-Smart Khata includes a complete billing workflow.
-
-## Wholesaler Flow
-
-```text
-Order Delivered
-        ↓
-Billing Section
-        ↓
-Generate Bill
-        ↓
-Send Bill
-        ↓
-Confirmation Dialog
-        ↓
-Confirm & Send
-```
-
-Before delivery, the wholesaler sees:
-
-```text
-Available after delivery
-```
-
-After delivery:
-
-```text
-[ Generate Bill ] [ Send Bill ]
-```
-
-After sending:
-
-```text
-[ Generate Bill ] [ ✓ Sent ]
-```
-
----
-
-# 🧍 Retailer Billing
-
-Retailers only see bills that have been sent by the wholesaler.
-
-Retailer billing includes:
-
-- Invoice Number
-- Wholesaler Name
-- Product
-- Quantity
-- Amount
-- Order Status
-- Payment Status
-- Bill Date
-- Download Bill
-
-Example:
-
-```text
-Invoice
-ARBROS-14-09-2026-0001
-
-Product: Rice
-Quantity: 10
-Amount: ₹10,000
-
-[ Download Bill ]
-```
-
----
-
-# 📄 Bill Generation
-
-The frontend includes a bill generation component.
-
-Users can:
-
-- Generate Bill
-- Preview Bill
-- Print Bill
-- Save Bill as PDF using browser print
-- Download/View Invoice Information
-
-Invoice data includes:
-
-- Business Name
-- Customer Name
-- Invoice Number
-- Product
-- Quantity
-- Price Per Unit
-- Total
-- Payment Status
-- Order Status
-- Date
-
----
-
-# 📒 Ledger Management
-
-Smart Khata includes digital ledger screens.
-
-Ledger functionality can display:
-
-- Debit Entries
-- Credit Entries
-- Orders
-- Advance Payments
-- Final Payments
-- Transaction Notes
-- Business Parties
-
-This allows retailers and wholesalers to track financial activity.
-
----
-
-# 👨‍💼 Employee Management
-
-The frontend includes employee-management functionality.
-
-Features include:
-
-- Add Employee
-- View Employees
-- Edit Employee
-- Delete Employee
-- Employee Details
-- Salary Information
-- Pending Salary Tracking
-- Employee Payment Information
-
----
-
-# ⭐ Review Management
-
-Smart Khata includes review functionality.
-
-Users can:
-
-- Add Reviews
-- View Reviews
-- View Ratings
-- Review Business Interactions
-
----
-
-# 📈 Reports
-
-The application includes a dedicated Reports section.
-
-Reports can display:
-
-- Orders
-- Recent Orders
-- Payment Status
-- Stock Information
-- Reviews
-- Ledger Activity
-- Business Performance Information
-
-Route:
-
-```text
-/reports
-```
-
----
-
-# 👤 Customer Portal
-
-Smart Khata includes a customer portal.
-
-Customer functionality can include:
-
-- Customer Account Information
-- Ledger Information
-- Transaction History
-- Business Data
-- Customer-Specific Records
-
----
-
-# 🔔 Status & Notifications
-
-The application uses visual states and toast messages for user feedback.
-
-Examples:
-
-- Payment Successful
-- Payment Failed
-- Order Updated
-- Bill Sent
-- Advance Requested
-- Final Payment Requested
-- Authentication Error
-- Session Expired
-
----
-
-# 🔐 Frontend Security
-
-Frontend security features include:
-
-- JWT Token Storage
-- Automatic Token Attachment to API Requests
-- Protected Routes
-- Role Checks
-- Automatic Logout on `401`
-- Session Expiry Detection
-- Old Session Logout
-- Login Security Integration
-- Centralized Axios API Configuration
-
----
-
-# 🌐 API Integration
-
-The frontend connects to the deployed backend:
-
-```text
-https://backend-of-smartkhata-book-vkcv.vercel.app
-```
-
-A shared Axios instance is used for API communication.
-
-Example:
-
-```js
-const api = axios.create({
-  baseURL: "https://backend-of-smartkhata-book-vkcv.vercel.app",
-});
-```
-
-Authentication tokens are automatically attached to requests.
-
----
-
-# 🛠️ Frontend Tech Stack
-
-| Technology       | Usage                    |
-| ---------------- | ------------------------ |
-| React.js         | Frontend Library         |
-| React Router DOM | Navigation & Routing     |
-| Axios            | Backend API Requests     |
-| CSS3             | Styling                  |
-| React Icons      | UI Icons                 |
-| Local Storage    | Authentication Session   |
-| Vite             | Development / Build Tool |
-| Netlify          | Frontend Deployment      |
-
----
-
-# ⚙️ Backend Tech Stack
-
-The frontend communicates with a backend built using:
-
-- Node.js
-- Express.js
-- MongoDB
-- Mongoose
-- JWT
-- bcrypt
-- Redis / Upstash
-- Cloudinary
-- Vercel
-
----
-
-# 📁 Frontend Project Structure
-
-```text
-smart-khata-web/
+web-smartkhatabook/
 │
 ├── public/
 │
 ├── src/
-│   │
 │   ├── components/
+│   │   ├── Sidebar.jsx
 │   │   ├── GenerateBillButton.jsx
 │   │   ├── FakePaymentModal.jsx
 │   │   └── ...
 │   │
 │   ├── pages/
 │   │   ├── Dashboard.jsx
+│   │   ├── Stock.jsx
+│   │   ├── Employees.jsx
+│   │   ├── EmployeeDetail.jsx
 │   │   ├── Orders.jsx
 │   │   ├── OrderDetails.jsx
 │   │   ├── Billing.jsx
+│   │   ├── Ledger.jsx
 │   │   ├── Report.jsx
+│   │   ├── Reviews.jsx
 │   │   └── ...
 │   │
 │   ├── api.js
@@ -626,248 +112,446 @@ smart-khata-web/
 
 ---
 
-# ⚙️ Installation
+## ✨ Features
 
-## 1. Clone the Repository
+### 🔐 Authentication
 
-```bash
-git clone https://github.com/Rakshitsoni1410/web-smartkhatabook.git
+- User Registration & Login
+- Phone / Email login support
+- Retailer / Wholesaler / Customer roles
+- JWT authentication with protected routes
+- Role-based access control
+- Forgot password & OTP reset flow
+- Automatic logout on `401` / session expiry
+- Single active session enforcement
+
+**Single Session Flow:**
+
+```
+Laptop Login
+     ↓
+Mobile Login with Same Account
+     ↓
+Mobile Becomes the Active Session
+     ↓
+Laptop Session Invalidated
+     ↓
+Laptop Automatically Logs Out
 ```
 
 ---
 
-## 2. Open Project Folder
+### 👥 User Roles
 
-```bash
-cd web-smartkhatabook
+| Role       | Description                                                       |
+| ---------- | ----------------------------------------------------------------- |
+| Retailer   | Places orders, pays demo invoices, views bills & ledger           |
+| Wholesaler | Manages products, approves orders, requests payments, sends bills |
+| Customer   | Views account, ledger, and transaction history                    |
+
+---
+
+### 📊 Dashboard
+
+Role-aware business overview featuring:
+
+- Business summary & product statistics
+- Order & inventory information
+- Employee overview & recent activity
+- Quick actions & review summary
+- Responsive UI with dark mode support
+
+---
+
+### 📦 Product & Inventory Management
+
+- Add / Edit / Delete products
+- Search by name or category
+- Purchase price, selling price, stock quantity
+- Stock availability & low-stock alerts
+- Responsive product cards with dark mode
+- Retailers can initiate a restock order directly from the Stock page
+
+---
+
+### 🛒 Order Management
+
+**Order lifecycle:**
+
+```
+Pending → Approved → Advance Pending → Processing → On The Way → Delivered → Completed
 ```
 
-If the React project is inside another folder:
+**Supported actions:**
 
-```bash
-cd smart-khata-web
+- Place order (Smart Auto or Choose Myself)
+- View & filter orders by status
+- View order details
+- Approve / Reject order
+- Request & pay demo advance
+- Mark On The Way / Delivered
+- Request & complete demo final payment
+- Generate / Send bill
+- View payment history
+
+---
+
+### 🤝 Smart Supplier Selection
+
+Two ordering modes are available when a retailer places an order.
+
+#### ⚡ Smart Auto
+
+The backend automatically selects an eligible wholesaler using a rule-based scoring strategy. Selection considers:
+
+- Product availability & required quantity
+- Selling price (with price-protection rule)
+- Available stock
+- Rating & review count
+- Fair order distribution across suppliers
+
+#### 👤 Choose Myself + Smart Suggestions
+
+Retailers can browse available wholesaler recommendations and make the final decision themselves. Each suggestion shows:
+
+- Shop / wholesaler name
+- Current price & available stock
+- Rating & review count
+- Recommendation reasons & smart badge
+- Price range indicator
+- Estimated total for the chosen quantity
+
+> The recommendation system is rule-based / heuristic — not a trained AI/ML model. The selected `wholesalerId` and `productId` are sent to the backend, which revalidates stock and price before creating the order.
+
+**API calls:**
+
+```js
+// Smart Auto
+await api.post("/api/orders/create", {
+  productName,
+  quantity,
+  unit,
+  selectionMode: "auto",
+});
+
+// Manual — step 1: get recommendations
+const res = await api.post("/api/orders/recommendations", {
+  productName,
+  quantity,
+});
+
+// Manual — step 2: place order with chosen supplier
+await api.post("/api/orders/create", {
+  productName,
+  quantity,
+  unit,
+  selectionMode: "manual",
+  selectedWholesalerId,
+  selectedProductId,
+});
 ```
 
 ---
 
-## 3. Install Dependencies
+### 💳 Demo Payment Gateway
 
-```bash
-npm install
+> ⚠️ **Demo only — no real money is transferred.**
+
+Supported demo methods: **UPI · Card · Net Banking**
+
+```
+Retailer Clicks Pay
+        ↓
+Smart Khata Pay Opens
+        ↓
+Select Demo Method
+        ↓
+Confirm Demo Payment
+        ↓
+Processing...
+        ↓
+Payment Successful ✓
+        ↓
+Demo Transaction ID Generated (e.g. SKPAY-MABC123-XYZ89)
+```
+
+**Never enter real:** UPI PIN · CVV · Bank password · Real card credentials.
+
+---
+
+### 💰 Advance & Final Payment
+
+**Advance:**
+
+```
+Wholesaler Requests Advance → Retailer Pays Demo → Advance Recorded → Order Processing
+```
+
+**Final:**
+
+```
+Order Delivered → Final Payment Requested → Retailer Pays Demo → Order Completed
+```
+
+The frontend shows advance percentage, advance amount, remaining balance, payment status, and transaction details.
+
+---
+
+### 🧾 Billing & Invoice Management
+
+**Wholesaler flow:**
+
+```
+Order Delivered → Generate Bill → Send Bill → Retailer Sees Bill
+```
+
+Wholesaler can: Generate · Preview · Print · Send bill — and see the sent confirmation.
+
+**Retailer view** (bills visible only after the wholesaler sends them):
+
+- Invoice number, wholesaler name, product, quantity, price per unit, total
+- Order & payment status, bill date
+- Print / download option
+
+Example invoice number:
+
+```
+ARBROS-14-09-2026-0001
 ```
 
 ---
 
-## 4. Start Development Server
+### 📒 Ledger Management
 
-```bash
-npm run dev
+Digital ledger displays:
+
+- Debit & credit entries
+- Order, advance payment, and final payment entries
+- Transaction notes & business parties
+- Filters, totals, and printable ledger view
+
+---
+
+### 👨‍💼 Employee Management
+
+- Add / Edit / Delete employees
+- Search employees
+- Salary information & payment records
+- Pending salary tracking
+- Daily attendance (Present / Absent / Leave)
+- Attendance history
+
+**One record per day:**
+
 ```
-
-The app will normally open on a Vite development URL such as:
-
-```text
-http://localhost:5173
+24 Sep → Present
+24 Sep → Update to Absent   ← updates same record, no duplicate
+25 Sep → New record
 ```
 
 ---
 
-# 🏗️ Production Build
+### 🔔 In-App Notifications
 
-Create a production build using:
+Events that trigger notifications:
 
-```bash
-npm run build
+- New order · Order status update
+- Advance requested / paid
+- Final payment requested / completed
+- Bill sent
+
+User actions: View · See unread count · Mark one or all as read · Delete · Clear all
+
+> The web frontend uses periodic polling for new notifications.
+
+**API routes:**
+
 ```
-
-The generated production files will be available inside:
-
-```text
-dist/
-```
-
----
-
-# 🌐 Deployment
-
-The Smart Khata web frontend is deployed using **Netlify**.
-
-Live application:
-
-```text
-https://smartkhatabooks.netlify.app/
-```
-
-Backend API:
-
-```text
-https://backend-of-smartkhata-book-vkcv.vercel.app
+GET    /api/notifications
+GET    /api/notifications/unread-count
+PATCH  /api/notifications/read-all
+PATCH  /api/notifications/:id/read
+DELETE /api/notifications/:id
+DELETE /api/notifications/clear-all
 ```
 
 ---
 
-# 🔄 Complete Application Flow
+### ⭐ Reviews
 
-```text
+- Add & view reviews with ratings
+- Business feedback linked to orders
+- Ratings contribute to smart supplier scoring
+
+---
+
+### 📈 Reports
+
+Available at `/reports`:
+
+- Orders & recent orders
+- Payment status & stock information
+- Reviews, ledger activity, business performance
+
+---
+
+### 👤 Customer Portal
+
+- Customer account & ledger information
+- Transaction history
+- Customer-specific business records
+
+---
+
+### 🌙 Dark Mode
+
+Shared light / dark theme with browser persistence via `localStorage`.
+
+---
+
+### 📱 Responsive Design
+
+Optimised for Desktop · Laptop · Tablet · Mobile Browser.
+
+Includes:
+
+- Flexible cards & layouts
+- Mobile-friendly actions
+- Bottom-sheet style modals on small screens
+- Overflow-safe long values
+- Touch-friendly buttons
+- Reduced-motion support
+
+---
+
+### 📲 Progressive Web App (PWA)
+
+The Vite frontend includes PWA support for an installable web-app experience. On iOS, use Safari's **Add to Home Screen**.
+
+---
+
+### 🤖 Rule-Based Help Chatbot
+
+A lightweight keyword-based help assistant for common in-app questions covering: Stock · Employees · Salary · Attendance · Orders · Billing · Ledger · Reviews · Login.
+
+> Does not require an external AI model.
+
+---
+
+## 🔐 Frontend Security
+
+- JWT token storage & automatic attachment to API requests
+- Protected routes with role-aware screens
+- Automatic logout on `401`
+- Session expiry detection & single-session UX
+
+> Frontend guards improve UX. Real authorization is enforced by the backend.
+
+---
+
+## 🌐 API Integration
+
+```js
+// src/api.js
+import axios from "axios";
+
+const api = axios.create({
+  baseURL: "https://backend-of-smartkhata-book-vkcv.vercel.app",
+});
+
+export default api;
+```
+
+---
+
+## 🔄 Complete Application Flow
+
+```
 User Registers / Logs In
         ↓
 Role-Based Dashboard
         ↓
-Retailer Places Order
+Retailer Needs Stock
         ↓
-Wholesaler Receives Order
-        ↓
-Wholesaler Approves
-        ↓
-Advance Requested
-        ↓
-Retailer Uses Demo Payment Gateway
-        ↓
-Order Processing
-        ↓
-On The Way
-        ↓
-Delivered
-        ↓
-Wholesaler Generates Bill
-        ↓
-Wholesaler Sends Bill
-        ↓
-Retailer Sees Bill
-        ↓
-Final Payment Requested
-        ↓
-Retailer Completes Demo Payment
-        ↓
-Order Completed
-        ↓
-Ledger / Billing / Reports Updated
+   ┌────┴──────────────┐
+   ↓                   ↓
+Smart Auto        Choose Myself
+   ↓                   ↓
+Auto Selection    Smart Suggestions
+   ↓                   ↓
+   └─────────┬─────────┘
+             ↓
+       Order Created
+             ↓
+     Wholesaler Notified
+             ↓
+     Wholesaler Approves
+             ↓
+      Advance Requested
+             ↓
+  Retailer Pays (Demo Gateway)
+             ↓
+         Processing
+             ↓
+          On The Way
+             ↓
+          Delivered
+             ↓
+    Bill Generated & Sent
+             ↓
+  Final Payment Requested
+             ↓
+  Retailer Pays (Demo Gateway)
+             ↓
+          Completed
+             ↓
+  Ledger / Billing / Reports Updated
 ```
 
 ---
 
-# 📱 Responsive Design
+## 📌 Future Improvements
 
-The Smart Khata web interface is designed to work across:
-
-- Desktop
-- Laptop
-- Tablet
-- Mobile Browser
-
-Pages such as Billing, Orders, Payment Gateway, and Dashboard include responsive layouts.
-
----
-
-# 📱 Flutter Application
-
-A separate Flutter repository is available for mobile application development.
-
-Repository:
-
-https://github.com/Rakshitsoni1410/smartkhatabook
-
-The mobile application can be expanded to include:
-
-- Dashboard
-- Orders
-- Stock
-- Billing
-- Notifications
-- Ledger
-- Customer Portal
+- Real payment gateway integration
+- Native push notifications
+- WebSocket real-time order updates
+- GST invoice support
+- Advanced PDF billing
+- Advanced analytics & demand forecasting
+- Multi-shop support
+- Admin dashboard
+- Automated payment reminders
 
 ---
 
-# 📌 Future Improvements
-
-Potential future improvements include:
-
-- Real Payment Gateway Integration
-- Push Notifications
-- Real-Time Order Updates
-- WebSocket Notifications
-- GST Invoice Support
-- Advanced PDF Billing
-- Advanced Analytics
-- AI Demand Prediction
-- Multi-Language Support
-- Dark Mode
-- Multi-Shop Support
-- Admin Dashboard
-- Automated Payment Reminders
-- Advanced Business Insights
-
----
-
-# 🎓 Project Information
+## 🎓 Project Information
 
 | Detail       | Information                |
 | ------------ | -------------------------- |
 | Project      | Smart Khata Book           |
 | Type         | Business Management System |
-| Course       | MCA                        |
-| Semester     | 2                          |
+| Course       | MCA — Semester 2           |
 | Project Type | Group Mini Project         |
-| Web Frontend | React.js                   |
+| Web Frontend | React.js + Vite            |
 | Backend      | Node.js + Express.js       |
 | Database     | MongoDB                    |
 | Mobile       | Flutter                    |
 
 ---
 
-# 👨‍💻 Author
+## 👨‍💻 Author
 
 Developed by **rrsoni**
-
-GitHub:
-
-https://github.com/Rakshitsoni1410
+GitHub: https://github.com/Rakshitsoni1410
 
 ---
 
-# 🔗 Important Links
+## 📄 License
 
-## Live Web Application
-
-https://smartkhatabooks.netlify.app/
-
-## Web Repository
-
-https://github.com/Rakshitsoni1410/web-smartkhatabook
-
-## Backend Repository
-
-https://github.com/Rakshitsoni1410/backend-of-smartkhata-book
-
-## Mobile Repository
-
-https://github.com/Rakshitsoni1410/smartkhatabook
+Developed for **educational and academic purposes**.
 
 ---
 
-# ❤️ Built With
-
-- React.js
-- JavaScript
-- CSS
-- Axios
-- React Router
-- React Icons
-- Node.js
-- Express.js
-- MongoDB
-
----
-
-# 📄 License
-
-This project is currently developed for **educational and academic purposes**.
-
----
-
-# ⭐ Support
-
-If you like Smart Khata Book, consider giving the project repositories a ⭐ on GitHub.
-
-**Smart Khata Book — Orders, Ledger, Billing, Payments & Business Management 🚀**
+> ⭐ If you find Smart Khata Book useful, consider starring the repositories on GitHub!
+>
+> **Smart Khata Book — Orders, Inventory, Smart Supplier Selection, Ledger, Billing, Employees & Business Management 🚀**
