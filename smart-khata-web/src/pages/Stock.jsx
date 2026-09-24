@@ -1,19 +1,10 @@
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
-import {
-  useNavigate,
-} from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 import api from "../api";
 
-import {
-  getStoredUser,
-} from "../utils/session";
+import { getStoredUser } from "../utils/session";
 
 import {
   FiAlertCircle,
@@ -28,6 +19,12 @@ import {
   FiSun,
   FiTrash2,
   FiX,
+  FiZap,
+  FiStar,
+  FiUser,
+  FiRefreshCw,
+  FiMinus,
+  FiTruck,
 } from "react-icons/fi";
 
 import "./Stock.css";
@@ -37,21 +34,15 @@ import "./Stock.css";
 // =====================================================
 
 const formatMoney = (value) => {
-  const amount =
-    Number(value || 0);
+  const amount = Number(value || 0);
 
-  if (
-    !Number.isFinite(amount)
-  ) {
+  if (!Number.isFinite(amount)) {
     return "₹0";
   }
 
-  return `₹${amount.toLocaleString(
-    "en-IN",
-    {
-      maximumFractionDigits: 2,
-    }
-  )}`;
+  return `₹${amount.toLocaleString("en-IN", {
+    maximumFractionDigits: 2,
+  })}`;
 };
 
 // =====================================================
@@ -76,96 +67,69 @@ const getDefaultForm = () => ({
 // =====================================================
 
 export default function Stock() {
-  const navigate =
-    useNavigate();
+  const navigate = useNavigate();
 
-  const user =
-    getStoredUser() || {};
+  const user = getStoredUser() || {};
 
-  const role =
-    String(
-      user?.role || ""
-    )
-      .trim()
-      .toLowerCase();
+  const role = String(user?.role || "")
+    .trim()
+    .toLowerCase();
 
-  const isRetailer =
-    role === "retailer";
+  const isRetailer = role === "retailer";
 
   // =====================================================
   // DATA
   // =====================================================
 
-  const [
-    products,
-    setProducts,
-  ] = useState([]);
+  const [products, setProducts] = useState([]);
 
-  const [
-    suggestions,
-    setSuggestions,
-  ] = useState([]);
+  const [suggestions, setSuggestions] = useState([]);
 
-  const [
-    wholesalers,
-    setWholesalers,
-  ] = useState({});
+  const [wholesalers, setWholesalers] = useState({});
 
   // =====================================================
   // UI
   // =====================================================
 
-  const [
-    search,
-    setSearch,
-  ] = useState("");
+  const [search, setSearch] = useState("");
 
-  const [
-    loading,
-    setLoading,
-  ] = useState(true);
+  const [loading, setLoading] = useState(true);
 
-  const [
-    saving,
-    setSaving,
-  ] = useState(false);
+  const [saving, setSaving] = useState(false);
 
-  const [
-    deletingId,
-    setDeletingId,
-  ] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
 
-  const [
-    orderingId,
-    setOrderingId,
-  ] = useState(null);
+  const [orderingId, setOrderingId] = useState(null);
 
-  const [
-    open,
-    setOpen,
-  ] = useState(false);
+  // =====================================================
+  // ORDER FLOW
+  // =====================================================
 
-  const [
-    editOpen,
-    setEditOpen,
-  ] = useState(false);
+  const [orderOpen, setOrderOpen] = useState(false);
 
-  const [
-    selected,
-    setSelected,
-  ] = useState(null);
+  const [orderProduct, setOrderProduct] = useState(null);
 
-  const [
-    form,
-    setForm,
-  ] = useState(
-    getDefaultForm()
-  );
+  const [orderQuantity, setOrderQuantity] = useState(1);
 
-  const [
-    toast,
-    setToast,
-  ] = useState({
+  const [orderMode, setOrderMode] = useState("");
+
+  const [orderRecommendations, setOrderRecommendations] = useState([]);
+
+  const [selectedSupplier, setSelectedSupplier] = useState(null);
+
+  const [recommendationsLoading, setRecommendationsLoading] = useState(false);
+
+  const [recommendationsError, setRecommendationsError] = useState("");
+
+  const [open, setOpen] = useState(false);
+
+  const [editOpen, setEditOpen] = useState(false);
+
+  const [selected, setSelected] = useState(null);
+
+  const [form, setForm] = useState(getDefaultForm());
+
+  const [toast, setToast] = useState({
     msg: "",
     type: "success",
   });
@@ -174,15 +138,9 @@ export default function Stock() {
   // DARK MODE
   // =====================================================
 
-  const [
-    darkMode,
-    setDarkMode,
-  ] = useState(() => {
+  const [darkMode, setDarkMode] = useState(() => {
     try {
-      const saved =
-        localStorage.getItem(
-          "smartkhata-theme"
-        );
+      const saved = localStorage.getItem("smartkhata-theme");
 
       if (saved === "dark") {
         return true;
@@ -193,9 +151,7 @@ export default function Stock() {
       }
 
       return (
-        window.matchMedia?.(
-          "(prefers-color-scheme: dark)"
-        )?.matches || false
+        window.matchMedia?.("(prefers-color-scheme: dark)")?.matches || false
       );
     } catch {
       return false;
@@ -204,12 +160,7 @@ export default function Stock() {
 
   useEffect(() => {
     try {
-      localStorage.setItem(
-        "smartkhata-theme",
-        darkMode
-          ? "dark"
-          : "light"
-      );
+      localStorage.setItem("smartkhata-theme", darkMode ? "dark" : "light");
     } catch {
       // Ignore storage error
     }
@@ -219,10 +170,7 @@ export default function Stock() {
   // TOAST
   // =====================================================
 
-  const showToast = (
-    msg,
-    type = "success"
-  ) => {
+  const showToast = (msg, type = "success") => {
     setToast({
       msg,
       type,
@@ -234,154 +182,98 @@ export default function Stock() {
       return;
     }
 
-    const timer =
-      setTimeout(() => {
-        setToast({
-          msg: "",
-          type: "success",
-        });
-      }, 3000);
+    const timer = setTimeout(() => {
+      setToast({
+        msg: "",
+        type: "success",
+      });
+    }, 3000);
 
-    return () =>
-      clearTimeout(timer);
+    return () => clearTimeout(timer);
   }, [toast]);
 
   // =====================================================
   // WHOLESALERS
   // =====================================================
 
-  const fetchWholesalers =
-    useCallback(
-      async (category) => {
-        if (!category) {
-          return;
-        }
+  const fetchWholesalers = useCallback(async (category) => {
+    if (!category) {
+      return;
+    }
 
-        try {
-          const res =
-            await api.get(
-              `/api/user/wholesalers/${encodeURIComponent(
-                category
-              )}`
-            );
+    try {
+      const res = await api.get(
+        `/api/user/wholesalers/${encodeURIComponent(category)}`,
+      );
 
-          setWholesalers(
-            (previous) => ({
-              ...previous,
+      setWholesalers((previous) => ({
+        ...previous,
 
-              [category]:
-                res.data
-                  ?.users || [],
-            })
-          );
-        } catch (error) {
-          console.error(
-            "FETCH WHOLESALERS ERROR:",
-            error
-          );
-        }
-      },
-      []
-    );
+        [category]: res.data?.users || [],
+      }));
+    } catch (error) {
+      console.error("FETCH WHOLESALERS ERROR:", error);
+    }
+  }, []);
 
   // =====================================================
   // PRODUCTS
   // =====================================================
 
-  const fetchProducts =
-    useCallback(async () => {
-      if (!user?._id) {
-        setProducts([]);
+  const fetchProducts = useCallback(async () => {
+    if (!user?._id) {
+      setProducts([]);
 
-        setLoading(false);
+      setLoading(false);
 
-        return;
-      }
+      return;
+    }
 
-      try {
-        const res =
-          await api.get(
-            `/api/product/list/${user._id}`
-          );
+    try {
+      const res = await api.get(`/api/product/list/${user._id}`);
 
-        const data =
-          Array.isArray(
-            res.data?.products
-          )
-            ? res.data.products
-            : [];
+      const data = Array.isArray(res.data?.products) ? res.data.products : [];
 
-        setProducts(data);
+      setProducts(data);
 
-        const categories = [
-          ...new Set(
-            data
-              .map(
-                (item) =>
-                  item.category
-              )
-              .filter(Boolean)
-          ),
-        ];
+      const categories = [
+        ...new Set(data.map((item) => item.category).filter(Boolean)),
+      ];
 
-        categories.forEach(
-          (category) => {
-            fetchWholesalers(
-              category
-            );
-          }
-        );
-      } catch (error) {
-        console.error(
-          "FETCH PRODUCTS ERROR:",
-          error
-        );
+      categories.forEach((category) => {
+        fetchWholesalers(category);
+      });
+    } catch (error) {
+      console.error("FETCH PRODUCTS ERROR:", error);
 
-        showToast(
-          error?.response?.data
-            ?.message ||
-            "Unable to load products.",
-          "error"
-        );
-      } finally {
-        setLoading(false);
-      }
-    }, [
-      user?._id,
-      fetchWholesalers,
-    ]);
+      showToast(
+        error?.response?.data?.message || "Unable to load products.",
+        "error",
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, [user?._id, fetchWholesalers]);
 
   // =====================================================
   // SUGGESTIONS
   // =====================================================
 
-  const fetchSuggestions =
-    useCallback(async () => {
-      if (!user?._id) {
-        return;
-      }
+  const fetchSuggestions = useCallback(async () => {
+    if (!user?._id) {
+      return;
+    }
 
-      try {
-        const res =
-          await api.get(
-            `/api/product/suggestions/${user._id}`
-          );
+    try {
+      const res = await api.get(`/api/product/suggestions/${user._id}`);
 
-        setSuggestions(
-          Array.isArray(
-            res.data?.suggestions
-          )
-            ? res.data
-                .suggestions
-            : []
-        );
-      } catch (error) {
-        console.error(
-          "FETCH SUGGESTIONS ERROR:",
-          error
-        );
-      }
-    }, [user?._id]);
+      setSuggestions(
+        Array.isArray(res.data?.suggestions) ? res.data.suggestions : [],
+      );
+    } catch (error) {
+      console.error("FETCH SUGGESTIONS ERROR:", error);
+    }
+  }, [user?._id]);
 
   // =====================================================
   // INITIAL LOAD
@@ -391,110 +283,80 @@ export default function Stock() {
     fetchProducts();
 
     fetchSuggestions();
-  }, [
-    fetchProducts,
-    fetchSuggestions,
-  ]);
+  }, [fetchProducts, fetchSuggestions]);
 
   // =====================================================
   // MODAL BODY LOCK
   // =====================================================
 
   useEffect(() => {
-    if (
-      !open &&
-      !editOpen
-    ) {
+    if (!open && !editOpen && !orderOpen) {
       return;
     }
 
-    const oldOverflow =
-      document.body.style
-        .overflow;
+    const oldOverflow = document.body.style.overflow;
 
-    document.body.style.overflow =
-      "hidden";
+    document.body.style.overflow = "hidden";
 
     return () => {
-      document.body.style.overflow =
-        oldOverflow;
+      document.body.style.overflow = oldOverflow;
     };
-  }, [
-    open,
-    editOpen,
-  ]);
+  }, [open, editOpen, orderOpen]);
 
   // =====================================================
   // ESCAPE MODAL
   // =====================================================
 
   useEffect(() => {
-    const handleEscape = (
-      event
-    ) => {
-      if (
-        event.key !==
-        "Escape"
-      ) {
+    const handleEscape = (event) => {
+      if (event.key !== "Escape") {
         return;
       }
 
-      if (
-        saving
-      ) {
+      if (saving || orderingId || recommendationsLoading) {
         return;
       }
 
       setOpen(false);
 
       setEditOpen(false);
+
+      setOrderOpen(false);
+
+      setOrderProduct(null);
+
+      setOrderMode("");
+
+      setOrderRecommendations([]);
+
+      setSelectedSupplier(null);
+
+      setRecommendationsError("");
     };
 
-    window.addEventListener(
-      "keydown",
-      handleEscape
-    );
+    window.addEventListener("keydown", handleEscape);
 
-    return () =>
-      window.removeEventListener(
-        "keydown",
-        handleEscape
-      );
-  }, [saving]);
+    return () => window.removeEventListener("keydown", handleEscape);
+  }, [saving, orderingId, recommendationsLoading]);
 
   // =====================================================
   // FORM
   // =====================================================
 
   const resetForm = () => {
-    setForm(
-      getDefaultForm()
-    );
+    setForm(getDefaultForm());
 
     setSelected(null);
   };
 
-  const handleChange = (
-    event
-  ) => {
-    const {
-      name,
-      value,
-      type,
-      checked,
-    } = event.target;
+  const handleChange = (event) => {
+    const { name, value, type, checked } = event.target;
 
-    setForm(
-      (previous) => ({
-        ...previous,
+    setForm((previous) => ({
+      ...previous,
 
-        [name]:
-          type ===
-          "checkbox"
-            ? checked
-            : value,
-      })
-    );
+      [name]: type === "checkbox" ? checked : value,
+    }));
   };
 
   // =====================================================
@@ -521,128 +383,84 @@ export default function Stock() {
   // ADD PRODUCT
   // =====================================================
 
-  const handleAdd =
-    async () => {
-      if (saving) {
-        return;
-      }
+  const handleAdd = async () => {
+    if (saving) {
+      return;
+    }
 
-      if (!form.name.trim()) {
-        showToast(
-          "Product name is required.",
-          "error"
-        );
+    if (!form.name.trim()) {
+      showToast("Product name is required.", "error");
 
-        return;
-      }
+      return;
+    }
 
-      if (
-        !form.category.trim()
-      ) {
-        showToast(
-          "Category is required.",
-          "error"
-        );
+    if (!form.category.trim()) {
+      showToast("Category is required.", "error");
 
-        return;
-      }
+      return;
+    }
 
-      try {
-        setSaving(true);
+    try {
+      setSaving(true);
 
-        await api.post(
-          "/api/product/add",
-          {
-            ownerId:
-              user._id,
+      await api.post("/api/product/add", {
+        ownerId: user._id,
 
-            businessType:
-              user.businessType,
+        businessType: user.businessType,
 
-            ...form,
+        ...form,
 
-            name:
-              form.name.trim(),
+        name: form.name.trim(),
 
-            category:
-              form.category.trim(),
-          }
-        );
+        category: form.category.trim(),
+      });
 
-        setOpen(false);
+      setOpen(false);
 
-        resetForm();
+      resetForm();
 
-        showToast(
-          "Product added successfully."
-        );
+      showToast("Product added successfully.");
 
-        await fetchProducts();
-      } catch (error) {
-        console.error(
-          "ADD PRODUCT ERROR:",
-          error
-        );
+      await fetchProducts();
+    } catch (error) {
+      console.error("ADD PRODUCT ERROR:", error);
 
-        showToast(
-          error?.response?.data
-            ?.message ||
-            "Unable to add product.",
-          "error"
-        );
-      } finally {
-        setSaving(false);
-      }
-    };
+      showToast(
+        error?.response?.data?.message || "Unable to add product.",
+        "error",
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
 
   // =====================================================
   // EDIT
   // =====================================================
 
-  const openEdit = (
-    item
-  ) => {
+  const openEdit = (item) => {
     setSelected(item);
 
     setForm({
-      name:
-        item?.name || "",
+      name: item?.name || "",
 
-      category:
-        item?.category ||
-        "",
+      category: item?.category || "",
 
-      description:
-        item?.description ||
-        "",
+      description: item?.description || "",
 
-      purchase:
-        item?.purchase ??
-        "",
+      purchase: item?.purchase ?? "",
 
-      selling:
-        item?.selling ??
-        "",
+      selling: item?.selling ?? "",
 
-      stockQty:
-        item?.stockQty ??
-        "",
+      stockQty: item?.stockQty ?? "",
 
-      inStock:
-        item?.inStock ??
-        true,
+      inStock: item?.inStock ?? true,
 
-      inWeight:
-        item?.inWeight ??
-        false,
+      inWeight: item?.inWeight ?? false,
 
-      weight:
-        item?.weight ??
-        "",
+      weight: item?.weight ?? "",
 
-      weightUnit:
-        item?.weightUnit ||
-        "kg",
+      weightUnit: item?.weightUnit || "kg",
     });
 
     setEditOpen(true);
@@ -662,564 +480,608 @@ export default function Stock() {
   // UPDATE
   // =====================================================
 
-  const handleUpdate =
-    async () => {
-      if (
-        saving ||
-        !selected?._id
-      ) {
-        return;
-      }
+  const handleUpdate = async () => {
+    if (saving || !selected?._id) {
+      return;
+    }
 
-      if (!form.name.trim()) {
-        showToast(
-          "Product name is required.",
-          "error"
-        );
+    if (!form.name.trim()) {
+      showToast("Product name is required.", "error");
 
-        return;
-      }
+      return;
+    }
 
-      try {
-        setSaving(true);
+    try {
+      setSaving(true);
 
-        await api.put(
-          `/api/product/update/${selected._id}`,
-          {
-            ...form,
+      await api.put(`/api/product/update/${selected._id}`, {
+        ...form,
 
-            name:
-              form.name.trim(),
+        name: form.name.trim(),
 
-            category:
-              form.category.trim(),
-          }
-        );
+        category: form.category.trim(),
+      });
 
-        setEditOpen(false);
+      setEditOpen(false);
 
-        resetForm();
+      resetForm();
 
-        showToast(
-          "Product updated successfully."
-        );
+      showToast("Product updated successfully.");
 
-        await fetchProducts();
-      } catch (error) {
-        console.error(
-          "UPDATE PRODUCT ERROR:",
-          error
-        );
+      await fetchProducts();
+    } catch (error) {
+      console.error("UPDATE PRODUCT ERROR:", error);
 
-        showToast(
-          error?.response?.data
-            ?.message ||
-            "Unable to update product.",
-          "error"
-        );
-      } finally {
-        setSaving(false);
-      }
-    };
+      showToast(
+        error?.response?.data?.message || "Unable to update product.",
+        "error",
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
 
   // =====================================================
   // DELETE
   // =====================================================
 
-  const handleDelete =
-    async (id) => {
-      if (
-        !id ||
-        deletingId
-      ) {
-        return;
-      }
+  const handleDelete = async (id) => {
+    if (!id || deletingId) {
+      return;
+    }
 
-      const confirmed =
-        window.confirm(
-          "Delete this product?"
-        );
+    const confirmed = window.confirm("Delete this product?");
 
-      if (!confirmed) {
-        return;
-      }
+    if (!confirmed) {
+      return;
+    }
 
-      try {
-        setDeletingId(id);
+    try {
+      setDeletingId(id);
 
-        await api.delete(
-          `/api/product/delete/${id}`
-        );
+      await api.delete(`/api/product/delete/${id}`);
 
-        showToast(
-          "Product deleted."
-        );
+      showToast("Product deleted.");
 
-        await fetchProducts();
-      } catch (error) {
-        console.error(
-          "DELETE PRODUCT ERROR:",
-          error
-        );
+      await fetchProducts();
+    } catch (error) {
+      console.error("DELETE PRODUCT ERROR:", error);
 
-        showToast(
-          error?.response?.data
-            ?.message ||
-            "Unable to delete product.",
-          "error"
-        );
-      } finally {
-        setDeletingId(null);
-      }
-    };
+      showToast(
+        error?.response?.data?.message || "Unable to delete product.",
+        "error",
+      );
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  // =====================================================
+  // ORDER HELPERS
+  // =====================================================
+
+  const getOrderUnit = (item) => {
+    if (!item) {
+      return "piece";
+    }
+
+    if (item.inWeight) {
+      return item.weightUnit || "kg";
+    }
+
+    return item.weightUnit || "piece";
+  };
+
+  // =====================================================
+  // RESET ORDER FLOW
+  // =====================================================
+
+  const resetOrderFlow = () => {
+    setOrderProduct(null);
+
+    setOrderQuantity(1);
+
+    setOrderMode("");
+
+    setOrderRecommendations([]);
+
+    setSelectedSupplier(null);
+
+    setRecommendationsError("");
+  };
+
+  // =====================================================
+  // CLOSE ORDER MODAL
+  // =====================================================
+
+  const closeOrderModal = () => {
+    if (orderingId || recommendationsLoading) {
+      return;
+    }
+
+    setOrderOpen(false);
+
+    resetOrderFlow();
+  };
 
   // =====================================================
   // ORDER NOW
   // =====================================================
 
-  const handleOrderNow =
-    async (item) => {
-      if (
-        !item?._id ||
-        !item?.name
-      ) {
-        showToast(
-          "Invalid product",
-          "error"
-        );
+  const handleOrderNow = (item) => {
+    if (!item?._id || !item?.name) {
+      showToast("Invalid product", "error");
 
-        return;
+      return;
+    }
+
+    if (orderingId) {
+      return;
+    }
+
+    setOrderProduct(item);
+
+    setOrderQuantity(1);
+
+    setOrderMode("");
+
+    setOrderRecommendations([]);
+
+    setSelectedSupplier(null);
+
+    setRecommendationsError("");
+
+    setOrderOpen(true);
+  };
+
+  // =====================================================
+  // QUANTITY
+  // =====================================================
+
+  const changeOrderQuantity = (value) => {
+    const parsed = Math.floor(Number(value));
+
+    const quantity =
+      Number.isFinite(parsed) && parsed > 0 ? Math.min(parsed, 9999) : 1;
+
+    setOrderQuantity(quantity);
+
+    if (orderRecommendations.length > 0 || selectedSupplier) {
+      setOrderRecommendations([]);
+
+      setSelectedSupplier(null);
+
+      setRecommendationsError("");
+    }
+  };
+
+  const decreaseOrderQuantity = () => {
+    changeOrderQuantity(Math.max(1, orderQuantity - 1));
+  };
+
+  const increaseOrderQuantity = () => {
+    changeOrderQuantity(orderQuantity + 1);
+  };
+
+  // =====================================================
+  // SUCCESS MESSAGE
+  // =====================================================
+
+  const handleOrderSuccess = async (response, mode) => {
+    const selectedShop =
+      response?.data?.selectedWholesaler?.shopName ||
+      response?.data?.selectedWholesaler?.name;
+
+    const selectedPrice = response?.data?.selection?.selectedPrice;
+
+    let message =
+      mode === "manual"
+        ? "Order placed with your selected wholesaler"
+        : "Smart order placed successfully";
+
+    if (selectedShop) {
+      message += ` • ${selectedShop}`;
+    }
+
+    if (selectedPrice !== undefined && selectedPrice !== null) {
+      message += ` • ${formatMoney(selectedPrice)}/${getOrderUnit(
+        orderProduct,
+      )}`;
+    }
+
+    showToast(message, "success");
+
+    setOrderOpen(false);
+
+    resetOrderFlow();
+
+    await fetchProducts();
+  };
+
+  // =====================================================
+  // SMART AUTO ORDER
+  // =====================================================
+
+  const placeSmartAutoOrder = async () => {
+    if (!orderProduct?._id || !orderProduct?.name) {
+      return;
+    }
+
+    if (orderingId) {
+      return;
+    }
+
+    try {
+      setOrderingId(orderProduct._id);
+
+      const response = await api.post("/api/orders/create", {
+        productName: orderProduct.name.trim(),
+
+        quantity: orderQuantity,
+
+        unit: getOrderUnit(orderProduct),
+
+        selectionMode: "auto",
+      });
+
+      await handleOrderSuccess(response, "auto");
+    } catch (error) {
+      const backendData = error?.response?.data;
+
+      console.error("SMART AUTO ORDER ERROR:", {
+        status: error?.response?.status,
+
+        data: backendData,
+
+        message: error?.message,
+      });
+
+      showToast(
+        backendData?.message || "Unable to place smart order.",
+        "error",
+      );
+    } finally {
+      setOrderingId(null);
+    }
+  };
+
+  // =====================================================
+  // LOAD MANUAL RECOMMENDATIONS
+  // =====================================================
+
+  const loadOrderRecommendations = async () => {
+    if (!orderProduct?.name) {
+      return;
+    }
+
+    if (recommendationsLoading) {
+      return;
+    }
+
+    try {
+      setOrderMode("manual");
+
+      setRecommendationsLoading(true);
+
+      setRecommendationsError("");
+
+      setSelectedSupplier(null);
+
+      const response = await api.post("/api/orders/recommendations", {
+        productName: orderProduct.name.trim(),
+
+        quantity: orderQuantity,
+      });
+
+      const list = Array.isArray(response?.data?.recommendations)
+        ? response.data.recommendations
+        : [];
+
+      setOrderRecommendations(list);
+
+      if (list.length === 0) {
+        setRecommendationsError(
+          "No wholesaler currently has enough stock for this quantity.",
+        );
+      }
+    } catch (error) {
+      console.error("ORDER RECOMMENDATIONS ERROR:", error);
+
+      const message =
+        error?.response?.data?.message || "Unable to load wholesalers.";
+
+      setRecommendationsError(message);
+
+      setOrderRecommendations([]);
+    } finally {
+      setRecommendationsLoading(false);
+    }
+  };
+
+  // CHOOSE MODE
+
+  const chooseSmartAuto = () => {
+    setOrderMode("auto");
+
+    setOrderRecommendations([]);
+
+    setSelectedSupplier(null);
+
+    setRecommendationsError("");
+  };
+
+  const chooseManual = () => {
+    loadOrderRecommendations();
+  };
+
+  // =====================================================
+  // SELECT SUPPLIER
+  // =====================================================
+
+  const chooseSupplier = (supplier) => {
+    if (!supplier?.wholesalerId || !supplier?.productId) {
+      return;
+    }
+
+    setSelectedSupplier(supplier);
+  };
+
+  // =====================================================
+  // PLACE MANUAL ORDER
+  // =====================================================
+
+  const placeManualOrder = async () => {
+    if (
+      !orderProduct?._id ||
+      !selectedSupplier?.wholesalerId ||
+      !selectedSupplier?.productId
+    ) {
+      showToast("Please select a wholesaler first.", "error");
+
+      return;
+    }
+
+    if (orderingId) {
+      return;
+    }
+
+    try {
+      setOrderingId(orderProduct._id);
+
+      const response = await api.post("/api/orders/create", {
+        productName: orderProduct.name.trim(),
+
+        quantity: orderQuantity,
+
+        unit: getOrderUnit(orderProduct),
+
+        selectionMode: "manual",
+
+        selectedWholesalerId: selectedSupplier.wholesalerId,
+
+        selectedProductId: selectedSupplier.productId,
+      });
+
+      await handleOrderSuccess(response, "manual");
+    } catch (error) {
+      const backendData = error?.response?.data;
+
+      console.error("MANUAL ORDER ERROR:", {
+        status: error?.response?.status,
+
+        data: backendData,
+
+        message: error?.message,
+      });
+
+      if (error?.response?.status === 409) {
+        setSelectedSupplier(null);
+
+        setOrderRecommendations([]);
+
+        setRecommendationsError(
+          "Supplier stock or price changed. Refresh the suggestions before ordering.",
+        );
       }
 
-      if (orderingId) {
-        return;
-      }
-
-      try {
-        setOrderingId(
-          item._id
-        );
-
-        const orderUnit =
-          item.inWeight
-            ? item.weightUnit ||
-              "kg"
-            : item.weightUnit ||
-              "piece";
-
-        const res =
-          await api.post(
-            "/api/orders/create",
-            {
-              productName:
-                item.name.trim(),
-
-              quantity: 1,
-
-              unit:
-                orderUnit,
-            }
-          );
-
-        const selectedShop =
-          res.data
-            ?.selectedWholesaler
-            ?.shopName ||
-          res.data
-            ?.selectedWholesaler
-            ?.name;
-
-        const selectedPrice =
-          res.data
-            ?.selection
-            ?.selectedPrice;
-
-        let message =
-          "Order placed successfully";
-
-        if (selectedShop) {
-          message +=
-            ` • ${selectedShop}`;
-        }
-
-        if (
-          selectedPrice !==
-          undefined
-        ) {
-          message +=
-            ` • ${formatMoney(
-              selectedPrice
-            )}`;
-        }
-
-        showToast(
-          message,
-          "success"
-        );
-
-        await fetchProducts();
-      } catch (error) {
-        const backendData =
-          error?.response
-            ?.data;
-
-        console.error(
-          "CREATE ORDER FAILED:",
-          {
-            status:
-              error?.response
-                ?.status,
-
-            data:
-              backendData,
-
-            message:
-              error?.message,
-          }
-        );
-
-        showToast(
-          backendData
-            ?.message ||
-            "Failed to place order",
-          "error"
-        );
-      } finally {
-        setOrderingId(null);
-      }
-    };
+      showToast(backendData?.message || "Failed to place order.", "error");
+    } finally {
+      setOrderingId(null);
+    }
+  };
 
   // =====================================================
   // FILTER
   // =====================================================
 
-  const filtered =
-    useMemo(() => {
-      const query =
-        search
-          .trim()
-          .toLowerCase();
+  const filtered = useMemo(() => {
+    const query = search.trim().toLowerCase();
 
-      if (!query) {
-        return products;
-      }
+    if (!query) {
+      return products;
+    }
 
-      return products.filter(
-        (item) => {
-          const name =
-            String(
-              item?.name ||
-                ""
-            ).toLowerCase();
+    return products.filter((item) => {
+      const name = String(item?.name || "").toLowerCase();
 
-          const category =
-            String(
-              item?.category ||
-                ""
-            ).toLowerCase();
+      const category = String(item?.category || "").toLowerCase();
 
-          return (
-            name.includes(
-              query
-            ) ||
-            category.includes(
-              query
-            )
-          );
-        }
-      );
-    }, [
-      products,
-      search,
-    ]);
+      return name.includes(query) || category.includes(query);
+    });
+  }, [products, search]);
 
   // =====================================================
   // SUMMARY
   // =====================================================
 
-  const totalProducts =
-    products.length;
+  const totalProducts = products.length;
 
-  const inStockCount =
-    products.filter(
-      (item) =>
-        item?.inStock &&
-        Number(
-          item?.stockQty || 0
-        ) > 0
-    ).length;
+  const inStockCount = products.filter(
+    (item) => item?.inStock && Number(item?.stockQty || 0) > 0,
+  ).length;
 
-  const lowStockCount =
-    products.filter(
-      (item) => {
-        const quantity =
-          Number(
-            item?.stockQty ||
-              0
-          );
+  const lowStockCount = products.filter((item) => {
+    const quantity = Number(item?.stockQty || 0);
 
-        return (
-          quantity > 0 &&
-          quantity <= 5
-        );
-      }
-    ).length;
+    return quantity > 0 && quantity <= 5;
+  }).length;
 
   // =====================================================
   // FORM MODAL
   // =====================================================
 
-  const renderProductForm = (
-    mode
-  ) => {
-    const isEdit =
-      mode === "edit";
+  const renderProductForm = (mode) => {
+    const isEdit = mode === "edit";
 
     return (
       <>
-        {!isEdit &&
-          suggestions.length >
-            0 && (
-            <div className="stock-suggest-box">
-              <div className="stock-suggest-header">
-                <span>
-                  Suggested Products
-                </span>
+        {!isEdit && suggestions.length > 0 && (
+          <div className="stock-suggest-box">
+            <div className="stock-suggest-header">
+              <span>Suggested Products</span>
 
-                <small>
-                  For{" "}
-                  {user?.businessType ||
-                    "your business"}
-                </small>
-              </div>
-
-              <div className="stock-chips">
-                {suggestions.map(
-                  (
-                    item,
-                    index
-                  ) => (
-                    <button
-                      type="button"
-                      className="stock-chip"
-                      key={
-                        item?._id ||
-                        `${item?.name}-${index}`
-                      }
-                      onClick={() =>
-                        setForm({
-                          name:
-                            item?.name ||
-                            "",
-
-                          category:
-                            item?.category ||
-                            "",
-
-                          description:
-                            item?.description ||
-                            "",
-
-                          purchase:
-                            item?.purchase ??
-                            "",
-
-                          selling:
-                            item?.selling ??
-                            "",
-
-                          stockQty:
-                            item?.stockQty ??
-                            "",
-
-                          inStock:
-                            true,
-
-                          inWeight:
-                            item?.inWeight ??
-                            false,
-
-                          weight:
-                            item?.weight ??
-                            "",
-
-                          weightUnit:
-                            item?.weightUnit ||
-                            "kg",
-                        })
-                      }
-                    >
-                      {item?.name ||
-                        "Product"}
-                    </button>
-                  )
-                )}
-              </div>
+              <small>For {user?.businessType || "your business"}</small>
             </div>
-          )}
+
+            <div className="stock-chips">
+              {suggestions.map((item, index) => (
+                <button
+                  type="button"
+                  className="stock-chip"
+                  key={item?._id || `${item?.name}-${index}`}
+                  onClick={() =>
+                    setForm({
+                      name: item?.name || "",
+
+                      category: item?.category || "",
+
+                      description: item?.description || "",
+
+                      purchase: item?.purchase ?? "",
+
+                      selling: item?.selling ?? "",
+
+                      stockQty: item?.stockQty ?? "",
+
+                      inStock: true,
+
+                      inWeight: item?.inWeight ?? false,
+
+                      weight: item?.weight ?? "",
+
+                      weightUnit: item?.weightUnit || "kg",
+                    })
+                  }
+                >
+                  {item?.name || "Product"}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="stock-form-grid">
           <label className="stock-field">
-            <span>
-              Product Name
-            </span>
+            <span>Product Name</span>
 
             <input
               name="name"
               placeholder="e.g. Premium Rice"
-              value={
-                form.name
-              }
-              onChange={
-                handleChange
-              }
+              value={form.name}
+              onChange={handleChange}
             />
           </label>
 
           <label className="stock-field">
-            <span>
-              Category
-            </span>
+            <span>Category</span>
 
             <input
               name="category"
               placeholder="e.g. Grocery"
-              value={
-                form.category
-              }
-              onChange={
-                handleChange
-              }
+              value={form.category}
+              onChange={handleChange}
             />
           </label>
 
           <label className="stock-field">
-            <span>
-              Purchase Price
-            </span>
+            <span>Purchase Price</span>
 
             <div className="stock-money-input">
-              <span>
-                ₹
-              </span>
+              <span>₹</span>
 
               <input
                 type="number"
                 min="0"
                 name="purchase"
                 placeholder="0"
-                value={
-                  form.purchase
-                }
-                onChange={
-                  handleChange
-                }
+                value={form.purchase}
+                onChange={handleChange}
               />
             </div>
           </label>
 
           <label className="stock-field">
-            <span>
-              Selling Price
-            </span>
+            <span>Selling Price</span>
 
             <div className="stock-money-input">
-              <span>
-                ₹
-              </span>
+              <span>₹</span>
 
               <input
                 type="number"
                 min="0"
                 name="selling"
                 placeholder="0"
-                value={
-                  form.selling
-                }
-                onChange={
-                  handleChange
-                }
+                value={form.selling}
+                onChange={handleChange}
               />
             </div>
           </label>
 
           <label className="stock-field">
-            <span>
-              Stock Quantity
-            </span>
+            <span>Stock Quantity</span>
 
             <input
               type="number"
               min="0"
               name="stockQty"
               placeholder="0"
-              value={
-                form.stockQty
-              }
-              onChange={
-                handleChange
-              }
+              value={form.stockQty}
+              onChange={handleChange}
             />
           </label>
 
           <label className="stock-field">
-            <span>
-              Unit
-            </span>
+            <span>Unit</span>
 
             <select
               name="weightUnit"
-              value={
-                form.weightUnit
-              }
-              onChange={
-                handleChange
-              }
+              value={form.weightUnit}
+              onChange={handleChange}
             >
-              <option value="piece">
-                Piece
-              </option>
+              <option value="piece">Piece</option>
 
-              <option value="kg">
-                Kilogram
-              </option>
+              <option value="kg">Kilogram</option>
 
-              <option value="gram">
-                Gram
-              </option>
+              <option value="gram">Gram</option>
 
-              <option value="litre">
-                Litre
-              </option>
+              <option value="litre">Litre</option>
 
-              <option value="ml">
-                Millilitre
-              </option>
+              <option value="ml">Millilitre</option>
 
-              <option value="box">
-                Box
-              </option>
+              <option value="box">Box</option>
 
-              <option value="packet">
-                Packet
-              </option>
+              <option value="packet">Packet</option>
             </select>
           </label>
 
           <label className="stock-field stock-field-full">
-            <span>
-              Description
-            </span>
+            <span>Description</span>
 
             <textarea
               name="description"
               placeholder="Optional product description..."
-              value={
-                form.description
-              }
-              onChange={
-                handleChange
-              }
+              value={form.description}
+              onChange={handleChange}
             />
           </label>
 
@@ -1228,42 +1090,26 @@ export default function Stock() {
               <input
                 type="checkbox"
                 name="inStock"
-                checked={
-                  Boolean(
-                    form.inStock
-                  )
-                }
-                onChange={
-                  handleChange
-                }
+                checked={Boolean(form.inStock)}
+                onChange={handleChange}
               />
 
               <span className="stock-toggle-control" />
 
-              <span>
-                Available in stock
-              </span>
+              <span>Available in stock</span>
             </label>
 
             <label className="stock-toggle">
               <input
                 type="checkbox"
                 name="inWeight"
-                checked={
-                  Boolean(
-                    form.inWeight
-                  )
-                }
-                onChange={
-                  handleChange
-                }
+                checked={Boolean(form.inWeight)}
+                onChange={handleChange}
               />
 
               <span className="stock-toggle-control" />
 
-              <span>
-                Weight based
-              </span>
+              <span>Weight based</span>
             </label>
           </div>
         </div>
@@ -1271,28 +1117,20 @@ export default function Stock() {
         <button
           type="button"
           className="stock-save-btn"
-          onClick={
-            isEdit
-              ? handleUpdate
-              : handleAdd
-          }
+          onClick={isEdit ? handleUpdate : handleAdd}
           disabled={saving}
         >
           {saving ? (
             <>
               <span className="stock-spinner" />
 
-              {isEdit
-                ? "Updating..."
-                : "Saving..."}
+              {isEdit ? "Updating..." : "Saving..."}
             </>
           ) : (
             <>
               <FiCheckCircle />
 
-              {isEdit
-                ? "Update Product"
-                : "Save Product"}
+              {isEdit ? "Update Product" : "Save Product"}
             </>
           )}
         </button>
@@ -1305,13 +1143,7 @@ export default function Stock() {
   // =====================================================
 
   return (
-    <div
-      className={`stock-page ${
-        darkMode
-          ? "stock-dark"
-          : ""
-      }`}
-    >
+    <div className={`stock-page ${darkMode ? "stock-dark" : ""}`}>
       {/* =====================================
           TOAST
       ====================================== */}
@@ -1319,24 +1151,16 @@ export default function Stock() {
       {toast.msg && (
         <div
           className={`stock-toast ${
-            toast.type ===
-            "success"
+            toast.type === "success"
               ? "stock-toast-success"
               : "stock-toast-error"
           }`}
           role="status"
           aria-live="polite"
         >
-          {toast.type ===
-          "success" ? (
-            <FiCheckCircle />
-          ) : (
-            <FiAlertCircle />
-          )}
+          {toast.type === "success" ? <FiCheckCircle /> : <FiAlertCircle />}
 
-          <span>
-            {toast.msg}
-          </span>
+          <span>{toast.msg}</span>
         </div>
       )}
 
@@ -1349,29 +1173,18 @@ export default function Stock() {
           <button
             type="button"
             className="stock-back-btn"
-            onClick={() =>
-              navigate(
-                "/dashboard"
-              )
-            }
+            onClick={() => navigate("/dashboard")}
             aria-label="Back to dashboard"
           >
             <FiArrowLeft />
           </button>
 
           <div>
-            <span className="stock-page-label">
-              INVENTORY
-            </span>
+            <span className="stock-page-label">INVENTORY</span>
 
-            <h1>
-              Stock
-            </h1>
+            <h1>Stock</h1>
 
-            <p>
-              Manage products,
-              pricing and inventory
-            </p>
+            <p>Manage products, pricing and inventory</p>
           </div>
         </div>
 
@@ -1379,44 +1192,23 @@ export default function Stock() {
           <button
             type="button"
             className="stock-theme-btn"
-            onClick={() =>
-              setDarkMode(
-                (
-                  previous
-                ) =>
-                  !previous
-              )
-            }
+            onClick={() => setDarkMode((previous) => !previous)}
             aria-label={
-              darkMode
-                ? "Switch to light mode"
-                : "Switch to dark mode"
+              darkMode ? "Switch to light mode" : "Switch to dark mode"
             }
-            title={
-              darkMode
-                ? "Light mode"
-                : "Dark mode"
-            }
+            title={darkMode ? "Light mode" : "Dark mode"}
           >
-            {darkMode ? (
-              <FiSun />
-            ) : (
-              <FiMoon />
-            )}
+            {darkMode ? <FiSun /> : <FiMoon />}
           </button>
 
           <button
             type="button"
             className="stock-add-btn"
-            onClick={
-              openAddModal
-            }
+            onClick={openAddModal}
           >
             <FiPlus />
 
-            <span>
-              Add Product
-            </span>
+            <span>Add Product</span>
           </button>
         </div>
       </header>
@@ -1432,13 +1224,9 @@ export default function Stock() {
           </div>
 
           <div>
-            <span>
-              Total Products
-            </span>
+            <span>Total Products</span>
 
-            <strong>
-              {totalProducts}
-            </strong>
+            <strong>{totalProducts}</strong>
           </div>
         </div>
 
@@ -1448,13 +1236,9 @@ export default function Stock() {
           </div>
 
           <div>
-            <span>
-              In Stock
-            </span>
+            <span>In Stock</span>
 
-            <strong>
-              {inStockCount}
-            </strong>
+            <strong>{inStockCount}</strong>
           </div>
         </div>
 
@@ -1464,13 +1248,9 @@ export default function Stock() {
           </div>
 
           <div>
-            <span>
-              Low Stock
-            </span>
+            <span>Low Stock</span>
 
-            <strong>
-              {lowStockCount}
-            </strong>
+            <strong>{lowStockCount}</strong>
           </div>
         </div>
       </section>
@@ -1486,23 +1266,14 @@ export default function Stock() {
           type="search"
           placeholder="Search product or category..."
           value={search}
-          onChange={(
-            event
-          ) =>
-            setSearch(
-              event.target
-                .value
-            )
-          }
+          onChange={(event) => setSearch(event.target.value)}
         />
 
         {search && (
           <button
             type="button"
             className="stock-search-clear"
-            onClick={() =>
-              setSearch("")
-            }
+            onClick={() => setSearch("")}
             aria-label="Clear search"
           >
             <FiX />
@@ -1518,14 +1289,9 @@ export default function Stock() {
         <div className="stock-state">
           <div className="stock-loader" />
 
-          <h3>
-            Loading stock
-          </h3>
+          <h3>Loading stock</h3>
 
-          <p>
-            Getting your latest
-            products...
-          </p>
+          <p>Getting your latest products...</p>
         </div>
       )}
 
@@ -1533,289 +1299,716 @@ export default function Stock() {
           EMPTY
       ====================================== */}
 
-      {!loading &&
-        filtered.length ===
-          0 && (
-          <div className="stock-state">
-            <div className="stock-state-icon">
-              <FiPackage />
-            </div>
-
-            <h3>
-              {search
-                ? "No products found"
-                : "No products yet"}
-            </h3>
-
-            <p>
-              {search
-                ? "Try another product name or category."
-                : "Add your first product to start managing inventory."}
-            </p>
-
-            {!search && (
-              <button
-                type="button"
-                className="stock-empty-add"
-                onClick={
-                  openAddModal
-                }
-              >
-                <FiPlus />
-
-                Add Product
-              </button>
-            )}
+      {!loading && filtered.length === 0 && (
+        <div className="stock-state">
+          <div className="stock-state-icon">
+            <FiPackage />
           </div>
-        )}
+
+          <h3>{search ? "No products found" : "No products yet"}</h3>
+
+          <p>
+            {search
+              ? "Try another product name or category."
+              : "Add your first product to start managing inventory."}
+          </p>
+
+          {!search && (
+            <button
+              type="button"
+              className="stock-empty-add"
+              onClick={openAddModal}
+            >
+              <FiPlus />
+              Add Product
+            </button>
+          )}
+        </div>
+      )}
 
       {/* =====================================
           PRODUCT GRID
       ====================================== */}
 
-      {!loading &&
-        filtered.length >
-          0 && (
-          <section className="stock-product-grid">
-            {filtered.map(
-              (item) => {
-                const stockQty =
-                  Number(
-                    item?.stockQty ||
-                      0
-                  );
+      {!loading && filtered.length > 0 && (
+        <section className="stock-product-grid">
+          {filtered.map((item) => {
+            const stockQty = Number(item?.stockQty || 0);
 
-                const isLowStock =
-                  stockQty <= 5;
+            const isLowStock = stockQty <= 5;
 
-                const inStock =
-                  Boolean(
-                    item?.inStock
-                  ) &&
-                  stockQty > 0;
+            const inStock = Boolean(item?.inStock) && stockQty > 0;
 
-                const supplierCount =
-                  wholesalers[
-                    item?.category
-                  ]?.length || 0;
+            const supplierCount = wholesalers[item?.category]?.length || 0;
 
-                return (
-                  <article
-                    className="stock-product-card"
-                    key={
-                      item._id
-                    }
+            return (
+              <article className="stock-product-card" key={item._id}>
+                {/* HEAD */}
+
+                <div className="stock-card-head">
+                  <div className="stock-product-title">
+                    <div className="stock-product-icon">
+                      <FiPackage />
+                    </div>
+
+                    <div>
+                      <h2>{item?.name || "Unnamed Product"}</h2>
+
+                      <span>{item?.category || "Uncategorized"}</span>
+                    </div>
+                  </div>
+
+                  <div className="stock-card-actions">
+                    <button
+                      type="button"
+                      className="stock-icon-btn stock-edit-btn"
+                      onClick={() => openEdit(item)}
+                      aria-label="Edit product"
+                      title="Edit product"
+                    >
+                      <FiEdit2 />
+                    </button>
+
+                    <button
+                      type="button"
+                      className="stock-icon-btn stock-delete-btn"
+                      disabled={deletingId === item._id}
+                      onClick={() => handleDelete(item._id)}
+                      aria-label="Delete product"
+                      title="Delete product"
+                    >
+                      {deletingId === item._id ? (
+                        <span className="stock-mini-spinner" />
+                      ) : (
+                        <FiTrash2 />
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                {/* TAGS */}
+
+                <div className="stock-tags">
+                  <span className="stock-category-pill">
+                    {item?.category || "General"}
+                  </span>
+
+                  <span
+                    className={`stock-availability-pill ${
+                      inStock ? "stock-in-stock" : "stock-out-stock"
+                    }`}
                   >
-                    {/* HEAD */}
+                    {inStock ? "In Stock" : "Out of Stock"}
+                  </span>
+                </div>
 
-                    <div className="stock-card-head">
-                      <div className="stock-product-title">
-                        <div className="stock-product-icon">
-                          <FiPackage />
-                        </div>
+                {/* DESCRIPTION */}
 
-                        <div>
-                          <h2>
-                            {item?.name ||
-                              "Unnamed Product"}
-                          </h2>
+                {item?.description && (
+                  <p className="stock-description">{item.description}</p>
+                )}
 
-                          <span>
-                            {item?.category ||
-                              "Uncategorized"}
-                          </span>
-                        </div>
+                {/* STATS */}
+
+                <div className="stock-mini-grid">
+                  <div>
+                    <small>Selling</small>
+
+                    <strong>{formatMoney(item?.selling)}</strong>
+                  </div>
+
+                  <div>
+                    <small>Profit</small>
+
+                    <strong>{formatMoney(item?.profit)}</strong>
+                  </div>
+
+                  <div>
+                    <small>Stock</small>
+
+                    <strong>{stockQty}</strong>
+                  </div>
+                </div>
+
+                {/* RETAILER ORDER */}
+
+                {isRetailer && (
+                  <div
+                    className={`stock-order-box ${
+                      isLowStock ? "stock-low-stock" : ""
+                    }`}
+                  >
+                    <div className="stock-order-copy">
+                      <div className="stock-order-status">
+                        <FiAlertCircle />
+
+                        <span>
+                          {isLowStock ? "Low Stock" : "Need Extra Stock?"}
+                        </span>
                       </div>
 
-                      <div className="stock-card-actions">
-                        <button
-                          type="button"
-                          className="stock-icon-btn stock-edit-btn"
-                          onClick={() =>
-                            openEdit(
-                              item
-                            )
-                          }
-                          aria-label="Edit product"
-                          title="Edit product"
-                        >
-                          <FiEdit2 />
-                        </button>
-
-                        <button
-                          type="button"
-                          className="stock-icon-btn stock-delete-btn"
-                          disabled={
-                            deletingId ===
-                            item._id
-                          }
-                          onClick={() =>
-                            handleDelete(
-                              item._id
-                            )
-                          }
-                          aria-label="Delete product"
-                          title="Delete product"
-                        >
-                          {deletingId ===
-                          item._id ? (
-                            <span className="stock-mini-spinner" />
-                          ) : (
-                            <FiTrash2 />
-                          )}
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* TAGS */}
-
-                    <div className="stock-tags">
-                      <span className="stock-category-pill">
-                        {item?.category ||
-                          "General"}
-                      </span>
-
-                      <span
-                        className={`stock-availability-pill ${
-                          inStock
-                            ? "stock-in-stock"
-                            : "stock-out-stock"
-                        }`}
-                      >
-                        {inStock
-                          ? "In Stock"
-                          : "Out of Stock"}
-                      </span>
-                    </div>
-
-                    {/* DESCRIPTION */}
-
-                    {item?.description && (
-                      <p className="stock-description">
-                        {
-                          item.description
-                        }
+                      <p>
+                        {isLowStock
+                          ? "Your stock is running low. Reorder now."
+                          : "Order additional stock in advance."}
                       </p>
-                    )}
 
-                    {/* STATS */}
-
-                    <div className="stock-mini-grid">
-                      <div>
+                      {supplierCount > 0 && (
                         <small>
-                          Selling
+                          {supplierCount} wholesaler
+                          {supplierCount === 1 ? "" : "s"} available
                         </small>
-
-                        <strong>
-                          {formatMoney(
-                            item?.selling
-                          )}
-                        </strong>
-                      </div>
-
-                      <div>
-                        <small>
-                          Profit
-                        </small>
-
-                        <strong>
-                          {formatMoney(
-                            item?.profit
-                          )}
-                        </strong>
-                      </div>
-
-                      <div>
-                        <small>
-                          Stock
-                        </small>
-
-                        <strong>
-                          {stockQty}
-                        </strong>
-                      </div>
+                      )}
                     </div>
 
-                    {/* RETAILER ORDER */}
+                    <button
+                      type="button"
+                      className="stock-order-btn"
+                      onClick={() => handleOrderNow(item)}
+                      disabled={Boolean(orderingId)}
+                    >
+                      {orderingId === item._id ? (
+                        <>
+                          <span className="stock-spinner" />
+                          Ordering...
+                        </>
+                      ) : (
+                        <>
+                          <FiShoppingCart />
+                          Order Now
+                        </>
+                      )}
+                    </button>
+                  </div>
+                )}
+              </article>
+            );
+          })}
+        </section>
+      )}
 
-                    {isRetailer && (
-                      <div
-                        className={`stock-order-box ${
-                          isLowStock
-                            ? "stock-low-stock"
-                            : ""
-                        }`}
-                      >
-                        <div className="stock-order-copy">
-                          <div className="stock-order-status">
-                            <FiAlertCircle />
+      {/* =====================================
+          ORDER MODE MODAL
+      ====================================== */}
 
-                            <span>
-                              {isLowStock
-                                ? "Low Stock"
-                                : "Need Extra Stock?"}
-                            </span>
-                          </div>
+      {orderOpen && orderProduct && (
+        <div
+          className="stock-modal-bg"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              closeOrderModal();
+            }
+          }}
+        >
+          <div
+            className="stock-modal-box stock-order-modal-box"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="stock-order-title"
+          >
+            {/* HEADER */}
 
-                          <p>
-                            {isLowStock
-                              ? "Your stock is running low. Reorder now."
-                              : "Order additional stock in advance."}
-                          </p>
+            <div className="stock-modal-head">
+              <div>
+                <span>ORDER STOCK</span>
 
-                          {supplierCount >
-                            0 && (
-                            <small>
-                              {
-                                supplierCount
-                              }{" "}
-                              wholesaler
-                              {supplierCount ===
-                              1
-                                ? ""
-                                : "s"}{" "}
-                              available
-                            </small>
-                          )}
-                        </div>
+                <h2 id="stock-order-title">{orderProduct.name}</h2>
 
-                        <button
-                          type="button"
-                          className="stock-order-btn"
-                          onClick={() =>
-                            handleOrderNow(
-                              item
-                            )
-                          }
-                          disabled={
-                            Boolean(
-                              orderingId
-                            )
-                          }
-                        >
-                          {orderingId ===
-                          item._id ? (
-                            <>
-                              <span className="stock-spinner" />
+                <p>
+                  Choose quantity and how you want to select your wholesaler.
+                </p>
+              </div>
 
-                              Ordering...
-                            </>
-                          ) : (
-                            <>
-                              <FiShoppingCart />
+              <button
+                type="button"
+                className="stock-modal-close"
+                onClick={closeOrderModal}
+                disabled={Boolean(orderingId) || recommendationsLoading}
+                aria-label="Close order window"
+              >
+                <FiX />
+              </button>
+            </div>
 
-                              Order Now
-                            </>
-                          )}
-                        </button>
-                      </div>
-                    )}
-                  </article>
-                );
-              }
+            {/* PRODUCT SUMMARY */}
+
+            <div className="stock-order-product-summary">
+              <div className="stock-order-product-icon">
+                <FiPackage />
+              </div>
+
+              <div className="stock-order-product-copy">
+                <strong>{orderProduct.name}</strong>
+
+                <span>{orderProduct.category || "General"}</span>
+              </div>
+
+              <div className="stock-order-current-stock">
+                <small>Your stock</small>
+
+                <strong>{Number(orderProduct.stockQty || 0)}</strong>
+              </div>
+            </div>
+
+            {/* QUANTITY */}
+
+            <section className="stock-order-section">
+              <div className="stock-order-section-head">
+                <div>
+                  <span className="stock-order-step">STEP 1</span>
+
+                  <h3>How much do you need?</h3>
+                </div>
+
+                <span className="stock-order-unit-pill">
+                  {getOrderUnit(orderProduct)}
+                </span>
+              </div>
+
+              <div className="stock-order-quantity-box">
+                <button
+                  type="button"
+                  onClick={decreaseOrderQuantity}
+                  disabled={
+                    orderQuantity <= 1 ||
+                    Boolean(orderingId) ||
+                    recommendationsLoading
+                  }
+                  aria-label="Decrease quantity"
+                >
+                  <FiMinus />
+                </button>
+
+                <input
+                  type="number"
+                  min="1"
+                  max="9999"
+                  step="1"
+                  value={orderQuantity}
+                  onChange={(event) => changeOrderQuantity(event.target.value)}
+                  disabled={Boolean(orderingId) || recommendationsLoading}
+                  aria-label="Order quantity"
+                />
+
+                <button
+                  type="button"
+                  onClick={increaseOrderQuantity}
+                  disabled={Boolean(orderingId) || recommendationsLoading}
+                  aria-label="Increase quantity"
+                >
+                  <FiPlus />
+                </button>
+              </div>
+            </section>
+
+            {/* MODE */}
+
+            <section className="stock-order-section">
+              <div className="stock-order-section-head">
+                <div>
+                  <span className="stock-order-step">STEP 2</span>
+
+                  <h3>Choose how to order</h3>
+                </div>
+              </div>
+
+              <div className="stock-order-mode-grid">
+                {/* AUTO */}
+
+                <button
+                  type="button"
+                  className={`stock-order-mode-card ${
+                    orderMode === "auto" ? "stock-order-mode-selected" : ""
+                  }`}
+                  onClick={chooseSmartAuto}
+                  disabled={Boolean(orderingId) || recommendationsLoading}
+                >
+                  <div className="stock-order-mode-icon stock-order-mode-auto-icon">
+                    <FiZap />
+                  </div>
+
+                  <div className="stock-order-mode-copy">
+                    <div className="stock-order-mode-title-row">
+                      <strong>Smart Auto</strong>
+
+                      <span>Fast</span>
+                    </div>
+
+                    <p>
+                      SmartKhataBook automatically selects a suitable wholesaler
+                      using price, rating, stock availability and order
+                      fairness.
+                    </p>
+
+                    <small>You don't need to compare suppliers manually.</small>
+                  </div>
+                </button>
+
+                {/* MANUAL */}
+
+                <button
+                  type="button"
+                  className={`stock-order-mode-card ${
+                    orderMode === "manual" ? "stock-order-mode-selected" : ""
+                  }`}
+                  onClick={chooseManual}
+                  disabled={Boolean(orderingId) || recommendationsLoading}
+                >
+                  <div className="stock-order-mode-icon stock-order-mode-manual-icon">
+                    <FiUser />
+                  </div>
+
+                  <div className="stock-order-mode-copy">
+                    <div className="stock-order-mode-title-row">
+                      <strong>Choose Myself</strong>
+
+                      <span>Your decision</span>
+                    </div>
+
+                    <p>
+                      Compare available wholesalers with smart suggestions, then
+                      make the final choice yourself.
+                    </p>
+
+                    <small>Smart recommendation is guidance only.</small>
+                  </div>
+                </button>
+              </div>
+            </section>
+
+            {/* ================================
+                  AUTO MODE
+              ================================= */}
+
+            {orderMode === "auto" && (
+              <section className="stock-order-auto-panel">
+                <div className="stock-order-auto-head">
+                  <div className="stock-order-auto-icon">
+                    <FiZap />
+                  </div>
+
+                  <div>
+                    <strong>Smart Auto Selection</strong>
+
+                    <p>
+                      The server will choose an eligible wholesaler and re-check
+                      price and stock before the order is created.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="stock-order-auto-points">
+                  <span>
+                    <FiCheckCircle />
+                    Competitive pricing
+                  </span>
+
+                  <span>
+                    <FiCheckCircle />
+                    Rating considered
+                  </span>
+
+                  <span>
+                    <FiCheckCircle />
+                    Stock checked
+                  </span>
+
+                  <span>
+                    <FiCheckCircle />
+                    Supplier fairness
+                  </span>
+                </div>
+
+                <button
+                  type="button"
+                  className="stock-order-final-btn stock-order-auto-btn"
+                  onClick={placeSmartAutoOrder}
+                  disabled={Boolean(orderingId)}
+                >
+                  {orderingId ? (
+                    <>
+                      <span className="stock-spinner" />
+                      Placing Order...
+                    </>
+                  ) : (
+                    <>
+                      <FiZap />
+                      Place Smart Order
+                    </>
+                  )}
+                </button>
+              </section>
             )}
-          </section>
-        )}
+
+            {/* ================================
+                  MANUAL MODE
+              ================================= */}
+
+            {orderMode === "manual" && (
+              <section className="stock-order-manual-panel">
+                <div className="stock-order-manual-header">
+                  <div>
+                    <span className="stock-order-step">STEP 3</span>
+
+                    <h3>Choose your wholesaler</h3>
+
+                    <p>
+                      SmartKhataBook can suggest an option, but you make the
+                      final decision.
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    className="stock-order-refresh"
+                    onClick={loadOrderRecommendations}
+                    disabled={recommendationsLoading || Boolean(orderingId)}
+                  >
+                    <FiRefreshCw
+                      className={
+                        recommendationsLoading ? "stock-order-spin" : ""
+                      }
+                    />
+                    Refresh
+                  </button>
+                </div>
+
+                {/* LOADING */}
+
+                {recommendationsLoading && (
+                  <div className="stock-order-recommend-state">
+                    <FiRefreshCw className="stock-order-spin" />
+
+                    <strong>Finding wholesalers...</strong>
+
+                    <p>
+                      Checking current prices, stock and supplier information.
+                    </p>
+                  </div>
+                )}
+
+                {/* ERROR */}
+
+                {!recommendationsLoading && recommendationsError && (
+                  <div className="stock-order-recommend-error">
+                    <FiAlertCircle />
+
+                    <div>
+                      <strong>Suggestions unavailable</strong>
+
+                      <p>{recommendationsError}</p>
+                    </div>
+
+                    <button type="button" onClick={loadOrderRecommendations}>
+                      Try Again
+                    </button>
+                  </div>
+                )}
+
+                {/* LIST */}
+
+                {!recommendationsLoading &&
+                  !recommendationsError &&
+                  orderRecommendations.length > 0 && (
+                    <div className="stock-order-supplier-list">
+                      {orderRecommendations.map((supplier, index) => {
+                        const supplierId = String(
+                          supplier.productId ||
+                            `${supplier.wholesalerId}-${index}`,
+                        );
+
+                        const isSelected =
+                          String(selectedSupplier?.productId || "") ===
+                          String(supplier.productId);
+
+                        const estimatedTotal =
+                          Number(supplier.price || 0) *
+                          Number(orderQuantity || 1);
+
+                        return (
+                          <button
+                            type="button"
+                            key={supplierId}
+                            className={`stock-order-supplier-card ${
+                              isSelected ? "stock-order-supplier-selected" : ""
+                            } ${
+                              supplier.isSmartRecommended
+                                ? "stock-order-supplier-recommended"
+                                : ""
+                            }`}
+                            onClick={() => chooseSupplier(supplier)}
+                            disabled={Boolean(orderingId)}
+                          >
+                            {supplier.isSmartRecommended && (
+                              <div className="stock-order-recommended-badge">
+                                <FiZap />
+                                Smart Recommendation
+                              </div>
+                            )}
+
+                            <div className="stock-order-supplier-top">
+                              <div className="stock-order-shop-icon">
+                                <FiTruck />
+                              </div>
+
+                              <div className="stock-order-shop-copy">
+                                <strong>
+                                  {supplier.shopName ||
+                                    supplier.name ||
+                                    "Wholesaler"}
+                                </strong>
+
+                                {supplier.name &&
+                                  supplier.shopName &&
+                                  supplier.name !== supplier.shopName && (
+                                    <span>{supplier.name}</span>
+                                  )}
+                              </div>
+
+                              <span
+                                className={`stock-order-select-circle ${
+                                  isSelected
+                                    ? "stock-order-select-circle-active"
+                                    : ""
+                                }`}
+                              >
+                                {isSelected && <FiCheckCircle />}
+                              </span>
+                            </div>
+
+                            <div className="stock-order-supplier-stats">
+                              <div>
+                                <small>Price</small>
+
+                                <strong>{formatMoney(supplier.price)}</strong>
+
+                                <span>
+                                  per{" "}
+                                  {supplier.unit || getOrderUnit(orderProduct)}
+                                </span>
+                              </div>
+
+                              <div>
+                                <small>Available</small>
+
+                                <strong>{Number(supplier.stock || 0)}</strong>
+
+                                <span>units</span>
+                              </div>
+
+                              <div>
+                                <small>Rating</small>
+
+                                <strong className="stock-order-rating">
+                                  <FiStar />
+
+                                  {Number(supplier.rating || 0) > 0
+                                    ? Number(supplier.rating).toFixed(1)
+                                    : "New"}
+                                </strong>
+
+                                <span>
+                                  {Number(supplier.reviews || 0)} reviews
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="stock-order-price-line">
+                              <span>Estimated total</span>
+
+                              <strong>{formatMoney(estimatedTotal)}</strong>
+                            </div>
+
+                            {supplier.withinSmartPriceRange ? (
+                              <div className="stock-order-price-good">
+                                <FiCheckCircle />
+                                Within smart price range
+                              </div>
+                            ) : (
+                              <div className="stock-order-price-warning">
+                                <FiAlertCircle />
+                                Above Smart Auto price range
+                              </div>
+                            )}
+
+                            {Array.isArray(supplier.reasons) &&
+                              supplier.reasons.length > 0 && (
+                                <div className="stock-order-reasons">
+                                  {supplier.reasons.map(
+                                    (reason, reasonIndex) => (
+                                      <span
+                                        key={`${supplierId}-reason-${reasonIndex}`}
+                                      >
+                                        <FiCheckCircle />
+
+                                        {reason}
+                                      </span>
+                                    ),
+                                  )}
+                                </div>
+                              )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                {/* SELECTED SUPPLIER FINAL CONFIRMATION */}
+
+                {selectedSupplier && (
+                  <div className="stock-order-selected-summary">
+                    <div>
+                      <span>YOUR CHOICE</span>
+
+                      <strong>
+                        {selectedSupplier.shopName ||
+                          selectedSupplier.name ||
+                          "Selected wholesaler"}
+                      </strong>
+
+                      <p>
+                        {orderQuantity} {getOrderUnit(orderProduct)} ×{" "}
+                        {formatMoney(selectedSupplier.price)}
+                      </p>
+                    </div>
+
+                    <strong className="stock-order-selected-total">
+                      {formatMoney(
+                        Number(selectedSupplier.price || 0) *
+                          Number(orderQuantity || 1),
+                      )}
+                    </strong>
+                  </div>
+                )}
+
+                {selectedSupplier && (
+                  <button
+                    type="button"
+                    className="stock-order-final-btn stock-order-manual-btn"
+                    onClick={placeManualOrder}
+                    disabled={Boolean(orderingId)}
+                  >
+                    {orderingId ? (
+                      <>
+                        <span className="stock-spinner" />
+                        Placing Order...
+                      </>
+                    ) : (
+                      <>
+                        <FiShoppingCart />
+                        Order From{" "}
+                        {selectedSupplier.shopName ||
+                          selectedSupplier.name ||
+                          "Selected Wholesaler"}
+                      </>
+                    )}
+                  </button>
+                )}
+              </section>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* =====================================
           ADD MODAL
@@ -1824,13 +2017,8 @@ export default function Stock() {
       {open && (
         <div
           className="stock-modal-bg"
-          onMouseDown={(
-            event
-          ) => {
-            if (
-              event.target ===
-              event.currentTarget
-            ) {
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
               closeAddModal();
             }
           }}
@@ -1843,26 +2031,17 @@ export default function Stock() {
           >
             <div className="stock-modal-head">
               <div>
-                <span>
-                  INVENTORY
-                </span>
+                <span>INVENTORY</span>
 
-                <h2 id="stock-add-title">
-                  Add Product
-                </h2>
+                <h2 id="stock-add-title">Add Product</h2>
 
-                <p>
-                  Add a new item to
-                  your stock.
-                </p>
+                <p>Add a new item to your stock.</p>
               </div>
 
               <button
                 type="button"
                 className="stock-modal-close"
-                onClick={
-                  closeAddModal
-                }
+                onClick={closeAddModal}
                 disabled={saving}
                 aria-label="Close"
               >
@@ -1870,9 +2049,7 @@ export default function Stock() {
               </button>
             </div>
 
-            {renderProductForm(
-              "add"
-            )}
+            {renderProductForm("add")}
           </div>
         </div>
       )}
@@ -1884,13 +2061,8 @@ export default function Stock() {
       {editOpen && (
         <div
           className="stock-modal-bg"
-          onMouseDown={(
-            event
-          ) => {
-            if (
-              event.target ===
-              event.currentTarget
-            ) {
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
               closeEditModal();
             }
           }}
@@ -1903,27 +2075,17 @@ export default function Stock() {
           >
             <div className="stock-modal-head">
               <div>
-                <span>
-                  INVENTORY
-                </span>
+                <span>INVENTORY</span>
 
-                <h2 id="stock-edit-title">
-                  Edit Product
-                </h2>
+                <h2 id="stock-edit-title">Edit Product</h2>
 
-                <p>
-                  Update product,
-                  pricing or stock
-                  information.
-                </p>
+                <p>Update product, pricing or stock information.</p>
               </div>
 
               <button
                 type="button"
                 className="stock-modal-close"
-                onClick={
-                  closeEditModal
-                }
+                onClick={closeEditModal}
                 disabled={saving}
                 aria-label="Close"
               >
@@ -1931,9 +2093,7 @@ export default function Stock() {
               </button>
             </div>
 
-            {renderProductForm(
-              "edit"
-            )}
+            {renderProductForm("edit")}
           </div>
         </div>
       )}
