@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import {
   FiFileText,
   FiChevronLeft,
@@ -7,13 +7,14 @@ import {
   FiClock,
   FiX,
   FiAlertCircle,
+  FiSearch,
+  FiMail,
+  FiEye,
+  FiBell,
 } from "react-icons/fi";
-
 import { useNavigate } from "react-router-dom";
-
 import api from "../api";
 import GenerateBillButton from "../components/GenerateBillButton";
-
 import "./Billing.css";
 import { getStoredUser } from "../utils/session";
 
@@ -44,173 +45,156 @@ const ORDER_STATUS_LABEL = {
   rejected: "Rejected",
 };
 
-// ============================================
-// DATE HELPERS — power the "new bill" highlight
-// ============================================
+const READ_STORAGE_PREFIX = "billing-read-v1";
 
-function isSameCalendarDay(a, b) {
-  return (
-    a.getFullYear() === b.getFullYear() &&
-    a.getMonth() === b.getMonth() &&
-    a.getDate() === b.getDate()
-  );
+function getReadStorageKey(userId) {
+  return `${READ_STORAGE_PREFIX}:${userId || "unknown"}`;
 }
 
-function isToday(dateInput) {
-  if (!dateInput) return false;
-  return isSameCalendarDay(new Date(dateInput), new Date());
-}
-
-function isYesterday(dateInput) {
-  if (!dateInput) return false;
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
-  return isSameCalendarDay(new Date(dateInput), yesterday);
-}
-
-// Shows "Today, 3:45 PM" / "Yesterday" / a normal date — so it's obvious
-// at a glance whether a bill just arrived versus came in a while ago.
-function formatBillDate(dateInput) {
-  if (!dateInput) return "-";
-  const date = new Date(dateInput);
-  if (isToday(dateInput)) {
-    return `Today, ${date.toLocaleTimeString("en-IN", {
-      hour: "2-digit",
-      minute: "2-digit",
-    })}`;
+function readLocalReadState(userId) {
+  try {
+    const parsed = JSON.parse(
+      localStorage.getItem(getReadStorageKey(userId)) || "{}",
+    );
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch {
+    return {};
   }
-  if (isYesterday(dateInput)) {
-    return "Yesterday";
-  }
-  return date.toLocaleDateString("en-IN", {
+}
+
+function formatDateTime(value) {
+  if (!value) return "Time unavailable";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Time unavailable";
+
+  const now = new Date();
+  const sameDay = date.toDateString() === now.toDateString();
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  const isYesterday = date.toDateString() === yesterday.toDateString();
+
+  const time = date.toLocaleTimeString("en-IN", {
+    hour: "numeric",
+    minute: "2-digit",
+  });
+
+  if (sameDay) return `Today, ${time}`;
+  if (isYesterday) return `Yesterday, ${time}`;
+
+  return `${date.toLocaleDateString("en-IN", {
     day: "2-digit",
     month: "short",
     year: "numeric",
-  });
+  })}, ${time}`;
+}
+
+function isSameLocalDay(value, reference = new Date()) {
+  if (!value) return false;
+  const date = new Date(value);
+  return (
+    !Number.isNaN(date.getTime()) &&
+    date.getFullYear() === reference.getFullYear() &&
+    date.getMonth() === reference.getMonth() &&
+    date.getDate() === reference.getDate()
+  );
 }
 
 export default function Billing() {
   const navigate = useNavigate();
+  const user = getStoredUser();
+  const userId = user?._id;
+  const isWholesaler = user?.role?.trim().toLowerCase() === "wholesaler";
 
   const [bills, setBills] = useState([]);
-
   const [loading, setLoading] = useState(true);
-
   const [error, setError] = useState("");
-
   const [sendingBillId, setSendingBillId] = useState(null);
-
-  // Confirmation modal
   const [billToSend, setBillToSend] = useState(null);
-
   const [sendError, setSendError] = useState("");
+  const [filter, setFilter] = useState("all");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [readState, setReadState] = useState(() => readLocalReadState(userId));
 
-  const user = getStoredUser();
+  useEffect(() => {
+    setReadState(readLocalReadState(userId));
+  }, [userId]);
 
-  const isWholesaler = user.role?.trim().toLowerCase() === "wholesaler";
+  const fetchBills = useCallback(
+    async ({ showLoading = true } = {}) => {
+      if (!userId) {
+        setError("Please log in again.");
+        setLoading(false);
+        return;
+      }
 
-  // ============================================
-  // FETCH BILLS
-  // ============================================
+      try {
+        if (showLoading) setLoading(true);
+        setError("");
+
+        const endpoint = isWholesaler
+          ? `/api/orders/billing/wholesaler/${userId}`
+          : `/api/orders/billing/retailer/${userId}`;
+
+        const res = await api.get(endpoint);
+        setBills(res.data.bills || []);
+      } catch (err) {
+        console.error("Failed to load bills:", err);
+        setError(
+          err.response?.data?.message ||
+            "Couldn't load bills. Please try again.",
+        );
+      } finally {
+        if (showLoading) setLoading(false);
+      }
+    },
+    [userId, isWholesaler],
+  );
 
   useEffect(() => {
     fetchBills();
+  }, [fetchBills]);
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const fetchBills = async () => {
-    if (!user._id) {
-      setError("Please log in again.");
-      setLoading(false);
-      return;
-    }
-
-    try {
-      setLoading(true);
-      setError("");
-
-      const endpoint = isWholesaler
-        ? `/api/orders/billing/wholesaler/${user._id}`
-        : `/api/orders/billing/retailer/${user._id}`;
-
-      const res = await api.get(endpoint);
-
-      setBills(res.data.bills || []);
-    } catch (err) {
-      console.error("Failed to load bills:", err);
-
-      setError(
-        err.response?.data?.message || "Couldn't load bills. Please try again.",
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // ============================================
-  // COUNTER PARTY
-  // ============================================
+  const markAsRead = useCallback(
+    (billId) => {
+      if (!billId) return;
+      setReadState((previous) => {
+        if (previous[billId]) return previous;
+        const next = { ...previous, [billId]: new Date().toISOString() };
+        try {
+          localStorage.setItem(getReadStorageKey(userId), JSON.stringify(next));
+        } catch (err) {
+          console.warn("Could not save local bill read state:", err);
+        }
+        return next;
+      });
+    },
+    [userId],
+  );
 
   const counterpartyOf = (bill) => {
     const other = isWholesaler ? bill.retailerId : bill.wholesalerId;
-
     return other?.shopName || other?.name || "Unknown";
   };
 
-  // ============================================
-  // BILL READY
-  // ============================================
-
-  const billIsReady = (bill) => {
-    return ["delivered", "completed"].includes(bill.orderStatus);
-  };
-
-  // ============================================
-  // NEW BILL — highlight whatever just happened "today" for this viewer:
-  // a retailer cares about when the wholesaler SENT the bill; a
-  // wholesaler cares about when the order became ready to bill.
-  // ============================================
-
-  const newnessDateOf = (bill) =>
-    isWholesaler ? bill.deliveredAt : bill.billSentAt;
-
-  const billIsNew = (bill) => isToday(newnessDateOf(bill));
-
-  // ============================================
-  // OPEN CONFIRMATION DIALOG
-  // ============================================
+  const billIsReady = (bill) =>
+    ["delivered", "completed"].includes(bill.orderStatus);
 
   const openSendConfirmation = (bill) => {
     setSendError("");
     setBillToSend(bill);
   };
 
-  // ============================================
-  // CLOSE CONFIRMATION DIALOG
-  // ============================================
-
   const closeSendConfirmation = () => {
-    if (sendingBillId) {
-      return;
-    }
-
+    if (sendingBillId) return;
     setBillToSend(null);
     setSendError("");
   };
 
-  // ============================================
-  // CONFIRM + SEND BILL
-  // ============================================
-
   const handleConfirmSendBill = async () => {
-    if (!billToSend?._id) {
-      return;
-    }
+    if (!billToSend?._id) return;
 
     try {
       setSendingBillId(billToSend._id);
-
       setSendError("");
 
       const res = await api.patch(`/api/orders/${billToSend._id}/send-bill`);
@@ -221,22 +205,19 @@ export default function Billing() {
             bill._id === billToSend._id
               ? {
                   ...bill,
-
                   billSentToRetailer: true,
-
                   billSentAt:
                     res.data.bill?.billSentAt || new Date().toISOString(),
                 }
               : bill,
           ),
         );
-
-        // Close dialog after successful send
         setBillToSend(null);
+      } else {
+        setSendError(res.data.message || "The bill could not be sent.");
       }
     } catch (err) {
       console.error("SEND BILL ERROR:", err);
-
       setSendError(
         err.response?.data?.message || "Failed to send bill to retailer.",
       );
@@ -245,12 +226,72 @@ export default function Billing() {
     }
   };
 
+  const getSentAt = (bill) =>
+    bill.billSentAt || bill.updatedAt || bill.createdAt;
+  const isUnread = (bill) =>
+    !isWholesaler && Boolean(bill.billSentToRetailer) && !readState[bill._id];
+  const isNewToday = (bill) =>
+    !isWholesaler &&
+    Boolean(bill.billSentToRetailer) &&
+    isSameLocalDay(getSentAt(bill));
+
+  const unreadCount = useMemo(
+    () => bills.filter((bill) => isUnread(bill)).length,
+    [bills, readState, isWholesaler],
+  );
+
+  const newTodayCount = useMemo(
+    () => bills.filter((bill) => isNewToday(bill)).length,
+    [bills, isWholesaler],
+  );
+
+  const filteredBills = useMemo(() => {
+    const normalizedSearch = searchTerm.trim().toLowerCase();
+
+    return [...bills]
+      .filter((bill) => {
+        if (!isWholesaler) {
+          if (!bill.billSentToRetailer) return false;
+          if (filter === "unread" && !isUnread(bill)) return false;
+          if (filter === "read" && isUnread(bill)) return false;
+          if (filter === "today" && !isNewToday(bill)) return false;
+        }
+
+        if (!normalizedSearch) return true;
+        const searchable = [
+          bill.invoiceNumber,
+          bill.productName,
+          counterpartyOf(bill),
+          bill.orderStatus,
+          bill.paymentStatus,
+        ]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase();
+
+        return searchable.includes(normalizedSearch);
+      })
+      .sort((a, b) => {
+        if (!isWholesaler) {
+          const unreadDifference = Number(isUnread(b)) - Number(isUnread(a));
+          if (unreadDifference !== 0) return unreadDifference;
+          const sentA = new Date(getSentAt(a) || 0).getTime();
+          const sentB = new Date(getSentAt(b) || 0).getTime();
+          return sentB - sentA;
+        }
+        return (
+          new Date(b.createdAt || 0).getTime() -
+          new Date(a.createdAt || 0).getTime()
+        );
+      });
+  }, [bills, filter, searchTerm, readState, isWholesaler]);
+
+  const openBill = (bill) => {
+    if (!isWholesaler && bill.billSentToRetailer) markAsRead(bill._id);
+  };
+
   return (
     <div className="billing-page">
-      {/* =====================================
-          HEADER
-      ====================================== */}
-
       <div className="billing-header">
         <button
           className="billing-back"
@@ -259,46 +300,105 @@ export default function Billing() {
         >
           <FiChevronLeft size={18} />
         </button>
-
         <div>
           <h1>Billing</h1>
-
           <p>
             {isWholesaler
               ? "Generate and send bills after order delivery"
               : "Bills sent by your wholesalers"}
           </p>
         </div>
+        {!isWholesaler && unreadCount > 0 && (
+          <div className="billing-unread-summary" aria-live="polite">
+            <FiBell size={15} />
+            <span>{unreadCount} unread</span>
+          </div>
+        )}
       </div>
 
-      {/* =====================================
-          LOADING
-      ====================================== */}
+      {!loading && !error && bills.length > 0 && (
+        <section className="billing-tools" aria-label="Bill filters">
+          <div className="billing-search">
+            <FiSearch size={17} />
+            <input
+              type="search"
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+              placeholder="Search invoice, product, or shop..."
+              aria-label="Search bills"
+            />
+            {searchTerm && (
+              <button
+                type="button"
+                onClick={() => setSearchTerm("")}
+                aria-label="Clear search"
+              >
+                <FiX size={16} />
+              </button>
+            )}
+          </div>
+
+          <div
+            className="billing-filters"
+            role="group"
+            aria-label="Filter bills"
+          >
+            {[
+              {
+                id: "all",
+                label: "All Bills",
+                count: bills.filter(
+                  (bill) => isWholesaler || bill.billSentToRetailer,
+                ).length,
+              },
+              ...(!isWholesaler
+                ? [
+                    { id: "unread", label: "Unread", count: unreadCount },
+                    {
+                      id: "read",
+                      label: "Read",
+                      count: bills.filter(
+                        (bill) => bill.billSentToRetailer && !isUnread(bill),
+                      ).length,
+                    },
+                    { id: "today", label: "New Today", count: newTodayCount },
+                  ]
+                : []),
+            ].map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                className={`billing-filter ${filter === item.id ? "billing-filter--active" : ""}`}
+                onClick={() => setFilter(item.id)}
+                aria-pressed={filter === item.id}
+              >
+                {item.label} <span>{item.count}</span>
+              </button>
+            ))}
+          </div>
+          {!isWholesaler && newTodayCount > 0 && (
+            <p className="billing-new-note">
+              <FiBell size={14} /> {newTodayCount} bill
+              {newTodayCount === 1 ? "" : "s"} sent today
+            </p>
+          )}
+        </section>
+      )}
 
       {loading && <div className="billing-empty">Loading bills…</div>}
-
-      {/* =====================================
-          ERROR
-      ====================================== */}
 
       {!loading && error && (
         <div className="billing-empty billing-error">
           <p>{error}</p>
-
-          <button type="button" onClick={fetchBills}>
+          <button type="button" onClick={() => fetchBills()}>
             Try Again
           </button>
         </div>
       )}
 
-      {/* =====================================
-          NO BILLS
-      ====================================== */}
-
       {!loading && !error && bills.length === 0 && (
         <div className="billing-empty">
           <FiFileText size={28} />
-
           <p>
             {isWholesaler
               ? "No orders available for billing yet."
@@ -307,68 +407,91 @@ export default function Billing() {
         </div>
       )}
 
-      {/* =====================================
-          BILL LIST
-      ====================================== */}
+      {!loading && !error && bills.length > 0 && filteredBills.length === 0 && (
+        <div className="billing-empty billing-empty--compact">
+          <FiSearch size={24} />
+          <p>No bills match your current search or filter.</p>
+          <button
+            type="button"
+            onClick={() => {
+              setFilter("all");
+              setSearchTerm("");
+            }}
+          >
+            Clear filters
+          </button>
+        </div>
+      )}
 
-      {!loading && !error && bills.length > 0 && (
+      {!loading && !error && filteredBills.length > 0 && (
         <div className="billing-list">
-          {bills.map((bill) => {
+          {filteredBills.map((bill) => {
             const canUseBill = billIsReady(bill);
-            const isNew = billIsNew(bill);
+            const unread = isUnread(bill);
+            const newToday = isNewToday(bill);
+            const sentAt = getSentAt(bill);
 
             return (
-              <div
-                className={`bill-card ${isNew ? "bill-card--new" : ""}`}
+              <article
+                className={[
+                  "bill-card",
+                  unread ? "bill-card--unread" : "",
+                  newToday ? "bill-card--new-today" : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
                 key={bill._id}
               >
-                {/* =========================
-                        TOP
-                    ========================== */}
-
                 <div className="bill-card-top">
                   <div>
                     <div className="bill-invoice-no">
                       {bill.invoiceNumber || "Invoice Pending"}
-                      {isNew && <span className="bill-new-badge">NEW</span>}
                     </div>
-
                     <div className="bill-counterparty">
                       {counterpartyOf(bill)}
                     </div>
                   </div>
-
-                  <span
-                    className={`bill-status ${
-                      STATUS_CLASS[bill.paymentStatus] || ""
-                    }`}
-                  >
-                    {STATUS_LABEL[bill.paymentStatus] || bill.paymentStatus}
-                  </span>
+                  <div className="bill-card-badges">
+                    {!isWholesaler && newToday && (
+                      <span className="bill-new-badge">NEW TODAY</span>
+                    )}
+                    {!isWholesaler && (
+                      <span
+                        className={`bill-read-badge ${unread ? "bill-read-badge--unread" : "bill-read-badge--read"}`}
+                      >
+                        {unread ? (
+                          <>
+                            <FiMail size={12} /> UNREAD
+                          </>
+                        ) : (
+                          <>
+                            <FiMailOpen size={12} /> READ
+                          </>
+                        )}
+                      </span>
+                    )}
+                    <span
+                      className={`bill-status ${STATUS_CLASS[bill.paymentStatus] || ""}`}
+                    >
+                      {STATUS_LABEL[bill.paymentStatus] ||
+                        bill.paymentStatus ||
+                        "Unknown"}
+                    </span>
+                  </div>
                 </div>
-
-                {/* =========================
-                        BODY
-                    ========================== */}
 
                 <div className="bill-card-body">
                   <div className="bill-product">{bill.productName}</div>
-
                   <div className="bill-row">
                     <span>
                       {bill.quantity} {bill.unit}
                     </span>
-
                     <span className="bill-total">
                       ₹{Number(bill.totalAmount || 0).toLocaleString("en-IN")}
                     </span>
                   </div>
-
-                  {/* ORDER STATUS */}
-
                   <div className="bill-row">
                     <span>Order Status</span>
-
                     <strong>
                       {ORDER_STATUS_LABEL[bill.orderStatus] ||
                         bill.orderStatus ||
@@ -376,126 +499,120 @@ export default function Billing() {
                     </strong>
                   </div>
 
-                  {/* =========================
-                          BILL NOT READY
-                      ========================== */}
+                  {!isWholesaler && bill.billSentToRetailer && (
+                    <div className="bill-received-info">
+                      {unread ? <FiMail size={14} /> : <FiEye size={14} />}
+                      <span>
+                        {unread
+                          ? "New bill waiting to be read"
+                          : "You have viewed this bill"}
+                        {sentAt ? ` · Sent ${formatDateTime(sentAt)}` : ""}
+                      </span>
+                    </div>
+                  )}
 
                   {isWholesaler && !canUseBill && !bill.billSentToRetailer && (
                     <div className="bill-waiting-info">
                       <FiClock size={14} />
-
                       <span>
                         Bill generation will be available after delivery
                       </span>
                     </div>
                   )}
 
-                  {/* =========================
-                          SENT INFO
-                      ========================== */}
-
                   {isWholesaler && bill.billSentToRetailer && (
                     <div className="bill-sent-info">
                       <FiCheck size={14} />
-
                       <span>
                         Bill sent to retailer
                         {bill.billSentAt
-                          ? ` · ${formatBillDate(bill.billSentAt)}`
+                          ? ` · ${formatDateTime(bill.billSentAt)}`
                           : ""}
                       </span>
                     </div>
                   )}
                 </div>
 
-                {/* =========================
-                        FOOTER
-                    ========================== */}
-
                 <div className="bill-card-footer">
                   <span className="bill-date">
-                    {formatBillDate(newnessDateOf(bill) || bill.createdAt)}
+                    Order date:{" "}
+                    {bill.createdAt
+                      ? new Date(bill.createdAt).toLocaleDateString("en-IN", {
+                          day: "2-digit",
+                          month: "short",
+                          year: "numeric",
+                        })
+                      : "—"}
                   </span>
 
                   <div className="bill-actions">
-                    {/* =================================
-                            WHOLESALER GENERATE BILL
-                        ================================== */}
-
                     {isWholesaler && canUseBill && (
                       <GenerateBillButton
                         label="Generate Bill"
                         order={{
                           orderId: bill.invoiceNumber || bill._id,
-
                           businessName: user.shopName || user.name,
-
                           customerName: counterpartyOf(bill),
-
                           items: [
                             {
                               name: bill.productName,
-
                               qty: bill.quantity,
-
                               pricePerUnit: bill.pricePerUnit,
                             },
                           ],
-
                           paymentStatus: bill.paymentStatus,
-
                           orderStatus: bill.orderStatus,
-
                           date: bill.createdAt,
                         }}
                       />
                     )}
 
-                    {/* =================================
-                            RETAILER DOWNLOAD BILL
-                        ================================== */}
+                    {!isWholesaler && bill.billSentToRetailer && (
+                      <button
+                        type="button"
+                        className="bill-read-action"
+                        onClick={() => openBill(bill)}
+                        disabled={!unread}
+                      >
+                        {unread ? (
+                          <>
+                            <FiEye size={14} /> Mark as Read
+                          </>
+                        ) : (
+                          <>
+                            <FiCheck size={14} /> Read
+                          </>
+                        )}
+                      </button>
+                    )}
 
                     {!isWholesaler && (
                       <GenerateBillButton
                         label="Download Bill"
                         order={{
                           orderId: bill.invoiceNumber || bill._id,
-
                           businessName:
                             bill.wholesalerId?.shopName ||
                             bill.wholesalerId?.name,
-
                           customerName: counterpartyOf(bill),
-
                           items: [
                             {
                               name: bill.productName,
-
                               qty: bill.quantity,
-
                               pricePerUnit: bill.pricePerUnit,
                             },
                           ],
-
                           paymentStatus: bill.paymentStatus,
-
                           orderStatus: bill.orderStatus,
-
                           date: bill.createdAt,
                         }}
                       />
                     )}
 
-                    {/* =================================
-                            SEND BILL
-                        ================================== */}
-
                     {isWholesaler && canUseBill && (
                       <button
                         type="button"
-                        className={`send-bill-btn ${
-                          bill.billSentToRetailer ? "send-bill-btn--sent" : ""
-                        }`}
+                        className={`send-bill-btn ${bill.billSentToRetailer ? "send-bill-btn--sent" : ""}`}
                         onClick={() => openSendConfirmation(bill)}
                         disabled={
                           bill.billSentToRetailer || sendingBillId === bill._id
@@ -503,21 +620,15 @@ export default function Billing() {
                       >
                         {bill.billSentToRetailer ? (
                           <>
-                            <FiCheck size={15} />
-                            Sent
+                            <FiCheck size={15} /> Sent
                           </>
                         ) : (
                           <>
-                            <FiSend size={15} />
-                            Send Bill
+                            <FiSend size={15} /> Send Bill
                           </>
                         )}
                       </button>
                     )}
-
-                    {/* =================================
-                            BEFORE DELIVERY
-                        ================================== */}
 
                     {isWholesaler && !canUseBill && (
                       <span className="bill-waiting-delivery">
@@ -526,24 +637,18 @@ export default function Billing() {
                     )}
                   </div>
                 </div>
-              </div>
+              </article>
             );
           })}
         </div>
       )}
 
-      {/* ==========================================
-          SEND BILL CONFIRMATION MODAL
-      ========================================== */}
-
       {billToSend && (
         <div className="bill-confirm-overlay" onClick={closeSendConfirmation}>
           <div
             className="bill-confirm-modal"
-            onClick={(e) => e.stopPropagation()}
+            onClick={(event) => event.stopPropagation()}
           >
-            {/* CLOSE */}
-
             <button
               type="button"
               className="bill-confirm-close"
@@ -553,63 +658,38 @@ export default function Billing() {
             >
               <FiX size={18} />
             </button>
-
-            {/* ICON */}
-
             <div className="bill-confirm-icon">
               <FiSend size={25} />
             </div>
-
-            {/* TITLE */}
-
             <h2>Send Bill to Retailer?</h2>
-
             <p className="bill-confirm-message">
               Are you sure you want to send this bill to{" "}
               <strong>{counterpartyOf(billToSend)}</strong>?
             </p>
-
-            {/* BILL DETAILS */}
-
             <div className="bill-confirm-details">
               <div>
                 <span>Invoice</span>
-
                 <strong>{billToSend.invoiceNumber || "-"}</strong>
               </div>
-
               <div>
                 <span>Product</span>
-
                 <strong>{billToSend.productName}</strong>
               </div>
-
               <div>
                 <span>Amount</span>
-
                 <strong className="bill-confirm-amount">
                   ₹{Number(billToSend.totalAmount || 0).toLocaleString("en-IN")}
                 </strong>
               </div>
             </div>
-
-            {/* WARNING */}
-
             <div className="bill-confirm-warning">
               <FiAlertCircle size={16} />
-
               <span>
                 After sending, this bill will appear in the retailer's Billing
                 section.
               </span>
             </div>
-
-            {/* ERROR */}
-
             {sendError && <div className="bill-confirm-error">{sendError}</div>}
-
-            {/* ACTIONS */}
-
             <div className="bill-confirm-actions">
               <button
                 type="button"
@@ -619,7 +699,6 @@ export default function Billing() {
               >
                 Cancel
               </button>
-
               <button
                 type="button"
                 className="bill-confirm-send"
@@ -630,8 +709,7 @@ export default function Billing() {
                   "Sending..."
                 ) : (
                   <>
-                    <FiSend size={15} />
-                    Confirm & Send
+                    <FiSend size={15} /> Confirm & Send
                   </>
                 )}
               </button>
