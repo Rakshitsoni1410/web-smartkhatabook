@@ -56,6 +56,40 @@
   transform: translateX(-2px);
 }
 
+.billing-theme-toggle {
+  flex: 0 0 auto;
+  min-height: 40px;
+  padding: 8px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 11px;
+  background: #fff;
+  color: #334155;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background .2s, border-color .2s, color .2s, box-shadow .2s;
+}
+
+.billing-theme-toggle:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.billing-theme-toggle:focus-visible {
+  outline: 3px solid rgba(59, 130, 246, .35);
+  outline-offset: 2px;
+}
+
+.billing-theme-toggle svg {
+  flex: 0 0 auto;
+}
+
 .billing-header h1 {
   margin: 0;
   color: #1a1a2e;
@@ -1050,6 +1084,17 @@
 
   .billing-header {
     align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .billing-header>div:nth-child(2) {
+    flex: 1 1 calc(100% - 55px);
+  }
+
+  .billing-theme-toggle {
+    margin-left: auto;
+    min-height: 36px;
+    padding: 7px 10px;
   }
 
   .billing-unread-summary {
@@ -1191,4 +1236,248 @@
     animation: none !important;
     transition: none !important;
   }
+}
+
+/* =========================================================
+   DARK MODE
+   Controlled by the Billing page theme button. The initial mode follows
+   the application's current theme, and the user's choice is saved locally.
+   ========================================================= */
+.billing-page.billing-page--dark {
+  color-scheme: dark;
+  background: #0b1220;
+  color: #e5e7eb;
+}
+
+.billing-page.billing-page--dark .billing-theme-toggle {
+  background: #172438;
+  border-color: #35445a;
+  color: #e2e8f0;
+}
+
+.billing-page.billing-page--dark .billing-theme-toggle:hover {
+  background: #223149;
+  border-color: #53647b;
+}
+
+.billing-page.billing-page--dark .billing-header h1,
+.billing-page.billing-page--dark .bill-counterparty,
+.billing-page.billing-page--dark .bill-product {
+  color: #f1f5f9;
+}
+
+.billing-page.billing-page--dark .billing-header p,
+.billing-page.billing-page--dark .bill-row,
+.billing-page.billing-page--dark .bill-row strong {
+  color: #a8b3c5;
+}
+
+.billing-page.billing-page--dark .billing-back,
+.billing-page.billing-page--dark .billing-tools,
+.billing-page.billing-page--dark .billing-empty,
+.billing-page.billing-page--dark .bill-card {
+  background: #111c2e;
+  border-color: #2b394d;
+  color: #e5e7eb;
+}
+
+.billing-page.billing-page--dark .billing-back {
+  color: #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .2);
+}
+
+.billing-page.billing-page--dark .billing-back:hover {
+  background: #1b2940;
+  border-color: #475569;
+}
+
+.billing-page.billing-page--dark .billing-search {
+  background: #0b1220;
+  border-color: #37465b;
+  color: #94a3b8;
+}
+
+.billing-page.billing-page--dark .billing-search:focus-within {
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, .14);
+}
+
+.billing-page.billing-page--dark .billing-search input {
+  color: #e5e7eb;
+}
+
+.billing-page.billing-page--dark .billing-search input::placeholder {
+  color: #7f8da3;
+}
+
+.billing-page.billing-page--dark .billing-search>button {
+  color: #a8b3c5;
+}
+
+.billing-page.billing-page--dark .billing-filter {
+  background: #172438;
+  border-color: #35445a;
+  color: #cbd5e1;
+}
+
+.billing-page.billing-page--dark .billing-filter span {
+  background: #26364d;
+  color: #cbd5e1;
+}
+
+.billing-page.billing-page--dark .billing-filter:hover {
+  background: #223149;
+  border-color: #53647b;
+}
+
+.billing-page.billing-page--dark .billing-filter--active {
+  background: #172f55;
+  border-color: #3b82f6;
+  color: #bfdbfe;
+}
+
+.billing-page.billing-page--dark .billing-filter--active span {
+  background: #244878;
+  color: #dbeafe;
+}
+
+.billing-page.billing-page--dark .bill-card:hover {
+  border-color: #43546c;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .22);
+}
+
+.billing-page.billing-page--dark .bill-card--unread {
+  background: linear-gradient(135deg, #302719 0%, #172131 70%);
+  border-color: #986b25;
+  box-shadow: 0 3px 12px rgba(245, 158, 11, .08);
+}
+
+.billing-page.billing-page--dark .bill-card--new-today:not(.bill-card--unread) {
+  border-color: #276749;
+}
+
+.billing-page.billing-page--dark .bill-card-body,
+.billing-page.billing-page--dark .bill-card-footer {
+  border-color: #2b394d;
+}
+
+.billing-page.billing-page--dark .bill-invoice-no {
+  color: #a5b4fc;
+}
+
+.billing-page.billing-page--dark .bill-date,
+.billing-page.billing-page--dark .billing-empty {
+  color: #91a0b5;
+}
+
+.billing-page.billing-page--dark .bill-new-badge {
+  background: #123827;
+  color: #86efac;
+  border-color: #226342;
+}
+
+.billing-page.billing-page--dark .bill-read-badge--unread,
+.billing-page.billing-page--dark .bill-received-info,
+.billing-page.billing-page--dark .bill-read-action {
+  background: #382719;
+  border-color: #805323;
+  color: #fdba74;
+}
+
+.billing-page.billing-page--dark .bill-read-badge--read {
+  background: #263247;
+  color: #cbd5e1;
+  border-color: #3b4b61;
+}
+
+.billing-page.billing-page--dark .bill-status--unpaid {
+  background: #3a2d0e;
+  color: #fcd34d;
+}
+
+.billing-page.billing-page--dark .bill-status--pending {
+  background: #292b55;
+  color: #c7d2fe;
+}
+
+.billing-page.billing-page--dark .bill-status--paid {
+  background: #123a2b;
+  color: #6ee7b7;
+}
+
+.billing-page.billing-page--dark .bill-waiting-info,
+.billing-page.billing-page--dark .bill-waiting-delivery {
+  background: #172438;
+  border-color: #35445a;
+  color: #a8b3c5;
+}
+
+.billing-page.billing-page--dark .bill-sent-info,
+.billing-page.billing-page--dark .bill-read-action:disabled {
+  background: #123827;
+  border-color: #226342;
+  color: #86efac;
+}
+
+.billing-page.billing-page--dark .bill-read-action:hover:not(:disabled) {
+  background: #4a2e19;
+}
+
+.billing-page.billing-page--dark .billing-unread-summary {
+  background: #382719;
+  border-color: #805323;
+  color: #fdba74;
+}
+
+.billing-page.billing-page--dark .billing-new-note {
+  color: #fdba74;
+}
+
+/* The confirmation dialog is rendered inside .billing-page and follows it. */
+.billing-page.billing-page--dark .bill-confirm-modal {
+  background: #111c2e;
+  color: #e5e7eb;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, .45);
+}
+
+.billing-page.billing-page--dark .bill-confirm-modal h2,
+.billing-page.billing-page--dark .bill-confirm-message strong,
+.billing-page.billing-page--dark .bill-confirm-details strong {
+  color: #f1f5f9;
+}
+
+.billing-page.billing-page--dark .bill-confirm-message,
+.billing-page.billing-page--dark .bill-confirm-details span {
+  color: #a8b3c5;
+}
+
+.billing-page.billing-page--dark .bill-confirm-close,
+.billing-page.billing-page--dark .bill-confirm-details,
+.billing-page.billing-page--dark .bill-confirm-cancel {
+  background: #1b2940;
+  border-color: #35445a;
+  color: #cbd5e1;
+}
+
+.billing-page.billing-page--dark .bill-confirm-close:hover:not(:disabled),
+.billing-page.billing-page--dark .bill-confirm-cancel:hover:not(:disabled) {
+  background: #2a3a52;
+  color: #f1f5f9;
+}
+
+.billing-page.billing-page--dark .bill-confirm-icon {
+  background: #172f55;
+  color: #93c5fd;
+}
+
+.billing-page.billing-page--dark .bill-confirm-warning {
+  background: #382f16;
+  border-color: #78612a;
+  color: #fcd34d;
+}
+
+.billing-page.billing-page--dark .bill-confirm-error {
+  background: #3a1c24;
+  border-color: #7f2939;
+  color: #fca5a5;
 }

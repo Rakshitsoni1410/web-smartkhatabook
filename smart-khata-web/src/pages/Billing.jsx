@@ -11,6 +11,8 @@ import {
   FiMail,
   FiEye,
   FiBell,
+  FiSun,
+  FiMoon,
 } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import api from "../api";
@@ -46,6 +48,43 @@ const ORDER_STATUS_LABEL = {
 };
 
 const READ_STORAGE_PREFIX = "billing-read-v1";
+const THEME_STORAGE_PREFIX = "billing-theme-v1";
+
+function appUsesDarkTheme() {
+  if (typeof document === "undefined") return false;
+
+  return [document.documentElement, document.body]
+    .filter(Boolean)
+    .some((element) => {
+      const theme = element.getAttribute("data-theme");
+      const bootstrapTheme = element.getAttribute("data-bs-theme");
+      const mode = element.getAttribute("data-mode");
+
+      return (
+        element.classList.contains("dark") ||
+        element.classList.contains("dark-mode") ||
+        element.classList.contains("theme-dark") ||
+        theme === "dark" ||
+        bootstrapTheme === "dark" ||
+        mode === "dark"
+      );
+    });
+}
+
+function getStoredBillingTheme(userId) {
+  try {
+    const savedTheme = localStorage.getItem(
+      `${THEME_STORAGE_PREFIX}:${userId || "guest"}`,
+    );
+    if (savedTheme === "dark") return true;
+    if (savedTheme === "light") return false;
+  } catch (err) {
+    console.warn("Could not load Billing theme preference:", err);
+  }
+
+  // On first use, follow the theme currently selected by the app.
+  return appUsesDarkTheme();
+}
 
 function getReadStorageKey(userId) {
   return `${READ_STORAGE_PREFIX}:${userId || "unknown"}`;
@@ -114,6 +153,26 @@ export default function Billing() {
   const [filter, setFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [readState, setReadState] = useState(() => readLocalReadState(userId));
+  const [isDarkMode, setIsDarkMode] = useState(() =>
+    getStoredBillingTheme(userId),
+  );
+
+  useEffect(() => {
+    setIsDarkMode(getStoredBillingTheme(userId));
+  }, [userId]);
+
+  const toggleBillingTheme = useCallback(() => {
+    const nextMode = !isDarkMode;
+    setIsDarkMode(nextMode);
+    try {
+      localStorage.setItem(
+        `${THEME_STORAGE_PREFIX}:${userId || "guest"}`,
+        nextMode ? "dark" : "light",
+      );
+    } catch (err) {
+      console.warn("Could not save Billing theme preference:", err);
+    }
+  }, [isDarkMode, userId]);
 
   useEffect(() => {
     setReadState(readLocalReadState(userId));
@@ -291,7 +350,10 @@ export default function Billing() {
   };
 
   return (
-    <div className="billing-page">
+    <div
+      className={`billing-page${isDarkMode ? " billing-page--dark" : ""}`}
+      data-billing-theme={isDarkMode ? "dark" : "light"}
+    >
       <div className="billing-header">
         <button
           className="billing-back"
@@ -308,6 +370,19 @@ export default function Billing() {
               : "Bills sent by your wholesalers"}
           </p>
         </div>
+        <button
+          type="button"
+          className="billing-theme-toggle"
+          onClick={toggleBillingTheme}
+          aria-label={
+            isDarkMode ? "Switch to light mode" : "Switch to dark mode"
+          }
+          aria-pressed={isDarkMode}
+          title={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
+        >
+          {isDarkMode ? <FiSun size={16} /> : <FiMoon size={16} />}
+          <span>{isDarkMode ? "Light mode" : "Dark mode"}</span>
+        </button>
         {!isWholesaler && unreadCount > 0 && (
           <div className="billing-unread-summary" aria-live="polite">
             <FiBell size={15} />
