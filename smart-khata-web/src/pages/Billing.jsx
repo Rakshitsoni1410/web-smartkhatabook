@@ -44,6 +44,51 @@ const ORDER_STATUS_LABEL = {
   rejected: "Rejected",
 };
 
+// ============================================
+// DATE HELPERS — power the "new bill" highlight
+// ============================================
+
+function isSameCalendarDay(a, b) {
+  return (
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  );
+}
+
+function isToday(dateInput) {
+  if (!dateInput) return false;
+  return isSameCalendarDay(new Date(dateInput), new Date());
+}
+
+function isYesterday(dateInput) {
+  if (!dateInput) return false;
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  return isSameCalendarDay(new Date(dateInput), yesterday);
+}
+
+// Shows "Today, 3:45 PM" / "Yesterday" / a normal date — so it's obvious
+// at a glance whether a bill just arrived versus came in a while ago.
+function formatBillDate(dateInput) {
+  if (!dateInput) return "-";
+  const date = new Date(dateInput);
+  if (isToday(dateInput)) {
+    return `Today, ${date.toLocaleTimeString("en-IN", {
+      hour: "2-digit",
+      minute: "2-digit",
+    })}`;
+  }
+  if (isYesterday(dateInput)) {
+    return "Yesterday";
+  }
+  return date.toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
+
 export default function Billing() {
   const navigate = useNavigate();
 
@@ -120,6 +165,17 @@ export default function Billing() {
   const billIsReady = (bill) => {
     return ["delivered", "completed"].includes(bill.orderStatus);
   };
+
+  // ============================================
+  // NEW BILL — highlight whatever just happened "today" for this viewer:
+  // a retailer cares about when the wholesaler SENT the bill; a
+  // wholesaler cares about when the order became ready to bill.
+  // ============================================
+
+  const newnessDateOf = (bill) =>
+    isWholesaler ? bill.deliveredAt : bill.billSentAt;
+
+  const billIsNew = (bill) => isToday(newnessDateOf(bill));
 
   // ============================================
   // OPEN CONFIRMATION DIALOG
@@ -259,9 +315,13 @@ export default function Billing() {
         <div className="billing-list">
           {bills.map((bill) => {
             const canUseBill = billIsReady(bill);
+            const isNew = billIsNew(bill);
 
             return (
-              <div className="bill-card" key={bill._id}>
+              <div
+                className={`bill-card ${isNew ? "bill-card--new" : ""}`}
+                key={bill._id}
+              >
                 {/* =========================
                         TOP
                     ========================== */}
@@ -270,6 +330,7 @@ export default function Billing() {
                   <div>
                     <div className="bill-invoice-no">
                       {bill.invoiceNumber || "Invoice Pending"}
+                      {isNew && <span className="bill-new-badge">NEW</span>}
                     </div>
 
                     <div className="bill-counterparty">
@@ -340,14 +401,7 @@ export default function Billing() {
                       <span>
                         Bill sent to retailer
                         {bill.billSentAt
-                          ? ` on ${new Date(bill.billSentAt).toLocaleDateString(
-                              "en-IN",
-                              {
-                                day: "2-digit",
-                                month: "short",
-                                year: "numeric",
-                              },
-                            )}`
+                          ? ` · ${formatBillDate(bill.billSentAt)}`
                           : ""}
                       </span>
                     </div>
@@ -360,11 +414,7 @@ export default function Billing() {
 
                 <div className="bill-card-footer">
                   <span className="bill-date">
-                    {new Date(bill.createdAt).toLocaleDateString("en-IN", {
-                      day: "2-digit",
-                      month: "short",
-                      year: "numeric",
-                    })}
+                    {formatBillDate(newnessDateOf(bill) || bill.createdAt)}
                   </span>
 
                   <div className="bill-actions">
