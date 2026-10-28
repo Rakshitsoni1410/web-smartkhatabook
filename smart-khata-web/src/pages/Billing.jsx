@@ -465,7 +465,7 @@ export default function Billing() {
                           </>
                         ) : (
                           <>
-                            <FiMailOpen size={12} /> READ
+                            <FiEye size={12} /> READ
                           </>
                         )}
                       </span>
